@@ -1,121 +1,185 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="990" viewBox="0 0 960 990" font-family="'Segoe UI', Inter, Arial, sans-serif">
-<title>Field Shift application framework</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="1060" viewBox="0 0 960 1060" font-family="'Segoe UI', Inter, Arial, sans-serif">
+<title>Field Shift: how a plan is made</title>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#374151" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-<rect x="0" y="0" width="960" height="990" fill="#FFFFFF"/>
+<rect x="0" y="0" width="960" height="1060" fill="#FFFFFF"/>
 
+<!-- stages -->
 <g fill="#FFFFFF" stroke="#111827" stroke-width="1.8">
-<rect x="340" y="30" width="280" height="60" rx="8"/>
-<rect x="340" y="125" width="280" height="60" rx="8"/>
-<rect x="340" y="220" width="280" height="60" rx="8"/>
-<rect x="340" y="315" width="280" height="60" rx="8"/>
-<rect x="340" y="410" width="280" height="60" rx="8"/>
-<rect x="340" y="820" width="280" height="64" rx="8"/>
+<rect x="340" y="40" width="280" height="60" rx="8"/>
+<rect x="340" y="135" width="280" height="60" rx="8"/>
+<rect x="340" y="230" width="280" height="60" rx="8"/>
+<rect x="340" y="325" width="280" height="60" rx="8"/>
+<rect x="340" y="420" width="280" height="60" rx="8"/>
+<rect x="340" y="830" width="280" height="64" rx="8"/>
 </g>
-<rect x="340" y="520" width="280" height="258" rx="8" fill="#FFFFFF" stroke="#111827" stroke-width="3.5"/>
+<rect x="340" y="530" width="280" height="258" rx="8" fill="#FFFFFF" stroke="#111827" stroke-width="3.5"/>
 
+<!-- other data -->
 <g fill="#F3F4F6" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="7 5">
-<rect x="670" y="30" width="260" height="60" rx="8"/>
-<rect x="670" y="125" width="260" height="60" rx="8"/>
-<rect x="670" y="220" width="260" height="60" rx="8"/>
-<rect x="670" y="315" width="260" height="60" rx="8"/>
-<rect x="670" y="410" width="260" height="60" rx="8"/>
-<rect x="670" y="520" width="260" height="54" rx="8"/>
-<rect x="670" y="588" width="260" height="54" rx="8"/>
-<rect x="670" y="656" width="260" height="54" rx="8"/>
-<rect x="670" y="724" width="260" height="54" rx="8"/>
-<rect x="30" y="520" width="260" height="54" rx="8"/>
-<rect x="30" y="588" width="260" height="54" rx="8"/>
-<rect x="30" y="656" width="260" height="54" rx="8"/>
-<rect x="30" y="724" width="260" height="54" rx="8"/>
+<rect x="30" y="40" width="260" height="60" rx="8"/>
+<rect x="30" y="230" width="260" height="60" rx="8"/>
+<rect x="30" y="420" width="260" height="60" rx="8"/>
+<rect x="30" y="734" width="260" height="54" rx="8"/>
 </g>
-<rect x="30" y="315" width="260" height="60" rx="8" fill="#FEF3C7" stroke="#B45309" stroke-width="1.8"/>
+<!-- NASA data -->
+<g fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5" stroke-dasharray="7 5">
+<rect x="30" y="530" width="260" height="54" rx="8"/>
+<rect x="30" y="598" width="260" height="54" rx="8"/>
+<rect x="30" y="666" width="260" height="54" rx="8"/>
+</g>
+<!-- agronomist -->
+<g fill="#FEF3C7" stroke="#B45309" stroke-width="1.8">
+<rect x="30" y="135" width="260" height="60" rx="8"/>
+<rect x="30" y="325" width="260" height="60" rx="8"/>
+</g>
+<!-- measures -->
+<g fill="#FFFFFF" stroke="#6B7280" stroke-width="1.5">
+<rect x="670" y="530" width="260" height="54" rx="8"/>
+<rect x="670" y="666" width="260" height="54" rx="8"/>
+<rect x="670" y="734" width="260" height="54" rx="8"/>
+</g>
+<rect x="670" y="598" width="260" height="54" rx="8" fill="#ECFDF5" stroke="#047857" stroke-width="1.8"/>
+<!-- screens -->
+<g fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.2">
+<rect x="636" y="59" width="60" height="22" rx="11"/>
+<rect x="636" y="154" width="68" height="22" rx="11"/>
+<rect x="636" y="249" width="68" height="22" rx="11"/>
+<rect x="636" y="344" width="68" height="22" rx="11"/>
+<rect x="636" y="851" width="200" height="22" rx="11"/>
+</g>
 
+<!-- arrows -->
 <g stroke="#374151" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
-<line x1="480" y1="90" x2="480" y2="122"/>
-<line x1="480" y1="185" x2="480" y2="217"/>
-<line x1="480" y1="280" x2="480" y2="312"/>
-<line x1="480" y1="375" x2="480" y2="407"/>
-<line x1="480" y1="470" x2="480" y2="516"/>
-<line x1="480" y1="778" x2="480" y2="816"/>
-<line x1="670" y1="60" x2="624" y2="60"/>
-<line x1="670" y1="155" x2="624" y2="155"/>
-<line x1="670" y1="250" x2="624" y2="250"/>
-<line x1="670" y1="335" x2="624" y2="335"/>
-<path d="M670 425 L648 425 L648 360 L624 360"/>
-<line x1="670" y1="450" x2="624" y2="450"/>
-<line x1="290" y1="345" x2="336" y2="345"/>
-<line x1="290" y1="547" x2="336" y2="547"/>
-<line x1="290" y1="615" x2="336" y2="615"/>
-<line x1="290" y1="683" x2="336" y2="683"/>
-<line x1="290" y1="751" x2="336" y2="751"/>
-<line x1="670" y1="547" x2="624" y2="547"/>
-<line x1="670" y1="615" x2="624" y2="615"/>
-<line x1="670" y1="683" x2="624" y2="683"/>
-<line x1="670" y1="751" x2="624" y2="751"/>
+<line x1="480" y1="100" x2="480" y2="132"/>
+<line x1="480" y1="195" x2="480" y2="227"/>
+<line x1="480" y1="290" x2="480" y2="322"/>
+<line x1="480" y1="385" x2="480" y2="417"/>
+<line x1="480" y1="480" x2="480" y2="526"/>
+<line x1="480" y1="788" x2="480" y2="826"/>
+<line x1="480" y1="894" x2="480" y2="918"/>
+<line x1="290" y1="70" x2="336" y2="70"/>
+<line x1="290" y1="165" x2="336" y2="165"/>
+<line x1="290" y1="250" x2="336" y2="250"/>
+<polyline points="290,272 315,272 315,337 336,337"/>
+<line x1="290" y1="355" x2="336" y2="355"/>
+<polyline points="290,436 322,436 322,373 336,373"/>
+<line x1="290" y1="456" x2="336" y2="456"/>
+<line x1="290" y1="557" x2="336" y2="557"/>
+<line x1="290" y1="625" x2="336" y2="625"/>
+<line x1="290" y1="693" x2="336" y2="693"/>
+<line x1="290" y1="761" x2="336" y2="761"/>
+<line x1="620" y1="557" x2="666" y2="557"/>
+<line x1="620" y1="625" x2="666" y2="625"/>
+<line x1="620" y1="693" x2="666" y2="693"/>
+<line x1="620" y1="761" x2="666" y2="761"/>
 </g>
 
-<g text-anchor="middle" dominant-baseline="central">
-<g fill="#111827" font-size="16" font-weight="600">
-<text x="480" y="51">1. Farm fields</text>
-<text x="480" y="146">2. Decision point</text>
-<text x="480" y="241">3. Slot search</text>
-<text x="480" y="336">4. Candidates for slots</text>
-<text x="480" y="431">5. Plan variants</text>
-<text x="480" y="610">6. Variant characteristics</text>
-<text x="480" y="842">7. Variants for the agronomist</text>
+<!-- stage text -->
+<g text-anchor="middle" fill="#111827">
+<g font-size="15" font-weight="600">
+<text x="480" y="66">1. Farm fields</text>
+<text x="480" y="161">2. Decision day</text>
+<text x="480" y="256">3. Free slots</text>
+<text x="480" y="351">4. Candidate crops</text>
+<text x="480" y="446">5. Farm plans</text>
+<text x="480" y="636" font-size="16">6. Plan measures</text>
+<text x="480" y="857">7. Plans for the agronomist</text>
 </g>
-<g fill="#374151" font-size="13.5">
-<text x="480" y="71">agronomist marks the fields</text>
-<text x="480" y="166">which fields free up, and when</text>
-<text x="480" y="261">free gaps on the timeline</text>
-<text x="480" y="356">windows, field rules, crop set</text>
-<text x="480" y="451">combinations across the whole farm</text>
-<text x="480" y="636">for each variant, on all data</text>
-<text x="480" y="864">agronomist compares and chooses</text>
+<g font-size="12" fill="#374151">
+<text x="480" y="85">the fields of the whole farm</text>
+<text x="480" y="180">what stands on each field, when it is free</text>
+<text x="480" y="275">the gaps on each field's timeline</text>
+<text x="480" y="370">sowing window, harvest and rules fit</text>
+<text x="480" y="465">combinations that pass the farm rules</text>
+<text x="480" y="662">every plan measured the same way</text>
+<text x="480" y="681">money replayed over past seasons</text>
+<text x="480" y="700">only data from before the decision day</text>
+<text x="480" y="877">compare, change field by field, choose</text>
 </g>
-<text x="480" y="680" fill="#111827" font-size="13.5" font-weight="600">main analysis stage</text>
-
-<g fill="#111827" font-size="15" font-weight="600">
-<text x="800" y="51">Field boundaries</text>
-<text x="800" y="146">Current crops</text>
-<text x="800" y="241">Field history</text>
-<text x="800" y="336">Regional package</text>
-<text x="800" y="431">Regulatory module</text>
-<text x="800" y="538">Regulatory module</text>
-<text x="800" y="606">Climate risks</text>
-<text x="800" y="674">Soil water</text>
-<text x="800" y="742">Terrain and erosion</text>
-<text x="160" y="538">Economics</text>
-<text x="160" y="606">Soil</text>
-<text x="160" y="674">Soil cover</text>
-<text x="160" y="742">Other products</text>
-</g>
-<g fill="#374151" font-size="13">
-<text x="800" y="71">declarations, FTW, agronomist input</text>
-<text x="800" y="166">agronomist input, crop map</text>
-<text x="800" y="261">declarations, HRL, ML</text>
-<text x="800" y="356">sowing windows, preceding crops</text>
-<text x="800" y="451">field and farm prohibitions</text>
-<text x="800" y="558">payments and penalties</text>
-<text x="800" y="626">R5: frost, heat, drought</text>
-<text x="800" y="694">R5, R9: moisture, waterlogging</text>
-<text x="800" y="762">R9, GAEC 5: slopes, erosion</text>
-<text x="160" y="558">yield, prices, costs</text>
-<text x="160" y="626">R1: local soil data</text>
-<text x="160" y="694">R4: when the field is bare</text>
-<text x="160" y="762">not selected</text>
-</g>
-<text x="160" y="336" fill="#78350F" font-size="15" font-weight="600">Crop set</text>
-<text x="160" y="356" fill="#92400E" font-size="13">chosen by the agronomist</text>
 </g>
 
-<rect x="30" y="920" width="900" height="48" rx="8" fill="#F9FAFB" stroke="#D1D5DB" stroke-width="1"/>
-<rect x="200" y="935" width="18" height="18" rx="4" fill="#FFFFFF" stroke="#111827" stroke-width="1.8"/>
-<rect x="420" y="935" width="18" height="18" rx="4" fill="#F3F4F6" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="4 3"/>
-<rect x="640" y="935" width="18" height="18" rx="4" fill="#FEF3C7" stroke="#B45309" stroke-width="1.8"/>
-<g fill="#111827" font-size="14" dominant-baseline="central">
-<text x="228" y="944">stage</text>
-<text x="448" y="944">input</text>
-<text x="668" y="944">agronomist input</text>
+<!-- input and measure text -->
+<g text-anchor="middle">
+<g font-size="14" font-weight="600" fill="#111827">
+<text x="160" y="65">Field declarations</text>
+<text x="160" y="255">Crop guides</text>
+<text x="160" y="445">Farm rules</text>
+<text x="160" y="756">Yields, prices, costs</text>
+<text x="800" y="552">Money</text>
+<text x="800" y="688">Weather risk</text>
+<text x="800" y="756">Rules and rotation</text>
+</g>
+<g font-size="12" fill="#4B5563">
+<text x="160" y="84">Lithuanian paying agency</text>
+<text x="160" y="274">sowing windows, preceding crops</text>
+<text x="160" y="464">EU payment conditions in Lithuania</text>
+<text x="160" y="774">Statistics Lithuania, Eurostat, FADN</text>
+<text x="800" y="570">margin in a usual and a bad season</text>
+<text x="800" y="706">frost, heat, dry and wet seasons</text>
+<text x="800" y="774">checks, payments, cereal after cereal</text>
+</g>
+<g font-size="14" font-weight="600" fill="#1E3A8A">
+<text x="160" y="552">NASA HLS</text>
+<text x="160" y="620">NASA GPM IMERG</text>
+<text x="160" y="688">NASA POWER</text>
+</g>
+<g font-size="12" fill="#1E40AF">
+<text x="160" y="570">soil cover, field against neighbours</text>
+<text x="160" y="638">erosive rain, wet harvests</text>
+<text x="160" y="706">temperature, dry seasons</text>
+</g>
+<g fill="#92400E">
+<text x="160" y="160" font-size="14" font-weight="600">Agronomist</text>
+<text x="160" y="179" font-size="12">confirms this year's crops</text>
+<text x="160" y="350" font-size="14" font-weight="600">Agronomist</text>
+<text x="160" y="369" font-size="12">crops the farm can grow, limits</text>
+</g>
+<g fill="#065F46">
+<text x="800" y="620" font-size="14" font-weight="600">Soil health score</text>
+<text x="800" y="638" font-size="12">0–100: cover, variety, organic matter</text>
+</g>
+<g font-size="12" fill="#3730A3">
+<text x="666" y="74">Map</text>
+<text x="670" y="169">Fields</text>
+<text x="670" y="264">Fields</text>
+<text x="670" y="359">Crops</text>
+<text x="736" y="866">Planner · Analytics · Checks</text>
+</g>
+</g>
+
+<!-- plans shown -->
+<rect x="24" y="922" width="912" height="50" rx="10" fill="#F9FAFB" stroke="#D1D5DB" stroke-width="1.2"/>
+<g fill="#FFFFFF" stroke="#374151" stroke-width="1.3">
+<rect x="34" y="930" width="140" height="34" rx="6"/>
+<rect x="184" y="930" width="140" height="34" rx="6"/>
+<rect x="334" y="930" width="140" height="34" rx="6"/>
+<rect x="636" y="930" width="140" height="34" rx="6"/>
+<rect x="786" y="930" width="140" height="34" rx="6"/>
+</g>
+<rect x="486" y="930" width="140" height="34" rx="6" fill="#ECFDF5" stroke="#047857" stroke-width="1.6"/>
+<g text-anchor="middle" font-size="12" fill="#111827">
+<text x="104" y="951">Typical local plan</text>
+<text x="254" y="951">Highest margin</text>
+<text x="404" y="951">Best in a bad year</text>
+<text x="556" y="951" fill="#065F46" font-weight="600">Best for soil</text>
+<text x="706" y="951">Balanced</text>
+<text x="856" y="951">Custom plan</text>
+</g>
+
+<!-- legend -->
+<rect x="30" y="996" width="900" height="44" rx="8" fill="#F9FAFB" stroke="#D1D5DB" stroke-width="1"/>
+<rect x="60" y="1009" width="18" height="18" rx="4" fill="#FFFFFF" stroke="#111827" stroke-width="1.6"/>
+<rect x="205" y="1009" width="18" height="18" rx="4" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.4" stroke-dasharray="4 3"/>
+<rect x="365" y="1009" width="18" height="18" rx="4" fill="#F3F4F6" stroke="#6B7280" stroke-width="1.4" stroke-dasharray="4 3"/>
+<rect x="525" y="1009" width="18" height="18" rx="4" fill="#FEF3C7" stroke="#B45309" stroke-width="1.6"/>
+<rect x="675" y="1009" width="18" height="18" rx="4" fill="#FFFFFF" stroke="#6B7280" stroke-width="1.4"/>
+<rect x="805" y="1010" width="30" height="16" rx="8" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.2"/>
+<g font-size="13" fill="#374151">
+<text x="86" y="1023">stage</text>
+<text x="231" y="1023">NASA data</text>
+<text x="391" y="1023">other data</text>
+<text x="551" y="1023">agronomist</text>
+<text x="701" y="1023">measure</text>
+<text x="843" y="1023">screen</text>
 </g>
 </svg>
