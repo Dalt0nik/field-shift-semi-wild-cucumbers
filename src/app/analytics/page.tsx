@@ -49,7 +49,7 @@ function Seasons({ part }: { part: 'bare' | 'weather' }) {
         <div className="legend" style={{ marginTop: 10 }}><span><Sw c="#1a7d3a" />never bare</span><span><Sw c="#ffffbf" />half the years</span><span><Sw c="#a6611a" />always bare</span><span><i className="sw nodata" style={{ background: 'repeating-linear-gradient(45deg,#cfd8cc 0 3px,#f3f6f1 3px 6px)' }} />no clear view in winter</span></div>
         <div style={{ marginTop: 8 }}><Check>stubble is not visible to the satellite, so a field shown bare in autumn may be covered by stubble.</Check></div>
       </Panel>}
-      {part === 'bare' && <div className="cols">
+      {part === 'bare' && <div className="cols" style={{ alignItems: 'stretch' }}>
         <Panel title="When does bare soil erode?" sub={<>NASA <Term id="imerg">GPM IMERG</Term>, {soilClimate.period}</>} right={<SoilHelpButton />}>
           <MonthRisk kind="erosion" />
           <p className="note" style={{ marginTop: 8 }}><Term id="erosivity">Heavy rain</Term> washes bare soil off the field. It comes mostly in summer, right after the cereal harvest. Each bar: how much of the year’s heavy rain falls on bare soil in that month. Lower is better.</p>
