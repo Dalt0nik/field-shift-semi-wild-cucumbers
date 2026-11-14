@@ -1,0 +1,724 @@
+{
+ "unit": "bare-soil-equivalent days, 1 Jul - 30 Jun; [p25, median, p75]",
+ "ndvi_soil": 0.197,
+ "ndvi_full": 0.922,
+ "seasons": [
+  "2024-25",
+  "2025-26"
+ ],
+ "model": {
+  "early>september": {
+   "n": 292,
+   "autumn": [
+    68,
+    75,
+    83
+   ],
+   "winter": [
+    56,
+    75,
+    89
+   ],
+   "spring": [
+    34,
+    42,
+    52
+   ],
+   "total": [
+    167,
+    193,
+    214
+   ]
+  },
+  "early>spring_early": {
+   "n": 31,
+   "autumn": [
+    46,
+    55,
+    71
+   ],
+   "winter": [
+    34,
+    54,
+    92
+   ],
+   "spring": [
+    65,
+    74,
+    78
+   ],
+   "total": [
+    152,
+    188,
+    232
+   ]
+  },
+  "early>spring_early>green_autumn": {
+   "n": 20,
+   "autumn": [
+    41,
+    49,
+    54
+   ],
+   "winter": [
+    30,
+    41,
+    49
+   ],
+   "spring": [
+    63,
+    69,
+    76
+   ],
+   "total": [
+    145,
+    153,
+    174
+   ]
+  },
+  "early>spring_early>open_autumn": {
+   "n": 11,
+   "autumn": [
+    65,
+    72,
+    89
+   ],
+   "winter": [
+    84,
+    95,
+    99
+   ],
+   "spring": [
+    68,
+    76,
+    81
+   ],
+   "total": [
+    232,
+    241,
+    260
+   ]
+  },
+  "early>spring_late": {
+   "n": 13,
+   "autumn": [
+    44,
+    54,
+    74
+   ],
+   "winter": [
+    37,
+    53,
+    100
+   ],
+   "spring": [
+    88,
+    96,
+    106
+   ],
+   "total": [
+    180,
+    199,
+    251
+   ]
+  },
+  "fallow>august": {
+   "n": 14,
+   "autumn": [
+    66,
+    75,
+    82
+   ],
+   "winter": [
+    18,
+    27,
+    45
+   ],
+   "spring": [
+    34,
+    38,
+    61
+   ],
+   "total": [
+    120,
+    141,
+    179
+   ]
+  },
+  "fallow>september": {
+   "n": 62,
+   "autumn": [
+    67,
+    82,
+    93
+   ],
+   "winter": [
+    73,
+    90,
+    101
+   ],
+   "spring": [
+    53,
+    61,
+    78
+   ],
+   "total": [
+    209,
+    237,
+    255
+   ]
+  },
+  "fallow>spring_early": {
+   "n": 24,
+   "autumn": [
+    42,
+    57,
+    72
+   ],
+   "winter": [
+    70,
+    86,
+    98
+   ],
+   "spring": [
+    75,
+    82,
+    89
+   ],
+   "total": [
+    194,
+    227,
+    249
+   ]
+  },
+  "fallow>spring_early>green_autumn": {
+   "n": 16,
+   "autumn": [
+    39,
+    47,
+    63
+   ],
+   "winter": [
+    59,
+    80,
+    101
+   ],
+   "spring": [
+    77,
+    82,
+    97
+   ],
+   "total": [
+    180,
+    206,
+    249
+   ]
+  },
+  "grass>grass": {
+   "n": 169,
+   "autumn": [
+    22,
+    28,
+    35
+   ],
+   "winter": [
+    40,
+    49,
+    59
+   ],
+   "spring": [
+    39,
+    47,
+    54
+   ],
+   "total": [
+    104,
+    123,
+    144
+   ]
+  },
+  "grass>september": {
+   "n": 19,
+   "autumn": [
+    44,
+    59,
+    74
+   ],
+   "winter": [
+    67,
+    89,
+    99
+   ],
+   "spring": [
+    50,
+    55,
+    63
+   ],
+   "total": [
+    170,
+    195,
+    221
+   ]
+  },
+  "grass>spring_early": {
+   "n": 37,
+   "autumn": [
+    26,
+    32,
+    45
+   ],
+   "winter": [
+    49,
+    61,
+    92
+   ],
+   "spring": [
+    72,
+    81,
+    85
+   ],
+   "total": [
+    162,
+    176,
+    209
+   ]
+  },
+  "grass>spring_early>green_autumn": {
+   "n": 34,
+   "autumn": [
+    24,
+    31,
+    43
+   ],
+   "winter": [
+    48,
+    57,
+    80
+   ],
+   "spring": [
+    73,
+    81,
+    84
+   ],
+   "total": [
+    161,
+    175,
+    197
+   ]
+  },
+  "grass>spring_late": {
+   "n": 26,
+   "autumn": [
+    23,
+    32,
+    36
+   ],
+   "winter": [
+    46,
+    59,
+    66
+   ],
+   "spring": [
+    86,
+    93,
+    104
+   ],
+   "total": [
+    162,
+    177,
+    197
+   ]
+  },
+  "grass>spring_late>green_autumn": {
+   "n": 24,
+   "autumn": [
+    22,
+    31,
+    35
+   ],
+   "winter": [
+    47,
+    59,
+    65
+   ],
+   "spring": [
+    86,
+    93,
+    104
+   ],
+   "total": [
+    162,
+    177,
+    196
+   ]
+  },
+  "late>september": {
+   "n": 143,
+   "autumn": [
+    41,
+    49,
+    58
+   ],
+   "winter": [
+    78,
+    92,
+    100
+   ],
+   "spring": [
+    43,
+    51,
+    58
+   ],
+   "total": [
+    168,
+    188,
+    203
+   ]
+  },
+  "late>spring_early": {
+   "n": 240,
+   "autumn": [
+    17,
+    33,
+    40
+   ],
+   "winter": [
+    48,
+    74,
+    89
+   ],
+   "spring": [
+    71,
+    79,
+    87
+   ],
+   "total": [
+    150,
+    185,
+    213
+   ]
+  },
+  "late>spring_early>green_autumn": {
+   "n": 221,
+   "autumn": [
+    15,
+    31,
+    39
+   ],
+   "winter": [
+    46,
+    71,
+    88
+   ],
+   "spring": [
+    71,
+    79,
+    87
+   ],
+   "total": [
+    145,
+    181,
+    207
+   ]
+  },
+  "late>spring_early>open_autumn": {
+   "n": 19,
+   "autumn": [
+    44,
+    48,
+    57
+   ],
+   "winter": [
+    79,
+    89,
+    105
+   ],
+   "spring": [
+    73,
+    78,
+    86
+   ],
+   "total": [
+    202,
+    225,
+    233
+   ]
+  },
+  "late>spring_late": {
+   "n": 111,
+   "autumn": [
+    30,
+    38,
+    45
+   ],
+   "winter": [
+    74,
+    92,
+    103
+   ],
+   "spring": [
+    94,
+    101,
+    107
+   ],
+   "total": [
+    201,
+    229,
+    248
+   ]
+  },
+  "late>spring_late>green_autumn": {
+   "n": 89,
+   "autumn": [
+    29,
+    36,
+    41
+   ],
+   "winter": [
+    68,
+    85,
+    99
+   ],
+   "spring": [
+    92,
+    100,
+    107
+   ],
+   "total": [
+    195,
+    222,
+    240
+   ]
+  },
+  "late>spring_late>open_autumn": {
+   "n": 22,
+   "autumn": [
+    45,
+    49,
+    53
+   ],
+   "winter": [
+    98,
+    105,
+    109
+   ],
+   "spring": [
+    100,
+    104,
+    107
+   ],
+   "total": [
+    249,
+    257,
+    266
+   ]
+  },
+  "mid>august": {
+   "n": 329,
+   "autumn": [
+    60,
+    66,
+    73
+   ],
+   "winter": [
+    20,
+    28,
+    39
+   ],
+   "spring": [
+    33,
+    38,
+    44
+   ],
+   "total": [
+    118,
+    132,
+    152
+   ]
+  },
+  "mid>grass": {
+   "n": 36,
+   "autumn": [
+    33,
+    43,
+    56
+   ],
+   "winter": [
+    37,
+    47,
+    56
+   ],
+   "spring": [
+    38,
+    48,
+    70
+   ],
+   "total": [
+    117,
+    142,
+    174
+   ]
+  },
+  "mid>september": {
+   "n": 416,
+   "autumn": [
+    67,
+    76,
+    83
+   ],
+   "winter": [
+    52,
+    77,
+    95
+   ],
+   "spring": [
+    35,
+    49,
+    60
+   ],
+   "total": [
+    166,
+    201,
+    229
+   ]
+  },
+  "mid>spring_early": {
+   "n": 571,
+   "autumn": [
+    57,
+    68,
+    79
+   ],
+   "winter": [
+    39,
+    58,
+    92
+   ],
+   "spring": [
+    70,
+    77,
+    85
+   ],
+   "total": [
+    175,
+    201,
+    243
+   ]
+  },
+  "mid>spring_early>green_autumn": {
+   "n": 447,
+   "autumn": [
+    55,
+    64,
+    73
+   ],
+   "winter": [
+    36,
+    48,
+    69
+   ],
+   "spring": [
+    69,
+    76,
+    84
+   ],
+   "total": [
+    169,
+    189,
+    218
+   ]
+  },
+  "mid>spring_early>open_autumn": {
+   "n": 124,
+   "autumn": [
+    73,
+    85,
+    93
+   ],
+   "winter": [
+    81,
+    95,
+    104
+   ],
+   "spring": [
+    73,
+    82,
+    88
+   ],
+   "total": [
+    241,
+    255,
+    277
+   ]
+  },
+  "mid>spring_late": {
+   "n": 293,
+   "autumn": [
+    53,
+    66,
+    80
+   ],
+   "winter": [
+    44,
+    66,
+    102
+   ],
+   "spring": [
+    82,
+    91,
+    100
+   ],
+   "total": [
+    184,
+    216,
+    273
+   ]
+  },
+  "mid>spring_late>green_autumn": {
+   "n": 227,
+   "autumn": [
+    49,
+    60,
+    73
+   ],
+   "winter": [
+    39,
+    53,
+    86
+   ],
+   "spring": [
+    79,
+    89,
+    99
+   ],
+   "total": [
+    179,
+    201,
+    246
+   ]
+  },
+  "mid>spring_late>open_autumn": {
+   "n": 66,
+   "autumn": [
+    72,
+    88,
+    99
+   ],
+   "winter": [
+    83,
+    103,
+    110
+   ],
+   "spring": [
+    90,
+    96,
+    104
+   ],
+   "total": [
+    249,
+    288,
+    303
+   ]
+  }
+ }
+}

@@ -1,0 +1,21 @@
+# secrets and local settings
+.env
+*.json.key
+*credentials*.json
+*service-account*.json
+
+# node / next
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+dist/
+build/
+
+# pipeline downloads and large local inputs (see pipeline/README.md)
+pipeline/cache/
+pipeline/local/
+*.parquet
+
+# screenshots of every state (npm run shots); regenerate rather than commit
+screenshots/

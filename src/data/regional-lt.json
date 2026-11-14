@@ -1,0 +1,1348 @@
+{
+ "meta": {
+  "source": "pipeline/inputs/crops.yaml",
+  "version": "0.2",
+  "compiled": "2026-11-12"
+ },
+ "crops": {
+  "winter_wheat": {
+   "id": "winter_wheat",
+   "name": "winter wheat",
+   "nameLt": "žieminiai kviečiai",
+   "season": "winter",
+   "groups": [
+    "cereals",
+    "winter_cereals",
+    "wheat"
+   ],
+   "declarationClass": "winter_cereals",
+   "sowing": {
+    "from": "09-10",
+    "to": "09-25",
+    "latest": "10-10",
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": "07-25",
+    "to": "08-31",
+    "status": "estimate"
+   },
+   "gdd": {
+    "base": 0,
+    "toMaturity": [
+     2523,
+     2764
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "perennial_grasses",
+      "severity": "soft",
+      "reason": "raise fertility and humus"
+     },
+     {
+      "ref": "brassicas",
+      "severity": "soft",
+      "reason": "improve phytosanitary condition and soil properties"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "fertility, nitrogen"
+     },
+     {
+      "ref": "green_manure_legumes",
+      "severity": "soft",
+      "reason": "soil structure, more nutrients"
+     },
+     {
+      "ref": "early_potato",
+      "severity": "soft",
+      "reason": "fertility, fewer weeds, easier soil preparation"
+     },
+     {
+      "ref": "black_fallow",
+      "severity": "soft",
+      "reason": "lower weed-control costs"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "cereals",
+      "severity": "soft",
+      "reason": "related crops: infection, pests, weeds, higher protection costs"
+     },
+     {
+      "ref": "maize_grain",
+      "severity": "hard",
+      "reason": "harvested too late, no time to prepare the soil; Fusarium head blight"
+     },
+     {
+      "ref": "maize_silage",
+      "severity": "soft",
+      "reason": "little time to prepare the soil; Fusarium head blight"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 2,
+    "recommended": null,
+    "scope": "wheat"
+   }
+  },
+  "spring_wheat": {
+   "id": "spring_wheat",
+   "name": "spring wheat",
+   "nameLt": "vasariniai kviečiai",
+   "season": "spring",
+   "groups": [
+    "cereals",
+    "spring_cereals",
+    "wheat"
+   ],
+   "declarationClass": "spring_cereals",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": {
+     "from": "04-05",
+     "to": "04-25"
+    }
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": [
+     0,
+     2
+    ],
+    "toMaturity": [
+     1855,
+     2036
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "perennial_grasses",
+      "severity": "soft",
+      "reason": "fertility, humus, fewer weeds"
+     },
+     {
+      "ref": "brassicas",
+      "severity": "soft",
+      "reason": "phytosanitary condition, soil properties"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "nitrogen and available phosphorus"
+     },
+     {
+      "ref": "row_crops",
+      "severity": "soft",
+      "reason": "fertility, fewer weeds"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "cereals",
+      "severity": "soft",
+      "reason": "shared infection, higher protection costs"
+     },
+     {
+      "ref": "maize",
+      "severity": "soft",
+      "reason": "Fusarium head blight"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 2,
+    "recommended": null,
+    "scope": "wheat"
+   }
+  },
+  "winter_barley": {
+   "id": "winter_barley",
+   "name": "winter barley",
+   "nameLt": "žieminiai miežiai",
+   "season": "winter",
+   "groups": [
+    "cereals",
+    "winter_cereals",
+    "barley"
+   ],
+   "declarationClass": "winter_cereals",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": 0,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [],
+    "bad": [
+     {
+      "ref": "cereals",
+      "severity": "soft",
+      "reason": "by analogy with other IKOK cereals: shared pathogens"
+     },
+     {
+      "ref": "maize_grain",
+      "severity": "hard",
+      "reason": "late harvest: grain maize is an unsuitable preceding crop for all winter cereals"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 2,
+    "recommended": null,
+    "scope": "barley"
+   }
+  },
+  "spring_barley": {
+   "id": "spring_barley",
+   "name": "spring barley",
+   "nameLt": "vasariniai miežiai",
+   "season": "spring",
+   "groups": [
+    "cereals",
+    "spring_cereals",
+    "barley"
+   ],
+   "declarationClass": "spring_cereals",
+   "sowing": {
+    "from": "04-07",
+    "to": "04-22",
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": 2,
+    "toMaturity": [
+     1855,
+     2036
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "faba_bean",
+      "severity": "soft",
+      "reason": "beans leave 60–90 kg N/ha"
+     },
+     {
+      "ref": "row_crops",
+      "severity": "soft",
+      "reason": "in the VDU trial, barley after maize and sugar beet gave a high yield"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "cereals",
+      "severity": "soft",
+      "reason": "by analogy with other IKOK cereals: shared pathogens"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 2,
+    "recommended": null,
+    "scope": "barley"
+   }
+  },
+  "triticale": {
+   "id": "triticale",
+   "name": "winter triticale",
+   "nameLt": "žieminiai kvietrugiai",
+   "season": "winter",
+   "groups": [
+    "cereals",
+    "winter_cereals"
+   ],
+   "declarationClass": "winter_cereals",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": null,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "winter_wheat",
+      "severity": "soft",
+      "reason": "example of a rotation link: grasses → winter wheat → winter triticale (trial, not a recommendation)"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "cereals",
+      "severity": "soft",
+      "reason": "by analogy with IKOK cereals"
+     },
+     {
+      "ref": "maize_grain",
+      "severity": "hard",
+      "reason": "late harvest: grain maize is an unsuitable preceding crop for all winter cereals"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 3,
+    "recommended": null,
+    "scope": "cereals"
+   }
+  },
+  "winter_rye": {
+   "id": "winter_rye",
+   "name": "winter rye",
+   "nameLt": "žieminiai rugiai",
+   "season": "winter",
+   "groups": [
+    "cereals",
+    "winter_cereals"
+   ],
+   "declarationClass": "winter_cereals",
+   "sowing": {
+    "from": "09-01",
+    "to": "09-15",
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": "07-25",
+    "to": null,
+    "status": "primary"
+   },
+   "gdd": {
+    "base": 0,
+    "toMaturity": [
+     2221,
+     2552
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "perennial_grasses",
+      "severity": "soft",
+      "reason": "fertility, humus"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "fertility, nitrogen; on light soils — forage legumes and mixtures"
+     },
+     {
+      "ref": "green_manure_legumes",
+      "severity": "soft",
+      "reason": "nutrients, structure"
+     },
+     {
+      "ref": "early_potato",
+      "severity": "soft",
+      "reason": "fewer weeds, easier soil preparation"
+     },
+     {
+      "ref": "black_fallow",
+      "severity": "soft",
+      "reason": "cleans the field of couch grass and perennial weeds"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "cereals",
+      "severity": "soft",
+      "reason": "soil infection, grass weeds"
+     },
+     {
+      "ref": "maize_silage",
+      "severity": "soft",
+      "reason": "risky: little time to prepare the soil, Fusarium risk rises strongly"
+     },
+     {
+      "ref": "maize_grain",
+      "severity": "hard",
+      "reason": "grain maize is harvested late — unsuitable before winter crops"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 3,
+    "recommended": null,
+    "scope": "cereals"
+   }
+  },
+  "oats": {
+   "id": "oats",
+   "name": "oats",
+   "nameLt": "avižos",
+   "season": "spring",
+   "groups": [
+    "cereals",
+    "spring_cereals"
+   ],
+   "declarationClass": "oats",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": 2,
+    "toMaturity": [
+     1855,
+     2036
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     },
+     {
+      "ref": "faba_bean",
+      "severity": "soft",
+      "reason": "beans leave 60–90 kg N/ha"
+     },
+     {
+      "ref": "row_crops",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     },
+     {
+      "ref": "cereals",
+      "severity": "soft",
+      "reason": "oats can be the last field of the rotation; oats can be sown after oats"
+     },
+     {
+      "ref": "brassicas",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     },
+     {
+      "ref": "maize",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "perennial_grasses",
+      "severity": "soft",
+      "reason": "old fallow/sod with couch grass and wireworm (dirvonai)"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 3,
+    "recommended": null,
+    "scope": "cereals"
+   }
+  },
+  "winter_rapeseed": {
+   "id": "winter_rapeseed",
+   "name": "winter oilseed rape",
+   "nameLt": "žieminiai rapsai",
+   "season": "winter",
+   "groups": [
+    "brassicas"
+   ],
+   "declarationClass": "rapeseed",
+   "sowing": {
+    "from": "08-10",
+    "to": "08-25",
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": "07-16",
+    "to": "07-31",
+    "status": "primary"
+   },
+   "gdd": {
+    "base": [
+     3,
+     5
+    ],
+    "toMaturity": [
+     2443,
+     2759
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "peas",
+      "severity": "soft",
+      "reason": "frees the field early, nitrogen"
+     },
+     {
+      "ref": "early_potato",
+      "severity": "soft",
+      "reason": "recommended"
+     },
+     {
+      "ref": "winter_cereals",
+      "severity": "soft",
+      "reason": "almost no shared pests and diseases; but after harvest there is often little time to prepare the soil"
+     },
+     {
+      "ref": "spring_cereals",
+      "severity": "soft",
+      "reason": "only if harvested early"
+     },
+     {
+      "ref": "black_fallow",
+      "severity": "soft",
+      "reason": "one of the best: weeds destroyed, soil ready in time"
+     },
+     {
+      "ref": "green_fallow",
+      "severity": "soft",
+      "reason": "one of the best; brassicas must not be in the mixture"
+     },
+     {
+      "ref": "clover",
+      "severity": "soft",
+      "reason": "enrich the soil with nutrients"
+     },
+     {
+      "ref": "lucerne",
+      "severity": "soft",
+      "reason": "enrich the soil"
+     },
+     {
+      "ref": "vetch",
+      "severity": "soft",
+      "reason": "enrich the soil"
+     },
+     {
+      "ref": "perennial_grasses",
+      "severity": "soft",
+      "reason": "grass mixtures — recommended (Žolių mišiniai)"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "brassicas",
+      "severity": "soft",
+      "reason": "shared pests and diseases"
+     },
+     {
+      "ref": "sugar_beet",
+      "severity": "hard",
+      "reason": "late harvest — no time to prepare the soil"
+     },
+     {
+      "ref": "potato",
+      "severity": "hard",
+      "reason": "late harvest (except early potato)"
+     },
+     {
+      "ref": "faba_bean",
+      "severity": "hard",
+      "reason": "late harvest"
+     },
+     {
+      "ref": "oats",
+      "severity": "soft",
+      "reason": "late harvest"
+     },
+     {
+      "ref": "buckwheat",
+      "severity": "hard",
+      "reason": "late harvest"
+     },
+     {
+      "ref": "maize",
+      "severity": "hard",
+      "reason": "late harvest"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 4,
+    "recommended": null,
+    "scope": "brassicas"
+   }
+  },
+  "spring_rapeseed": {
+   "id": "spring_rapeseed",
+   "name": "spring oilseed rape",
+   "nameLt": "vasariniai rapsai",
+   "season": "spring",
+   "groups": [
+    "brassicas"
+   ],
+   "declarationClass": "rapeseed",
+   "sowing": {
+    "from": "04-21",
+    "to": "05-10",
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": "08-21",
+    "to": "09-10",
+    "status": "primary"
+   },
+   "gdd": {
+    "base": 5,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "winter_cereals",
+      "severity": "soft",
+      "reason": "almost no shared pests and diseases"
+     },
+     {
+      "ref": "spring_cereals",
+      "severity": "soft",
+      "reason": "almost no shared pests and diseases"
+     },
+     {
+      "ref": "potatoes",
+      "severity": "soft",
+      "reason": "recommended"
+     },
+     {
+      "ref": "clover",
+      "severity": "soft",
+      "reason": "only first-year clover"
+     },
+     {
+      "ref": "vetch_oat_mix",
+      "severity": "soft",
+      "reason": "recommended"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "brassicas",
+      "severity": "soft",
+      "reason": "shared pests and diseases"
+     },
+     {
+      "ref": "sugar_beet",
+      "severity": "soft",
+      "reason": "beet nematode"
+     },
+     {
+      "ref": "flax",
+      "severity": "soft",
+      "reason": "flea beetle outbreak"
+     },
+     {
+      "ref": "peas",
+      "severity": "soft",
+      "reason": "sclerotinia"
+     },
+     {
+      "ref": "clover",
+      "severity": "soft",
+      "reason": "sclerotinia (except first-year clover in the good list — contradiction in the source)"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 4,
+    "recommended": null,
+    "scope": "brassicas"
+   }
+  },
+  "peas": {
+   "id": "peas",
+   "name": "field pea",
+   "nameLt": "žirniai",
+   "season": "spring",
+   "groups": [
+    "legumes",
+    "grain_legumes"
+   ],
+   "declarationClass": "pulses",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": "07-20",
+    "to": "08-20",
+    "status": "estimate"
+   },
+   "gdd": {
+    "base": 4,
+    "toMaturity": [
+     1493,
+     1701
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "winter_cereals",
+      "severity": "soft",
+      "reason": "recommended"
+     },
+     {
+      "ref": "row_crops",
+      "severity": "soft",
+      "reason": "recommended"
+     },
+     {
+      "ref": "spring_cereals",
+      "severity": "soft",
+      "reason": "recommended"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "clover",
+      "severity": "soft",
+      "reason": "cereals make better use of the accumulated nitrogen"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "the same; pea after pea — diseases and pests"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 3,
+    "recommended": 4,
+    "scope": "self"
+   }
+  },
+  "faba_bean": {
+   "id": "faba_bean",
+   "name": "faba bean",
+   "nameLt": "pupos",
+   "season": "spring",
+   "groups": [
+    "legumes",
+    "grain_legumes"
+   ],
+   "declarationClass": "pulses",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": "09-01",
+    "to": "09-30",
+    "status": "primary"
+   },
+   "gdd": {
+    "base": [
+     3,
+     4
+    ],
+    "toMaturity": [
+     1621,
+     1910
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "winter_cereals",
+      "severity": "soft",
+      "reason": "recommended"
+     },
+     {
+      "ref": "row_crops",
+      "severity": "soft",
+      "reason": "recommended"
+     },
+     {
+      "ref": "spring_cereals",
+      "severity": "soft",
+      "reason": "recommended (except oats)"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "clover",
+      "severity": "soft",
+      "reason": "not recommended"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "diseases; faba beans after faba beans are not allowed"
+     },
+     {
+      "ref": "winter_rye",
+      "severity": "soft",
+      "reason": "diseases and stem nematode"
+     },
+     {
+      "ref": "oats",
+      "severity": "soft",
+      "reason": "diseases and stem nematode"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 4,
+    "recommended": 6,
+    "scope": "self"
+   }
+  },
+  "lupin": {
+   "id": "lupin",
+   "name": "lupin",
+   "nameLt": "lubinai",
+   "season": "spring",
+   "groups": [
+    "legumes",
+    "grain_legumes"
+   ],
+   "declarationClass": "pulses",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": null,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [],
+    "bad": []
+   },
+   "returnInterval": {
+    "min": 6,
+    "recommended": null,
+    "scope": "legumes"
+   }
+  },
+  "maize_grain": {
+   "id": "maize_grain",
+   "name": "grain maize",
+   "nameLt": "kukurūzai grūdams",
+   "season": "spring",
+   "groups": [
+    "maize",
+    "row_crops"
+   ],
+   "declarationClass": "maize",
+   "sowing": {
+    "from": "04-25",
+    "to": "05-10",
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": "10-01",
+    "to": "11-15",
+    "status": "estimate"
+   },
+   "gdd": {
+    "base": 8,
+    "toMaturity": [
+     2434,
+     2710
+    ]
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "row_crops",
+      "severity": "soft",
+      "reason": "best preceding crops"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "best preceding crops"
+     },
+     {
+      "ref": "fallow",
+      "severity": "soft",
+      "reason": "best preceding crops"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "maize",
+      "severity": "soft",
+      "reason": "tolerates repeated sowing, but undesirable on poor soils; with warming there are more diseases and pests"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 3,
+    "recommended": null,
+    "scope": "maize"
+   }
+  },
+  "maize_silage": {
+   "id": "maize_silage",
+   "name": "silage maize",
+   "nameLt": "kukurūzai silosui",
+   "season": "spring",
+   "groups": [
+    "maize",
+    "row_crops"
+   ],
+   "declarationClass": "maize",
+   "sowing": {
+    "from": "04-25",
+    "to": "05-10",
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": 8,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "row_crops",
+      "severity": "soft",
+      "reason": "best preceding crops"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "best preceding crops"
+     },
+     {
+      "ref": "fallow",
+      "severity": "soft",
+      "reason": "best preceding crops"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "maize",
+      "severity": "soft",
+      "reason": "repeated sowing is undesirable on poor soils"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 3,
+    "recommended": null,
+    "scope": "maize"
+   }
+  },
+  "sugar_beet": {
+   "id": "sugar_beet",
+   "name": "sugar beet",
+   "nameLt": "cukriniai runkeliai",
+   "season": "spring",
+   "groups": [
+    "row_crops",
+    "root_crops",
+    "sugar_beet"
+   ],
+   "declarationClass": "sugar_beet",
+   "sowing": {
+    "from": "04-15",
+    "to": "04-26",
+    "latest": "05-05",
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": "09-20",
+    "to": "10-31",
+    "status": "primary"
+   },
+   "gdd": {
+    "base": null,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "winter_cereals",
+      "severity": "soft",
+      "reason": "the most suitable preceding crop"
+     }
+    ],
+    "bad": []
+   },
+   "returnInterval": {
+    "min": 5,
+    "recommended": null,
+    "scope": "sugar_beet"
+   }
+  },
+  "potato": {
+   "id": "potato",
+   "name": "potato",
+   "nameLt": "bulvės",
+   "season": "spring",
+   "groups": [
+    "row_crops",
+    "potatoes"
+   ],
+   "declarationClass": null,
+   "sowing": {
+    "from": "04-21",
+    "to": "05-10",
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": null,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "winter_cereals",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     },
+     {
+      "ref": "brassicas",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "good preceding crop (incl. lupin)"
+     },
+     {
+      "ref": "root_crops",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     },
+     {
+      "ref": "maize",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     },
+     {
+      "ref": "fallow",
+      "severity": "soft",
+      "reason": "good preceding crop"
+     }
+    ],
+    "bad": [
+     {
+      "ref": "perennial_grasses",
+      "severity": "soft",
+      "reason": "wireworm (click beetles) and soil pests; on p. 40 the same source names grasses as a good preceding crop against nematodes — check wireworm"
+     },
+     {
+      "ref": "potatoes",
+      "severity": "soft",
+      "reason": "repeated sowing raises disease risk; seed potato — not after potato"
+     }
+    ]
+   },
+   "returnInterval": {
+    "min": 3,
+    "recommended": 4,
+    "scope": "potatoes"
+   }
+  },
+  "perennial_grasses": {
+   "id": "perennial_grasses",
+   "name": "perennial grasses / leys",
+   "nameLt": "daugiametės žolės",
+   "season": "perennial",
+   "groups": [
+    "perennial_grasses"
+   ],
+   "declarationClass": "perennial_grass",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": null,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [],
+    "bad": []
+   },
+   "returnInterval": {
+    "min": null,
+    "recommended": null,
+    "scope": "perennial_grasses"
+   }
+  },
+  "clover": {
+   "id": "clover",
+   "name": "clover",
+   "nameLt": "dobilai",
+   "season": "perennial",
+   "groups": [
+    "legumes",
+    "forage_legumes",
+    "perennial_grasses"
+   ],
+   "declarationClass": "perennial_grass",
+   "sowing": {
+    "from": null,
+    "to": null,
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": null,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [],
+    "bad": []
+   },
+   "returnInterval": {
+    "min": 6,
+    "recommended": null,
+    "scope": "legumes"
+   }
+  },
+  "buckwheat": {
+   "id": "buckwheat",
+   "name": "buckwheat",
+   "nameLt": "grikiai",
+   "season": "spring",
+   "groups": [],
+   "declarationClass": "buckwheat",
+   "sowing": {
+    "from": "05-11",
+    "to": "05-31",
+    "latest": null,
+    "status": "primary",
+    "estimate": null
+   },
+   "harvest": {
+    "from": null,
+    "to": null,
+    "status": "unknown"
+   },
+   "gdd": {
+    "base": null,
+    "toMaturity": null
+   },
+   "previous": {
+    "good": [
+     {
+      "ref": "row_crops",
+      "severity": "soft",
+      "reason": "sown after row crops"
+     },
+     {
+      "ref": "legumes",
+      "severity": "soft",
+      "reason": "sown after legumes"
+     },
+     {
+      "ref": "winter_cereals",
+      "severity": "soft",
+      "reason": "sown after winter crops"
+     }
+    ],
+    "bad": []
+   },
+   "returnInterval": {
+    "min": null,
+    "recommended": null,
+    "scope": "buckwheat"
+   }
+  }
+ },
+ "groups": {
+  "cereals": [
+   "winter_wheat",
+   "spring_wheat",
+   "winter_barley",
+   "spring_barley",
+   "triticale",
+   "winter_rye",
+   "oats"
+  ],
+  "winter_cereals": [
+   "winter_wheat",
+   "winter_barley",
+   "triticale",
+   "winter_rye"
+  ],
+  "spring_cereals": [
+   "spring_wheat",
+   "spring_barley",
+   "oats"
+  ],
+  "wheat": [
+   "winter_wheat",
+   "spring_wheat"
+  ],
+  "barley": [
+   "winter_barley",
+   "spring_barley"
+  ],
+  "brassicas": [
+   "winter_rapeseed",
+   "spring_rapeseed"
+  ],
+  "legumes": [
+   "peas",
+   "faba_bean",
+   "lupin",
+   "clover",
+   "lucerne",
+   "vetch",
+   "green_manure_legumes"
+  ],
+  "grain_legumes": [
+   "peas",
+   "faba_bean",
+   "lupin"
+  ],
+  "forage_legumes": [
+   "clover",
+   "lucerne",
+   "vetch"
+  ],
+  "perennial_grasses": [
+   "perennial_grasses",
+   "clover",
+   "lucerne"
+  ],
+  "row_crops": [
+   "potato",
+   "early_potato",
+   "sugar_beet",
+   "maize_grain",
+   "maize_silage"
+  ],
+  "root_crops": [
+   "sugar_beet"
+  ],
+  "maize": [
+   "maize_grain",
+   "maize_silage"
+  ],
+  "potatoes": [
+   "potato",
+   "early_potato"
+  ],
+  "fallow": [
+   "black_fallow",
+   "green_fallow"
+  ],
+  "black_fallow": [
+   "black_fallow"
+  ],
+  "green_fallow": [
+   "green_fallow"
+  ],
+  "early_potato": [
+   "early_potato"
+  ],
+  "sugar_beet": [
+   "sugar_beet"
+  ]
+ },
+ "pseudoCrops": [
+  "black_fallow",
+  "green_fallow",
+  "early_potato",
+  "green_manure_legumes",
+  "lucerne",
+  "vetch",
+  "vetch_oat_mix",
+  "flax"
+ ]
+}

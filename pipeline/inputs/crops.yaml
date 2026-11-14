@@ -1,0 +1,1828 @@
+# Crop rules for the rotation planner (Lithuania).
+# Version and the rules for interpreting null / severity are in meta.
+meta:
+  version: '0.2'
+  compiled: '2026-11-12'
+  country: LT
+  date_convention: Dates are "MM-DD" strings in the Lithuanian calendar. Harvest year = calendar year of harvest. Winter crops are sown in year t-1 (August–October) and harvested in year t; spring crops are sown and harvested in year t. The preceding crop of a winter crop of harvest year t is the crop harvested in year t-1 before its sowing.
+  page_convention: 'page = PDF page number in sequence (1 = first page of the file), not the printed number. In the IKOK guides the printed number = page - 1.'
+  identity_fields_without_src: [names, groups, season]
+  precedence: A rule for a specific crop overrides a rule for a group. At equal specificity bad overrides good.
+  src_format: '{id: source label, page: PDF page number or null, where: table or section}'
+  status_values: {primary: primary source read, snippet: only an abstract or a fragment was seen, secondary: 'encyclopedia, news, retelling; or the value is taken from our earlier notes without re-checking', estimate: our judgement or a conclusion drawn from the source numbers, calculation: calculated by us from open data}
+  status_default: primary
+  sources:
+    K: {title: Crop classes in the open NMA declarations 2024–2025 and EuroCrops 2021 (calculation), url: null, status: calculation, kind: our calculation from open declarations, reliability: reproducible from the open declarations}
+    IKOK-WW: {title: 'LAMMC IKOK gairės. Žieminiai kviečiai (2-as leid., 2024)', url: 'https://www.lammc.lt/data/public/uploads/2025/11/2025_ikok_zieminiai_kvieciai_maketas_taisytas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-SW: {title: LAMMC IKOK gairės. Vasariniai kviečiai (2024), url: 'https://www.lammc.lt/data/public/uploads/2025/12/2025_ikok_vasariniai_kvieciai_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-RYE: {title: 'LAMMC IKOK gairės. Žieminiai rugiai (2-as leid., 2024)', url: 'https://www.lammc.lt/data/public/uploads/2025/10/2025_ikok_zieminiai_rugiai_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-OAT: {title: 'LAMMC IKOK gairės. Avižos (2-as leid., 2024)', url: 'https://lammc.lt/data/public/uploads/2026/01/2025_ikok_avizos_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-WR: {title: 'LAMMC IKOK gairės. Žieminiai rapsai (2-as leid., 2024)', url: 'https://www.lammc.lt/data/public/uploads/2025/10/2025_ikok_zieminiai_rapsai_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-SR: {title: 'LAMMC IKOK gairės. Vasariniai rapsai (2-as leid., 2024)', url: 'https://lammc.lt/data/public/uploads/2025/10/2025_ikok_vasariniai_rapsai_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-PEA: {title: LAMMC IKOK gairės. Žirniai (2024), url: 'https://lammc.lt/data/public/uploads/2025/12/2025_ikok_zirniai_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-BEAN: {title: 'LAMMC IKOK gairės. Pupos (2-as leid., 2024)', url: 'https://lammc.lt/data/public/uploads/2025/12/2025_ikok_pupos_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-POT: {title: 'LAMMC IKOK gairės. Bulvės (2-as leid., 2024)', url: 'https://www.lammc.lt/data/public/uploads/2025/12/2025_ikok_bulves_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    IKOK-MAIZE: {title: 'LAMMC IKOK gairės. Kukurūzai (2-as leid., 2024)', url: 'https://lammc.lt/data/public/uploads/2025/10/2025_ikok_kukuruzai_maketas.pdf', status: primary, kind: state methodological guidelines (LAMMC), reliability: 'high: Lithuanian, 2024, authors named; an independent sample of 43 of 45 references is correct'}
+    GDD: {title: LAMMC. Augalų vystymosi tarpsnių ir agroklimatinių rodiklių sąsajos tyrimai (pristatymas 2026-01-28), url: 'https://zum.lrv.lt/public/canonical/1769771241/19022/Prezentacija_%20Augal%C5%B3%20vystymosi%20tarpsni%C5%B3_VDU_2026_01_28_.pdf', status: primary, kind: 'slides of the LAMMC 2023–2025 project (Žydelis, Danytė, Povilaitis), published on the ŽŪM website', reliability: 'medium: recent Lithuanian trials (274), but this is a presentation, not a peer-reviewed article; no article found on Zenodo'}
+    Best4Soil: {title: 'Best4Soil. Augalų sėjomaina: praktinė informacija (LT)', url: 'https://orgprints.org/id/eprint/43540/13/LT_AUGALU%CC%A8%20SE%CC%87JOMAINA_%20PRAKTINE%CC%87%20INFORMACIJA%20%281%29.pdf', status: primary, kind: 'leaflet of an EU Horizon 2020 project (grant 817696), Lithuanian translation', reliability: 'medium: pan-European, not Lithuanian trials — hence soft penalties only'}
+    Joniskelis: {title: 'Žemės ūkio mokslai 2012, 19(4): žaliosios trąšos sėjomainose su žieminiais javais', url: 'https://lmaleidykla.lt/ojs/index.php/zemesukiomokslai/article/download/2583/1419', status: primary, kind: article in "Žemės ūkio mokslai" (Lithuanian Academy of Sciences), reliability: 'high, but a single-station trial'}
+    VDU-rotations: {title: 'Žemės ūkio mokslai 2019, 26(2): ilgalaikė augalų kaita', url: 'https://lmaleidykla.lt/ojs/index.php/zemesukiomokslai/article/download/4060/2868', status: primary, kind: article in "Žemės ūkio mokslai" (Lithuanian Academy of Sciences), reliability: 'high, but a single-station trial'}
+    ZUM-2026: {title: 'ŽŪM, laikraštis apie 2026 m. išmokas', url: 'https://zum.lrv.lt/public/canonical/1776052984/19279/2026-laikrastis-spaudai.pdf', status: primary, kind: official ŽŪM / NMA publication on 2026 payments, reliability: high for payment rules}
+    VDU-barley: {title: 'VDU, vasarinių miežių sėjos laikas', url: 'https://ejournals.vdu.lt/index.php/jm2022/lt/article/download/701/385/1694', status: secondary, kind: article from the VDU student conference of young scientists, reliability: 'low: one year (2025), one farm (Kelmė); the 7–22 Apr window is quoted from Noworolnik 2012 (Poland)'}
+    VLE-barley: {title: 'VLE, miežiai', url: 'https://www.vle.lt/straipsnis/mieziai/', status: secondary, kind: VLE encyclopedia article, reliability: 'low: general reference without trials or source dates'}
+    VLE-beet: {title: 'VLE, cukriniai runkeliai', url: 'https://www.vle.lt/straipsnis/cukriniai-runkeliai/', status: secondary, kind: VLE encyclopedia article, reliability: 'low: general reference without trials or source dates'}
+    VLE-buckwheat: {title: 'VLE, grikiai', url: 'https://www.vle.lt/straipsnis/grikiai/', status: secondary, kind: VLE encyclopedia article, reliability: 'low: general reference without trials or source dates'}
+    Zemdirbyste-beet: {title: 'Petkevičienė B. Sėjos laiko ir veislių įtaka cukrinių runkelių produktyvumui. Žemdirbystė 95(4), 2008, p. 59–70', url: 'https://zemdirbyste-agriculture.test.deimantinis.lm.lt/95(4)tomas/95_4_tomas_59_70.pdf', status: primary, kind: article in "Žemdirbystė" (peer-reviewed LAMMC journal), reliability: 'low for sowing dates: the 15–26 Apr window is the result of trials at Rumokai in 1973–1975, retold in a 2008 article. The link leads to a test copy of the journal website (…test.deimantinis.lm.lt)'}
+    ZUDC-2021: {title: 'ŽŪDC, javapjūtės eiga 2021 m. rugpjūtis', url: 'https://zudc.lt/wp-content/uploads/2024/01/Siu-metu-rugpjucio-antroje-puseje-Lietuvoje-nukulta-daugiau-grudiniu-augalu-negu-praejusiu-metu-analogisku-metu.pdf', status: snippet, kind: ŽŪDC operational summary, reliability: 'medium: preliminary data, only farms ≥ 50 ha'}
+    K-T: {title: Crop transitions 2024 → 2025 from declarations (calculation), url: null, status: calculation, kind: our calculation from open declarations, reliability: reproducible from the open declarations}
+  revised: '2026-11-12 (after independent verification)'
+  status_default_meaning: 'primary = the value is in the source on the stated page. Manually re-checked: all hard rules, all intervals, sowing windows and GDD + a sample of 45 references. Our conversion to MM-DD dates or to BBCH codes is marked separately as estimate'
+  null_semantics: 'null = unknown. The planner must NOT treat null as "allowed": a check that lacks a date returns "unknown", and this is shown in the interface next to the variant'
+  severity_values: {hard: 'filter: do not offer the variant', soft: penalty in the objective function + reason in the interface, info: 'explanation, does not affect the calculation'}
+  sowing_latest_semantics: 'sowing.latest is the date after which the source considers sowing undesirable; always soft (penalty D7), no source gives a physical ban by sowing date'
+  known_issues: ['Group and crop identifiers partly coincide (perennial_grasses, sugar_beet; early_potato and fallow with pseudo-crops): ref is ambiguous. Not fixed', 'At equal specificity bad overrides good, so a good entry with a condition (spring rapeseed after first-year clover) is always overridden. Not fixed']
+  policy_note: policy_rules are not agronomy. The applies_to field says whom the rule applies to
+policy_rules:
+- id: eco_no_same_crop_twice
+  rule: Do not sow the same crop two years in a row on the same field
+  applies_to: participants_of_eco_scheme_augalu_kaita
+  severity: hard
+  src:
+  - {id: ZUM-2026, page: 18, where: 'Ūkio darbų kalendorius, veikla „Augalų kaita“'}
+- id: eco_min_4_crops
+  rule: At least 4 different crops per year on the declared area
+  applies_to: participants_of_eco_scheme_augalu_kaita
+  severity: hard
+  src:
+  - {id: ZUM-2026, page: 18, where: 'Ūkio darbų kalendorius, veikla „Augalų kaita“'}
+- id: eco_legume_each_year
+  rule: Every year one of the crops is a legume
+  applies_to: participants_of_eco_scheme_augalu_kaita
+  severity: hard
+  src:
+  - {id: ZUM-2026, page: 18, where: 'Ūkio darbų kalendorius, veikla „Augalų kaita“'}
+- id: eco_main_crop_max_50pct
+  rule: The main crop is at most 50% of the declared area (for commitments from 2025)
+  applies_to: participants_of_eco_scheme_augalu_kaita
+  severity: hard
+  src:
+  - {id: ZUM-2026, page: 18, where: 'Ūkio darbų kalendorius, veikla „Augalų kaita“'}
+- id: mow_grass_legumes_by_0901
+  rule: Mow meadows and herbaceous nitrogen-fixing crops on arable land at least once before 09-01
+  applies_to:
+    crops: [perennial_grasses, clover]
+    who: all applicants for direct payments
+  severity: hard
+  src:
+  - {id: ZUM-2026, page: 7, where: 6. Laikytis šienavimo terminų}
+- id: legumes_share_min
+  rule: Legumes (grain legumes) should take at least 12.5% of the rotation
+  applies_to: rotation
+  severity: soft
+  src:
+  - {id: IKOK-PEA, page: 5, where: 1. Sėjomaina}
+pseudo_crops:
+  black_fallow:
+    names: {lt: juodasis pūdymas, ru: чёрный пар, en: black fallow}
+  green_fallow:
+    names: {lt: žaliasis pūdymas, ru: зелёный (занятый) пар, en: green fallow}
+    note: brassicas must not be sown in green fallow before winter rapeseed
+    src:
+    - {id: IKOK-WR, page: 6, where: 1. Sėjomaina (tekstas po 1 lentelės)}
+  early_potato:
+    names: {lt: ankstyvosios bulvės, ru: ранний картофель, en: early potato}
+    harvest: {from: null, to: null, todo: harvest date of early potato in Lithuania}
+  green_manure_legumes:
+    names: {lt: pupiniai augalai žaliajai trąšai, ru: бобовые на сидерат, en: legumes for green manure}
+  lucerne:
+    names: {lt: liucernos, ru: люцерна, en: lucerne}
+  vetch:
+    names: {lt: vikiai, ru: вика, en: vetch}
+  vetch_oat_mix:
+    names: {lt: vikių ir avižų mišiniai, ru: вико-овсяная смесь, en: vetch-oat mix}
+  flax:
+    names: {lt: linai, ru: лён, en: flax}
+groups:
+  cereals:
+    note: 'Small-grain cereals (migliniai javai). Maize is a separate group maize, although botanically it is a cereal'
+    members: [winter_wheat, spring_wheat, winter_barley, spring_barley, triticale, winter_rye, oats]
+  winter_cereals:
+    members: [winter_wheat, winter_barley, triticale, winter_rye]
+  spring_cereals:
+    members: [spring_wheat, spring_barley, oats]
+  wheat:
+    note: 'Triticum, for the Best4Soil interval'
+    members: [winter_wheat, spring_wheat]
+  barley:
+    note: 'Hordeum, for the Best4Soil interval'
+    members: [winter_barley, spring_barley]
+  brassicas:
+    note: Brassicas (bastutiniai / kryžmažiedžiai)
+    members: [winter_rapeseed, spring_rapeseed]
+  legumes:
+    note: All legumes (pupiniai / ankštiniai)
+    members: [peas, faba_bean, lupin, clover, lucerne, vetch, green_manure_legumes]
+  grain_legumes:
+    members: [peas, faba_bean, lupin]
+  forage_legumes:
+    members: [clover, lucerne, vetch]
+  perennial_grasses:
+    note: 'Daugiametės žolės, including legume-grass mixtures'
+    members: [perennial_grasses, clover, lucerne]
+  row_crops:
+    note: Kaupiamieji augalai (row crops). For winter crops maize is banned by a separate rule
+    members: [potato, early_potato, sugar_beet, maize_grain, maize_silage]
+  root_crops:
+    note: Šakniavaisiai
+    members: [sugar_beet]
+  maize:
+    members: [maize_grain, maize_silage]
+  potatoes:
+    members: [potato, early_potato]
+  fallow:
+    members: [black_fallow, green_fallow]
+  black_fallow:
+    members: [black_fallow]
+  green_fallow:
+    members: [green_fallow]
+  early_potato:
+    members: [early_potato]
+  sugar_beet:
+    members: [sugar_beet]
+crops:
+  winter_wheat:
+    names: {lt: žieminiai kviečiai, ru: озимая пшеница, en: winter wheat}
+    groups: [cereals, winter_cereals, wheat]
+    season: winter
+    declaration_class:
+      code: winter_cereals
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 09-10, to: 09-25}
+      latest: 10-10
+      notes:
+      - text: Must start tillering before the end of autumn vegetation
+        src:
+        - {id: IKOK-WW, page: 7, where: 3. Sėjos laikas ir gylis}
+      - text: 'Late sowing: shallower (≤3 cm) and a higher seeding rate'
+        src:
+        - {id: IKOK-WW, page: 7, where: 3. Sėjos laikas ir gylis; 4. Sėklos norma}
+      src:
+      - {id: IKOK-WW, page: 7, where: 3. Sėjos laikas ir gylis}
+      latest_severity: soft
+    harvest:
+      from: null
+      to: null
+      todo: harvest dates from the primary source; IKOK-WW gives only the ripeness criterion (BBCH 89)
+      criterion:
+        text: Threshed at full grain ripeness
+        src:
+        - {id: IKOK-WW, page: 35, where: VII. Derliaus nuėmimas ir saugojimas}
+      estimate: {from: 07-25, to: 08-31, status: estimate, note: 'rye from the end of July (IKOK-RYE p33); by 2021-08-20, 71.8% of cereals were harvested (ZUDC-2021, snippet)'}
+    gdd:
+      base_c: 0
+      t_max_c: [30, 35]
+      sowing_to_maturity_c: [2523, 2764]
+      bbch_model: BBCH = 110.00·exp(−exp(1.15 − 0.00107·GDD))
+      src:
+      - {id: GDD, page: 5, where: Augimo temperatūrų sumos skaičiavimai (lentelė)}
+      - {id: GDD, page: 12, where: Išvados 1–2}
+    previous_crops:
+      good:
+      - ref: perennial_grasses
+        reason: raise fertility and humus
+        severity: soft
+        src:
+        - {id: IKOK-WW, page: 5, where: 1 lentelė. Žieminių kviečių priešsėliai}
+      - ref: brassicas
+        reason: improve phytosanitary condition and soil properties
+        severity: soft
+        src:
+        - {id: IKOK-WW, page: 5, where: 1 lentelė. Žieminių kviečių priešsėliai}
+      - ref: legumes
+        reason: 'fertility, nitrogen'
+        severity: soft
+        src:
+        - {id: IKOK-WW, page: 5, where: 1 lentelė. Žieminių kviečių priešsėliai}
+      - ref: green_manure_legumes
+        reason: 'soil structure, more nutrients'
+        severity: soft
+        src:
+        - {id: IKOK-WW, page: 5, where: 1 lentelė. Žieminių kviečių priešsėliai}
+      - ref: early_potato
+        reason: 'fertility, fewer weeds, easier soil preparation'
+        severity: soft
+        src:
+        - {id: IKOK-WW, page: 5, where: 1 lentelė. Žieminių kviečių priešsėliai}
+      - ref: black_fallow
+        reason: lower weed-control costs
+        severity: soft
+        src:
+        - {id: IKOK-WW, page: 5, where: 1 lentelė. Žieminių kviečių priešsėliai}
+      bad:
+      - ref: cereals
+        reason: 'related crops: infection, pests, weeds, higher protection costs'
+        severity: soft
+        src:
+        - {id: IKOK-WW, page: 6, where: 1 lentelė (Nerekomenduojami)}
+      - ref: maize_grain
+        reason: 'harvested too late, no time to prepare the soil; Fusarium head blight'
+        severity: hard
+        src:
+        - {id: IKOK-WW, page: 6, where: 1 lentelė (Nerekomenduojami)}
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina (paskutinė pastraipa)}
+      - ref: maize_silage
+        reason: little time to prepare the soil; Fusarium head blight
+        severity: soft
+        src:
+        - {id: IKOK-WW, page: 6, where: 1 lentelė (Nerekomenduojami)}
+      notes:
+      - text: 'The more fertile the soil and the better the weather, the smaller the effect of the preceding crop'
+        src:
+        - {id: IKOK-WW, page: 6, where: Svarbu! after 1 lentelė}
+    return_interval_years:
+      min: 2
+      recommended: null
+      scope: wheat
+      todo: LAMMC gives no interval for wheat
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, eilutė Triticum aestivum (1:2)'}
+      severity: soft
+      basis: Best4Soil
+    vulnerable_phases:
+    - phase: sowing
+      months: [9, 10]
+      hazard: dry seedbed
+      threshold: 'soil moisture 9–12%: seeds lie 30–40 days, poor emergence'
+      src:
+      - {id: IKOK-WW, page: 7, where: 3. Sėjos laikas ir gylis}
+    - phase: autumn until the end of vegetation
+      bbch: '21'
+      hazard: did not start tillering before winter
+      threshold: tillering must start before the end of autumn vegetation
+      src:
+      - {id: IKOK-WW, page: 7, where: 3. Sėjos laikas ir gylis (Svarbu!)}
+      bbch_status: estimate
+    - phase: heading and grain filling
+      bbch: 51–75
+      hazard: grain aphid (Sitobion avenae)
+      threshold: 20–30% of stems infested and 2–3 aphids per ear
+      src:
+      - {id: IKOK-WW, page: 33, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: end of stem elongation
+      bbch: 37–39
+      hazard: thrips
+      threshold: 50% of stems and 1–2 thrips per stem
+      src:
+      - {id: IKOK-WW, page: 33, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: vegetation
+      bbch: null
+      hazard: cereal sawflies (javiniai lapiniai pjūkleliai)
+      threshold: 50 larvae/m²
+      src:
+      - {id: IKOK-WW, page: 33, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: flowering
+      bbch: 61–69
+      hazard: Fusarium head blight
+      threshold: moisture in the crop for 48–72 h at 22–27 °C — outbreak forecast
+      src:
+      - {id: IKOK-WW, page: 24, where: IV.1 Svarbiausios grybinės ligos (varpų fuzariozė)}
+      bbch_status: estimate
+  spring_wheat:
+    names: {lt: vasariniai kviečiai, ru: яровая пшеница, en: spring wheat}
+    groups: [cereals, spring_cereals, wheat]
+    season: spring
+    declaration_class:
+      code: spring_cereals
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      rule: as_early_as_soil_workable
+      latest: null
+      todo: no calendar dates — only "as early as possible"
+      estimate: {from: 04-05, to: 04-25, status: estimate, note: 'by analogy with spring barley (VDU-barley, secondary)'}
+      notes:
+      - text: 'Sow early, as soon as the soil can be worked; late sowing — poorer emergence and a thin stand'
+        src:
+        - {id: IKOK-SW, page: 6, where: 3. Sėjos laikas ir gylis}
+      src:
+      - {id: IKOK-SW, page: 6, where: 3. Sėjos laikas ir gylis}
+    harvest: {from: null, to: null, todo: harvest dates of spring wheat from the primary source}
+    gdd:
+      base_c: [0, 2]
+      t_max_c: 35
+      sowing_to_maturity_c: [1855, 2036]
+      status: estimate
+      note: 'the sum is given for spring cereals as a whole, not for wheat separately'
+      src:
+      - {id: GDD, page: 5, where: Augimo temperatūrų sumos skaičiavimai (lentelė)}
+      - {id: GDD, page: 12, where: Išvados 3}
+    previous_crops:
+      good:
+      - ref: perennial_grasses
+        reason: 'fertility, humus, fewer weeds'
+        severity: soft
+        src:
+        - {id: IKOK-SW, page: 5, where: 1 lentelė. Vasarinių kviečių priešsėliai}
+      - ref: brassicas
+        reason: 'phytosanitary condition, soil properties'
+        severity: soft
+        src:
+        - {id: IKOK-SW, page: 5, where: 1 lentelė. Vasarinių kviečių priešsėliai}
+      - ref: legumes
+        reason: nitrogen and available phosphorus
+        severity: soft
+        src:
+        - {id: IKOK-SW, page: 5, where: 1 lentelė. Vasarinių kviečių priešsėliai}
+      - ref: row_crops
+        reason: 'fertility, fewer weeds'
+        severity: soft
+        src:
+        - {id: IKOK-SW, page: 5, where: 1 lentelė (Kaupiamieji augalai)}
+      bad:
+      - ref: cereals
+        reason: 'shared infection, higher protection costs'
+        severity: soft
+        src:
+        - {id: IKOK-SW, page: 6, where: 1 lentelė (Nerekomenduojami)}
+      - ref: maize
+        reason: Fusarium head blight
+        severity: soft
+        src:
+        - {id: IKOK-SW, page: 6, where: 1 lentelė (Nerekomenduojami)}
+        note: The phrase about lack of time for soil preparation was copied in the source from the winter wheat guide and does not apply to spring wheat
+    return_interval_years:
+      min: 2
+      recommended: null
+      scope: wheat
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, eilutė Triticum aestivum (1:2)'}
+      severity: soft
+      basis: Best4Soil
+    vulnerable_phases:
+    - phase: tillering
+      bbch: 21–29
+      hazard: bird cherry-oat aphid
+      threshold: 50% of plants and 1–2 aphids per plant
+      src:
+      - {id: IKOK-SW, page: 29, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: stem elongation
+      bbch: 31–47
+      hazard: bird cherry-oat aphid
+      threshold: 50% of stems and >10 aphids per stem
+      src:
+      - {id: IKOK-SW, page: 29, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: ear
+      bbch: 51–75
+      hazard: grain aphid
+      threshold: 20–30% of stems and 2–3 aphids per ear
+      src:
+      - {id: IKOK-SW, page: 29, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: end of stem elongation
+      bbch: 37–39
+      hazard: thrips
+      threshold: 50% of stems and 1–2 thrips
+      src:
+      - {id: IKOK-SW, page: 29, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+  winter_barley:
+    names: {lt: žieminiai miežiai, ru: озимый ячмень, en: winter barley}
+    groups: [cereals, winter_cereals, barley]
+    season: winter
+    declaration_class:
+      code: winter_cereals
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      latest: null
+      todo: LAMMC barley guide not found (being updated)
+    harvest: {from: null, to: null, todo: harvest dates of winter barley}
+    vegetation_days:
+      value: [296, 305]
+      status: secondary
+      src:
+      - {id: VLE-barley, page: null, where: 'article, growing season'}
+    gdd:
+      base_c: 0
+      t_max_c: 30
+      sowing_to_maturity_c: null
+      bbch_model: BBCH = 110.00·exp(−exp(1.22 − 0.00139·GDD))
+      todo: the sum to maturity is not given in the presentation (equation only)
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+      - {id: GDD, page: 12, where: Išvados 2}
+      status: estimate
+      note: The equation is given for "miežiai" under the winter crops heading — assigning it to winter barley is our decision
+    previous_crops:
+      good: []
+      bad:
+      - ref: cereals
+        reason: 'by analogy with other IKOK cereals: shared pathogens'
+        severity: soft
+        status: estimate
+        src:
+        - {id: IKOK-WW, page: 6, where: 1 lentelė (Nerekomenduojami) — analogy}
+      - ref: maize_grain
+        reason: 'late harvest: grain maize is an unsuitable preceding crop for all winter cereals'
+        severity: hard
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+      todo: LAMMC preceding-crop table for barley
+    return_interval_years:
+      min: 2
+      recommended: null
+      scope: barley
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, eilutė Hordeum vulgare (1:2)'}
+      severity: soft
+      basis: Best4Soil
+    vulnerable_phases:
+    - phase: winter
+      months: [12, 1, 2]
+      hazard: winterkill without snow
+      threshold: withstands down to −15 °C without snow
+      status: secondary
+      src:
+      - {id: VLE-barley, page: null, where: article}
+  spring_barley:
+    names: {lt: vasariniai miežiai, ru: яровой ячмень, en: spring barley}
+    groups: [cereals, spring_cereals, barley]
+    season: spring
+    declaration_class:
+      code: spring_cereals
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 04-07, to: 04-22}
+      latest: null
+      status: secondary
+      notes:
+      - text: '2025 trial (Kelmė): best date 10 April out of 3/10/17/25'
+        status: secondary
+        src:
+        - {id: VDU-barley, page: null, where: 'via our earlier notes, not re-checked'}
+      src:
+      - {id: VDU-barley, page: null, where: 'via our earlier notes, not re-checked'}
+    harvest: {from: null, to: null, todo: harvest dates of spring barley}
+    vegetation_days:
+      value: [96, 104]
+      status: secondary
+      src:
+      - {id: VLE-barley, page: null, where: 'article, growing season'}
+    gdd:
+      base_c: 2
+      t_max_c: 34
+      sowing_to_maturity_c: [1855, 2036]
+      status: estimate
+      note: the sum for spring cereals as a whole
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+      - {id: GDD, page: 12, where: Išvados 3}
+    previous_crops:
+      good:
+      - ref: faba_bean
+        reason: beans leave 60–90 kg N/ha
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1. Sėjomaina}
+      - ref: row_crops
+        reason: 'in the VDU trial, barley after maize and sugar beet gave a high yield'
+        severity: soft
+        status: estimate
+        src:
+        - {id: VDU-rotations, page: 10, where: 'Rezultatai, 3 pav.'}
+      bad:
+      - ref: cereals
+        reason: 'by analogy with other IKOK cereals: shared pathogens'
+        severity: soft
+        status: estimate
+        src:
+        - {id: IKOK-SW, page: 6, where: 1 lentelė (Nerekomenduojami) — analogy}
+      todo: LAMMC preceding-crop table for barley
+    return_interval_years:
+      min: 2
+      recommended: null
+      scope: barley
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, eilutė Hordeum vulgare (1:2)'}
+      severity: soft
+      basis: Best4Soil
+    vulnerable_phases: []
+    vulnerable_phases_todo: pest thresholds for barley (guide being updated)
+  triticale:
+    names: {lt: žieminiai kvietrugiai, ru: озимое тритикале, en: winter triticale}
+    groups: [cereals, winter_cereals]
+    season: winter
+    declaration_class:
+      code: winter_cereals
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      latest: null
+      todo: LAMMC triticale guide not found
+    harvest: {from: null, to: null, todo: harvest dates of triticale}
+    gdd:
+      base_c: null
+      sowing_to_maturity_c: null
+      todo: triticale is not among the 11 GDD crops
+      src:
+      - {id: GDD, page: 3, where: Tyrimų laikotarpis ir pasirinkti augalai}
+    previous_crops:
+      good:
+      - ref: winter_wheat
+        reason: 'example of a rotation link: grasses → winter wheat → winter triticale (trial, not a recommendation)'
+        severity: soft
+        status: estimate
+        src:
+        - {id: Joniskelis, page: 1, where: Santrauka}
+      bad:
+      - ref: cereals
+        reason: by analogy with IKOK cereals
+        severity: soft
+        status: estimate
+        src:
+        - {id: IKOK-WW, page: 6, where: 1 lentelė (Nerekomenduojami) — analogy}
+      - ref: maize_grain
+        reason: 'late harvest: grain maize is an unsuitable preceding crop for all winter cereals'
+        severity: hard
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+      todo: LAMMC preceding-crop table for triticale
+    return_interval_years:
+      min: 3
+      recommended: null
+      scope: cereals
+      severity: soft
+      basis: Best4Soil
+      status: estimate
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, eilutė Migliniai / Kukurūzai (1:3)'}
+      note: 'The "Migliniai" row (cereals) was applied to rye, oats and triticale as a soft penalty. Conflict: in the same table wheat and barley are 1:2. There are no separate LAMMC data'
+    vulnerable_phases: []
+  winter_rye:
+    names: {lt: žieminiai rugiai, ru: озимая рожь, en: winter rye}
+    groups: [cereals, winter_cereals]
+    season: winter
+    declaration_class:
+      code: winter_cereals
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 09-01, to: 09-15}
+      latest: null
+      notes:
+      - text: Does not continue tillering in spring — must tiller before winter
+        src:
+        - {id: IKOK-RYE, page: 7, where: 4. Sėjos laikas}
+      src:
+      - {id: IKOK-RYE, page: 7, where: 4. Sėjos laikas (rugsėjo pirmoji pusė)}
+      todo: no deadline stated
+    harvest:
+      from: 07-25
+      to: null
+      notes:
+      - text: Threshing starts at the end of July; harvest should last 5–10 days
+        src:
+        - {id: IKOK-RYE, page: 33, where: VII. Derliaus nuėmimas ir saugojimas}
+      src:
+      - {id: IKOK-RYE, page: 33, where: VII. Derliaus nuėmimas ir saugojimas}
+      status: estimate
+      note: '"end of July" converted to 07-25 by us'
+    gdd:
+      base_c: 0
+      t_max_c: 30
+      sowing_to_maturity_c: [2221, 2552]
+      bbch_model: BBCH = 110.00·exp(−exp(1.11 − 0.00125·GDD))
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+      - {id: GDD, page: 12, where: Išvados 1–2}
+    previous_crops:
+      good:
+      - ref: perennial_grasses
+        reason: 'fertility, humus'
+        severity: soft
+        src:
+        - {id: IKOK-RYE, page: 5, where: 1 lentelė. Žieminių rugių priešsėliai}
+      - ref: legumes
+        reason: 'fertility, nitrogen; on light soils — forage legumes and mixtures'
+        severity: soft
+        src:
+        - {id: IKOK-RYE, page: 5, where: 1 lentelė; 1. Sėjomaina}
+      - ref: green_manure_legumes
+        reason: 'nutrients, structure'
+        severity: soft
+        src:
+        - {id: IKOK-RYE, page: 5, where: 1 lentelė}
+      - ref: early_potato
+        reason: 'fewer weeds, easier soil preparation'
+        severity: soft
+        src:
+        - {id: IKOK-RYE, page: 5, where: 1 lentelė}
+      - ref: black_fallow
+        reason: cleans the field of couch grass and perennial weeds
+        severity: soft
+        src:
+        - {id: IKOK-RYE, page: 6, where: 1 lentelė (tęsinys)}
+      bad:
+      - ref: cereals
+        reason: 'soil infection, grass weeds'
+        severity: soft
+        src:
+        - {id: IKOK-RYE, page: 6, where: 1 lentelė (Nerekomenduojami)}
+      - ref: maize_silage
+        reason: 'risky: little time to prepare the soil, Fusarium risk rises strongly'
+        severity: soft
+        src:
+        - {id: IKOK-RYE, page: 6, where: 1 lentelė (Nerekomenduojami)}
+      - ref: maize_grain
+        reason: grain maize is harvested late — unsuitable before winter crops
+        severity: hard
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina (paskutinė pastraipa)}
+      notes:
+      - text: Rye is rarely in the same rotation as wheat (different soils)
+        src:
+        - {id: IKOK-RYE, page: 5, where: 1. Sėjomaina}
+      - text: In the VDU trial rye is little sensitive to repeated sowing; in a 50-year monoculture yield components are lower
+        src:
+        - {id: VDU-rotations, page: 12, where: Rezultatai ir aptarimas}
+    return_interval_years:
+      min: 3
+      recommended: null
+      scope: cereals
+      severity: soft
+      basis: Best4Soil
+      status: estimate
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, eilutė Migliniai / Kukurūzai (1:3)'}
+      note: 'The "Migliniai" row (cereals) was applied to rye, oats and triticale as a soft penalty. Conflict: in the same table wheat and barley are 1:2. There are no separate LAMMC data'
+    vulnerable_phases:
+    - phase: tillering
+      bbch: 21–29
+      hazard: bird cherry-oat aphid
+      threshold: 50% of stems and 1–2 aphids per plant
+      src:
+      - {id: IKOK-RYE, page: 27, where: V.1 Svarbiausi kenkėjai (amarai)}
+      bbch_status: estimate
+    - phase: stem elongation
+      bbch: 31–39
+      hazard: bird cherry-oat aphid
+      threshold: 50% of stems and >10 aphids per plant
+      src:
+      - {id: IKOK-RYE, page: 27, where: V.1 Svarbiausi kenkėjai (amarai)}
+      bbch_status: estimate
+    - phase: after heading
+      bbch: 59–75
+      hazard: grain aphid
+      threshold: 20–30% of ears and 2–3 aphids per ear
+      src:
+      - {id: IKOK-RYE, page: 27, where: V.1 Svarbiausi kenkėjai (amarai)}
+      bbch_status: estimate
+  oats:
+    names: {lt: avižos, ru: овёс, en: oats}
+    groups: [cereals, spring_cereals]
+    season: spring
+    declaration_class:
+      code: oats
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      rule: earliest_of_spring_cereals
+      latest: null
+      todo: no calendar dates
+      notes:
+      - text: 'Sown earlier than all spring cereals, as soon as the soil is ready; tolerates frosts'
+        src:
+        - {id: IKOK-OAT, page: 6, where: 4. Sėjos laikas}
+      src:
+      - {id: IKOK-OAT, page: 6, where: 4. Sėjos laikas}
+    harvest: {from: null, to: null, todo: harvest dates of oats}
+    gdd:
+      base_c: 2
+      t_max_c: 32
+      sowing_to_maturity_c: [1855, 2036]
+      status: estimate
+      note: the sum for spring cereals as a whole; the Gompertz model for oats explains ~97% (R²=0.967)
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+      - {id: GDD, page: 9, where: Avižų vystymosi priklausomybė nuo GDD}
+      - {id: GDD, page: 12, where: Išvados 3}
+    previous_crops:
+      good:
+      - ref: legumes
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-OAT, page: 5, where: 1. Sėjomaina}
+      - ref: faba_bean
+        reason: beans leave 60–90 kg N/ha
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1. Sėjomaina}
+      - ref: row_crops
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-OAT, page: 5, where: 1. Sėjomaina}
+      - ref: cereals
+        reason: oats can be the last field of the rotation; oats can be sown after oats
+        severity: soft
+        src:
+        - {id: IKOK-OAT, page: 5, where: 1. Sėjomaina}
+      - ref: brassicas
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-OAT, page: 5, where: 1. Sėjomaina}
+      - ref: maize
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-OAT, page: 5, where: 1. Sėjomaina}
+      bad:
+      - ref: perennial_grasses
+        reason: old fallow/sod with couch grass and wireworm (dirvonai)
+        severity: soft
+        src:
+        - {id: IKOK-OAT, page: 5, where: 1. Sėjomaina}
+        status: estimate
+        note: 'The source speaks of "dirvonai" — old fallow/sod, not grasses in a rotation; mapping to perennial_grasses is ours'
+      notes:
+      - text: 'After a well-fertilised preceding crop, oats may lodge'
+        src:
+        - {id: IKOK-OAT, page: 5, where: 1. Sėjomaina}
+    return_interval_years:
+      min: 3
+      recommended: null
+      scope: cereals
+      severity: soft
+      basis: Best4Soil
+      status: estimate
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, eilutė Migliniai / Kukurūzai (1:3)'}
+      note: 'The "Migliniai" row (cereals) was applied to rye, oats and triticale as a soft penalty. Conflict: in the same table wheat and barley are 1:2. There are no separate LAMMC data'
+    vulnerable_phases:
+    - phase: ear
+      bbch: 51–75
+      hazard: grain aphid
+      threshold: 20–30% of stems and 2–3 aphids per ear
+      src:
+      - {id: IKOK-OAT, page: 21, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: vegetation
+      bbch: null
+      hazard: cereal sawflies
+      threshold: 50 larvae/m²
+      src:
+      - {id: IKOK-OAT, page: 21, where: 5. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+  winter_rapeseed:
+    names: {lt: žieminiai rapsai, ru: озимый рапс, en: winter oilseed rape}
+    groups: [brassicas]
+    season: winter
+    declaration_class:
+      code: rapeseed
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 08-10, to: 08-25}
+      latest: null
+      todo: no hard deadline; after 08-25 the risk of poor overwintering rises
+      notes:
+      - text: Before 08-10 growth regulation and protection are needed; after 08-25 overwintering is worse
+        src:
+        - {id: IKOK-WR, page: 8, where: 5. Sėjos laikas ir sėklos norma}
+      - text: A 10-day delay (after 20–25 Aug) reduces the chance of overwintering to 60% and the yield by 1–2 t/ha
+        src:
+        - {id: IKOK-WR, page: 8, where: 5. Sėjos laikas ir sėklos norma}
+      - text: 'From emergence to the end of vegetation 50–70 days are needed: 8 leaves, root collar 17–22 mm'
+        src:
+        - {id: IKOK-WR, page: 8, where: 5. Sėjos laikas ir sėklos norma}
+      src:
+      - {id: IKOK-WR, page: 8, where: 5. Sėjos laikas ir sėklos norma}
+    harvest:
+      from: 07-16
+      to: 07-31
+      status: estimate
+      note: 'source: "second half of July", 40–60 days after flowering, at BBCH 89; dates are our conversion'
+      src:
+      - {id: IKOK-WR, page: 46, where: VII. Derliaus nuėmimas}
+    gdd:
+      base_c: [3, 5]
+      t_max_c: [30, 35]
+      sowing_to_maturity_c: [2443, 2759]
+      bbch_model: BBCH = 105,50·exp(−exp(1,59 − 0,00152·GDD))
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+      - {id: GDD, page: 12, where: Išvados 1–2}
+    previous_crops:
+      good:
+      - ref: peas
+        reason: 'frees the field early, nitrogen'
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė. Rapsų priešsėliai}
+        - {id: IKOK-WR, page: 6, where: 1. Sėjomaina (tekstas)}
+      - ref: early_potato
+        reason: recommended
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė. Rapsų priešsėliai}
+      - ref: winter_cereals
+        reason: almost no shared pests and diseases; but after harvest there is often little time to prepare the soil
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė}
+        - {id: IKOK-WR, page: 6, where: 1. Sėjomaina (tekstas)}
+      - ref: spring_cereals
+        reason: only if harvested early
+        condition: harvest_before_wr_sowing
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė (priklausomai nuo derliaus nuėmimo laiko)}
+      - ref: black_fallow
+        reason: 'one of the best: weeds destroyed, soil ready in time'
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė; tekstas po lentele}
+      - ref: green_fallow
+        reason: one of the best; brassicas must not be in the mixture
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 6, where: 1. Sėjomaina (tekstas)}
+      - ref: clover
+        reason: enrich the soil with nutrients
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė}
+        - {id: IKOK-WR, page: 6, where: tekstas}
+      - ref: lucerne
+        reason: enrich the soil
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė}
+      - ref: vetch
+        reason: enrich the soil
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė}
+      - ref: perennial_grasses
+        reason: grass mixtures — recommended (Žolių mišiniai)
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė}
+      bad:
+      - ref: brassicas
+        reason: shared pests and diseases
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: 1 lentelė (Nerekomenduojami)}
+        - {id: IKOK-WR, page: 6, where: tekstas}
+      - ref: sugar_beet
+        reason: late harvest — no time to prepare the soil
+        severity: hard
+        src:
+        - {id: IKOK-WR, page: 5, where: '1 lentelė, žymė * – dėl vėlyvo derliaus nuėmimo'}
+      - ref: potato
+        reason: late harvest (except early potato)
+        severity: hard
+        src:
+        - {id: IKOK-WR, page: 5, where: '1 lentelė, žymė *'}
+      - ref: faba_bean
+        reason: late harvest
+        severity: hard
+        src:
+        - {id: IKOK-WR, page: 5, where: '1 lentelė, žymė *'}
+      - ref: oats
+        reason: late harvest
+        severity: soft
+        src:
+        - {id: IKOK-WR, page: 5, where: '1 lentelė, žymė *'}
+        - {id: K-T, page: null, where: 'transitions 2024 → 2025, row Oats, column Rapeseed'}
+        note: 'The source (IKOK-WR p. 5) classes oats as late-harvested — literally this is hard. Downgraded to soft: in the 2024→2025 declarations 6.7 thousand ha of winter rapeseed (2%) were sown after oats — this is real practice, and oats are usually harvested no later than spring wheat, which the source allows'
+      - ref: buckwheat
+        reason: late harvest
+        severity: hard
+        src:
+        - {id: IKOK-WR, page: 5, where: '1 lentelė, žymė *'}
+      - ref: maize
+        reason: late harvest
+        severity: hard
+        src:
+        - {id: IKOK-WR, page: 5, where: '1 lentelė, žymė *'}
+    return_interval_years:
+      min: 4
+      scope: brassicas
+      recommended: null
+      src:
+      - {id: IKOK-WR, page: 29, where: 'lentelė ligų, Sclerotinia sclerotiorum: 4–7 metų pertrauka tarp bastutinių'}
+      - {id: Best4Soil, page: 2, where: '1 lentelė, eilutė Kryžmažiedžiai (1:4)'}
+      note: 'IKOK-WR p. 29: a 4–7 year break between brassicas (against sclerotinia) — a range, not a recommendation of 7; Best4Soil: 1:4. "4–6 years" from an earlier note is not confirmed'
+      severity: hard
+      basis: LAMMC
+      range: [4, 7]
+    vulnerable_phases:
+    - phase: sowing
+      months: [8]
+      hazard: late sowing
+      threshold: 'after 08-25: overwintering down to 60%, −1…2 t/ha'
+      src:
+      - {id: IKOK-WR, page: 8, where: 5. Sėjos laikas ir sėklos norma}
+    - phase: 'emergence, autumn'
+      bbch: 10–19
+      hazard: cruciferous flea beetles
+      threshold: 2–3 beetles per running metre or 10% of leaf area
+      src:
+      - {id: IKOK-WR, page: 43, where: 4.1. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: 'emergence, autumn'
+      bbch: 10–19
+      hazard: rape flea beetle
+      threshold: 1–2 beetles per running metre or 10% of leaf area
+      src:
+      - {id: IKOK-WR, page: 43, where: 4.1.}
+      bbch_status: estimate
+    - phase: stem elongation
+      bbch: 30–39
+      hazard: rape pollen beetle
+      threshold: 1–2 beetles per plant; active from +15 °C
+      src:
+      - {id: IKOK-WR, page: 43, where: 4.1.}
+      - {id: IKOK-WR, page: 38, where: V.1 Rapsinis žiedinukas}
+      bbch_status: estimate
+    - phase: budding
+      bbch: 50–59
+      hazard: rape pollen beetle
+      threshold: 3–4 beetles per plant
+      src:
+      - {id: IKOK-WR, page: 43, where: 4.1.}
+      bbch_status: estimate
+    - phase: early spring
+      bbch: 30–50
+      hazard: stem weevil
+      threshold: 1 beetle per 5 plants or 10 beetles in a yellow trap in 3 days
+      src:
+      - {id: IKOK-WR, page: 43, where: 4.1.}
+      bbch_status: estimate
+    - phase: harvest
+      months: [7]
+      hazard: delayed harvest — shattering
+      threshold: up to 10% losses
+      src:
+      - {id: IKOK-WR, page: 46, where: VII. Derliaus nuėmimas}
+  spring_rapeseed:
+    names: {lt: vasariniai rapsai, ru: яровой рапс, en: spring oilseed rape}
+    groups: [brassicas]
+    season: spring
+    declaration_class:
+      code: rapeseed
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 04-21, to: 05-10}
+      latest: null
+      status: estimate
+      note: 'source: "most often the end of April – beginning of May"; dates are our conversion'
+      notes:
+      - text: Tolerates frosts of 2–3 °C; on peat soils avoid early sowing
+        src:
+        - {id: IKOK-SR, page: 7, where: 5. Sėjos laikas ir sėklos norma}
+      src:
+      - {id: IKOK-SR, page: 7, where: 5. Sėjos laikas ir sėklos norma}
+    harvest:
+      from: 08-21
+      to: 09-10
+      status: estimate
+      note: 'source: "end of August – beginning of September", 40–60 days after flowering'
+      src:
+      - {id: IKOK-SR, page: 39, where: VII. Derliaus nuėmimas}
+    gdd:
+      base_c: 5
+      t_max_c: 30
+      sowing_to_maturity_c: null
+      todo: the sum for spring rapeseed is not given in the conclusions
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+    previous_crops:
+      good:
+      - ref: winter_cereals
+        reason: almost no shared pests and diseases
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 5, where: 1 lentelė. Vasarinių rapsų priešsėliai}
+      - ref: spring_cereals
+        reason: almost no shared pests and diseases
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 5, where: 1 lentelė}
+      - ref: potatoes
+        reason: recommended
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 5, where: 1 lentelė}
+      - ref: clover
+        reason: only first-year clover
+        condition: clover_first_year
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 5, where: 1 lentelė (Dobilai pirmamečiai)}
+      - ref: vetch_oat_mix
+        reason: recommended
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 5, where: 1 lentelė}
+      bad:
+      - ref: brassicas
+        reason: shared pests and diseases
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 5, where: 1 lentelė (Nerekomenduojami)}
+      - ref: sugar_beet
+        reason: beet nematode
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 6, where: 1. Sėjomaina (tekstas)}
+      - ref: flax
+        reason: flea beetle outbreak
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 6, where: tekstas}
+      - ref: peas
+        reason: sclerotinia
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 5, where: 1 lentelė}
+        - {id: IKOK-SR, page: 6, where: tekstas}
+      - ref: clover
+        reason: sclerotinia (except first-year clover in the good list — contradiction in the source)
+        severity: soft
+        src:
+        - {id: IKOK-SR, page: 5, where: 1 lentelė}
+        - {id: IKOK-SR, page: 6, where: tekstas}
+    return_interval_years:
+      min: 4
+      recommended: null
+      scope: brassicas
+      src:
+      - {id: IKOK-SR, page: 28, where: 'ligos: mažiausia rekomenduojama pertrauka 4–5 metai'}
+      - {id: IKOK-SR, page: 26, where: 'Sclerotinia: 4–7 metų pertrauka tarp bastutinių'}
+      - {id: Best4Soil, page: 2, where: '1 lentelė, Kryžmažiedžiai (1:4)'}
+      note: 'Aligned with winter rapeseed (shared scope: brassicas). Page 5 of the same guide gives 3–4 years — the weakest of the three; kept as a note'
+      severity: hard
+      basis: LAMMC
+      range: [4, 7]
+    vulnerable_phases:
+    - phase: emergence
+      bbch: 10–19
+      hazard: cruciferous flea beetles
+      threshold: 2–3 beetles per running metre or 10% of leaves
+      src:
+      - {id: IKOK-SR, page: 36, where: 4.1. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: emergence
+      bbch: 10–19
+      hazard: rape flea beetle
+      threshold: 1–2 beetles per running metre or 10% of leaves
+      src:
+      - {id: IKOK-SR, page: 36, where: 4.1.}
+      bbch_status: estimate
+    - phase: stem elongation / budding
+      bbch: 30–59
+      hazard: rape pollen beetle
+      threshold: 1–2 / 3–4 beetles per plant
+      src:
+      - {id: IKOK-SR, page: 36, where: 4.1.}
+      bbch_status: estimate
+    - phase: emergence
+      months: [5]
+      hazard: spring frosts
+      threshold: 'tolerates 2–3 °C of frost, more — risk'
+      src:
+      - {id: IKOK-SR, page: 7, where: 5. Sėjos laikas ir sėklos norma}
+  peas:
+    names: {lt: žirniai, ru: горох, en: field pea}
+    groups: [legumes, grain_legumes]
+    season: spring
+    declaration_class:
+      code: pulses
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      rule: soil_temp
+      soil_temp_c:
+        value: [7, 8]
+        depth_cm: [4, 6]
+      latest: null
+      todo: no calendar dates
+      notes:
+      - text: Less sensitive to late sowing than faba beans and spring wheat
+        src:
+        - {id: IKOK-PEA, page: 9, where: 7. Sėjos laikas}
+      src:
+      - {id: IKOK-PEA, page: 9, where: 7. Sėjos laikas}
+    harvest:
+      from: null
+      to: null
+      todo: harvest date not given; it is only known that rain in the 2nd–3rd ten-day periods of July delays ripening
+      notes:
+      - text: 'Harvest lasts no more than 8 days, otherwise shattering; harvested when 80–90% of pods turn brown'
+        src:
+        - {id: IKOK-PEA, page: 40, where: VII. Derliaus nuėmimas}
+      estimate: {from: 07-20, to: 08-20, status: estimate, note: 'Extended from 08-10 after verification: pea harvest in Lithuania often runs until mid-August (reviewer''s judgement, not the source)'}
+    gdd:
+      base_c: 4
+      t_max_c: 30
+      sowing_to_maturity_c: [1493, 1701]
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+      - {id: GDD, page: 12, where: Išvados 4}
+    previous_crops:
+      good:
+      - ref: winter_cereals
+        reason: recommended
+        severity: soft
+        src:
+        - {id: IKOK-PEA, page: 5, where: 1 lentelė. Žirnių priešsėliai}
+      - ref: row_crops
+        reason: recommended
+        severity: soft
+        src:
+        - {id: IKOK-PEA, page: 5, where: 1 lentelė}
+      - ref: spring_cereals
+        reason: recommended
+        severity: soft
+        src:
+        - {id: IKOK-PEA, page: 5, where: 1 lentelė}
+      bad:
+      - ref: clover
+        reason: cereals make better use of the accumulated nitrogen
+        severity: soft
+        src:
+        - {id: IKOK-PEA, page: 5, where: 1 lentelė; 1. Sėjomaina}
+      - ref: legumes
+        reason: the same; pea after pea — diseases and pests
+        severity: soft
+        src:
+        - {id: IKOK-PEA, page: 5, where: 1 lentelė; 1. Sėjomaina}
+    return_interval_years:
+      min: 3
+      recommended: 4
+      scope: self
+      src:
+      - {id: IKOK-PEA, page: 5, where: 1. Sėjomaina (po 3–4 metų)}
+      alt:
+        min: 6
+        scope: legumes
+        src:
+        - {id: Best4Soil, page: 2, where: '1 lentelė, Ankštiniai (1:6)'}
+      severity: hard
+      basis: LAMMC
+    vulnerable_phases:
+    - phase: emergence
+      months: [4, 5]
+      hazard: spring frosts
+      threshold: seedlings withstand down to −4…−6 °C
+      src:
+      - {id: IKOK-PEA, page: 9, where: 7. Sėjos laikas}
+    - phase: budding
+      bbch: 50–59
+      hazard: pea aphid
+      threshold: '>50% of plants infested'
+      src:
+      - {id: IKOK-PEA, page: 37, where: 4. Purškimas pagal žalingumo ribas}
+      bbch_status: estimate
+    - phase: ripening
+      months: [7]
+      hazard: rain in the 2nd–3rd ten-day periods of July
+      threshold: null
+      src:
+      - {id: IKOK-PEA, page: 40, where: VII. Derliaus nuėmimas}
+  faba_bean:
+    names: {lt: pupos, ru: кормовые бобы, en: faba bean}
+    groups: [legumes, grain_legumes]
+    season: spring
+    declaration_class:
+      code: pulses
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      rule: early_soil_temp
+      soil_temp_c: {value: 7, depth_cm: null}
+      latest: null
+      todo: no calendar dates
+      notes:
+      - text: Each day of sowing delay — up to −40…50 kg/ha
+        src:
+        - {id: IKOK-BEAN, page: 9, where: 6. Sėjos laikas}
+      src:
+      - {id: IKOK-BEAN, page: 9, where: 6. Sėjos laikas}
+    harvest:
+      from: 09-01
+      to: 09-30
+      notes:
+      - text: Harvested in September when 80–90% of pods turn black; a one-week delay — up to 10% losses
+        src:
+        - {id: IKOK-BEAN, page: 35, where: VII. Derliaus nuėmimas ir saugojimas}
+      src:
+      - {id: IKOK-BEAN, page: 35, where: VII. Derliaus nuėmimas ir saugojimas}
+    gdd:
+      base_c: [3, 4]
+      t_max_c: 32
+      sowing_to_maturity_c: [1621, 1910]
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+      - {id: GDD, page: 12, where: Išvados 4}
+    previous_crops:
+      good:
+      - ref: winter_cereals
+        reason: recommended
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1 lentelė. Pupų priešsėliai}
+      - ref: row_crops
+        reason: recommended
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1 lentelė}
+      - ref: spring_cereals
+        reason: recommended (except oats)
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1 lentelė}
+      bad:
+      - ref: clover
+        reason: not recommended
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1 lentelė}
+      - ref: legumes
+        reason: diseases; faba beans after faba beans are not allowed
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1 lentelė; 1. Sėjomaina}
+      - ref: winter_rye
+        reason: diseases and stem nematode
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1 lentelė; 1. Sėjomaina}
+      - ref: oats
+        reason: diseases and stem nematode
+        severity: soft
+        src:
+        - {id: IKOK-BEAN, page: 5, where: 1 lentelė; 1. Sėjomaina}
+    return_interval_years:
+      min: 4
+      recommended: 6
+      scope: self
+      src:
+      - {id: IKOK-BEAN, page: 5, where: 1. Sėjomaina (po 4–6 metų)}
+      alt:
+        min: 6
+        scope: legumes
+        src:
+        - {id: Best4Soil, page: 2, where: '1 lentelė, Ankštiniai (1:6)'}
+      severity: hard
+      basis: LAMMC
+    vulnerable_phases:
+    - phase: sowing
+      months: [4, 5]
+      hazard: late sowing
+      threshold: −40…50 kg/ha per day
+      src:
+      - {id: IKOK-BEAN, page: 9, where: 6. Sėjos laikas}
+    - phase: emergence
+      months: [4, 5]
+      hazard: spring frosts
+      threshold: withstand down to −5…−8 °C
+      src:
+      - {id: IKOK-BEAN, page: 9, where: 6. Sėjos laikas}
+    - phase: budding–flowering
+      bbch: 50–69
+      hazard: bean aphid
+      threshold: 20% of plants with aphids
+      src:
+      - {id: IKOK-BEAN, page: 30, where: 2. Kenkėjų žalingumo ribos}
+      bbch_status: estimate
+  lupin:
+    names: {lt: lubinai, ru: люпин, en: lupin}
+    groups: [legumes, grain_legumes]
+    season: spring
+    declaration_class:
+      code: pulses
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      latest: null
+      todo: no source
+    harvest: {from: null, to: null, todo: no source}
+    gdd: {base_c: null, sowing_to_maturity_c: null, todo: lupin is not in GDD}
+    previous_crops:
+      good: []
+      bad: []
+      todo: no source on preceding crops of lupin
+    return_interval_years:
+      min: 6
+      recommended: null
+      scope: legumes
+      status: estimate
+      note: lupin is assigned to Ankštiniai by us; the table gives pea and faba bean as examples
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, Ankštiniai (1:6)'}
+      severity: soft
+      basis: estimate
+    vulnerable_phases: []
+    as_predecessor:
+    - for: potato
+      text: lupin is named among the best preceding crops of potato (against nematodes)
+      src:
+      - {id: IKOK-POT, page: 40, where: V. Bulviniai cistiniai nematodai}
+  maize_grain:
+    names: {lt: kukurūzai grūdams, ru: кукуруза на зерно, en: grain maize}
+    groups: [maize, row_crops]
+    season: spring
+    declaration_class:
+      code: maize
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 04-25, to: 05-10}
+      latest: null
+      rule: soil_temp
+      soil_temp_c:
+        value: [8, 10]
+        depth_cm: sowing depth
+      status: estimate
+      note: 'Source: sow at the end of April – beginning of May, "finish by 5–10 May"; this is the recommended end with a loss of ~1%/day (D7), not a ban. The from/to dates are our conversion'
+      notes:
+      - text: Each day of sowing delay — ~1% yield loss
+        src:
+        - {id: IKOK-MAIZE, page: 7, where: 4. Sėjos laikas}
+      src:
+      - {id: IKOK-MAIZE, page: 7, where: 4. Sėjos laikas}
+      latest_severity: null
+    harvest:
+      from: null
+      to: null
+      todo: grain harvest date; the source says only "late"
+      estimate: {from: 10-01, to: 11-15, status: estimate}
+      notes:
+      - text: Harvested late — unsuitable as a preceding crop for winter crops
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+    gdd:
+      base_c: 8
+      t_max_c: 35
+      sowing_to_maturity_c: [2434, 2710]
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+      - {id: GDD, page: 12, where: Išvados 1}
+    previous_crops:
+      good:
+      - ref: row_crops
+        reason: best preceding crops
+        severity: soft
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+      - ref: legumes
+        reason: best preceding crops
+        severity: soft
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+      - ref: fallow
+        reason: best preceding crops
+        severity: soft
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+      bad:
+      - ref: maize
+        reason: 'tolerates repeated sowing, but undesirable on poor soils; with warming there are more diseases and pests'
+        severity: soft
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+    return_interval_years:
+      min: 3
+      recommended: null
+      scope: maize
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, Migliniai / Kukurūzai (1:3)'}
+      severity: soft
+      basis: Best4Soil
+    vulnerable_phases:
+    - phase: emergence
+      bbch: 10–13
+      hazard: spring frosts
+      threshold: down to −5 °C seedlings are hardly harmed
+      src:
+      - {id: IKOK-MAIZE, page: 7, where: 4. Sėjos laikas}
+      bbch_status: estimate
+    - phase: 6–7 leaves
+      bbch: 16–17
+      hazard: 'any stress (water, nutrition)'
+      threshold: null
+      src:
+      - {id: IKOK-MAIZE, page: 4, where: I. Įvadas}
+      bbch_status: estimate
+    - phase: 'critical period: starts 10 days before tassel emergence, lasts about a month'
+      bbch: 51–69
+      hazard: 'moisture deficit (critical period: 2/3 of demand)'
+      threshold: null
+      src:
+      - {id: IKOK-MAIZE, page: 4, where: I. Įvadas}
+      bbch_status: estimate
+    - phase: sowing
+      months: [4, 5]
+      hazard: wireworm
+      threshold: ≤3 click beetle larvae per m²
+      src:
+      - {id: IKOK-MAIZE, page: 35, where: Purškimas pagal žalingumo ribas}
+  maize_silage:
+    names: {lt: kukurūzai silosui, ru: кукуруза на силос, en: silage maize}
+    groups: [maize, row_crops]
+    season: spring
+    declaration_class:
+      code: maize
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 04-25, to: 05-10}
+      latest: null
+      status: estimate
+      note: 'Source: sow at the end of April – beginning of May, "finish by 5–10 May"; this is the recommended end with a loss of ~1%/day (D7), not a ban. The from/to dates are our conversion'
+      src:
+      - {id: IKOK-MAIZE, page: 7, where: 4. Sėjos laikas}
+      latest_severity: null
+    harvest: {from: null, to: null, todo: silage harvest date (not in IKOK-MAIZE)}
+    gdd:
+      base_c: 8
+      sowing_to_maturity_c: null
+      todo: 2434–2710 — to physiological maturity; silage is harvested earlier (wax ripeness)
+      src:
+      - {id: GDD, page: 5, where: lentelė}
+    previous_crops:
+      good:
+      - ref: row_crops
+        reason: best preceding crops
+        severity: soft
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+      - ref: legumes
+        reason: best preceding crops
+        severity: soft
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+      - ref: fallow
+        reason: best preceding crops
+        severity: soft
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+      bad:
+      - ref: maize
+        reason: repeated sowing is undesirable on poor soils
+        severity: soft
+        src:
+        - {id: IKOK-MAIZE, page: 5, where: 1. Sėjomaina}
+    return_interval_years:
+      min: 3
+      recommended: null
+      scope: maize
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, Migliniai / Kukurūzai (1:3)'}
+      severity: soft
+      basis: Best4Soil
+    vulnerable_phases:
+    - phase: moisture-critical
+      bbch: 51–69
+      hazard: moisture deficit
+      threshold: null
+      src:
+      - {id: IKOK-MAIZE, page: 4, where: I. Įvadas}
+      bbch_status: estimate
+  sugar_beet:
+    names: {lt: cukriniai runkeliai, ru: сахарная свёкла, en: sugar beet}
+    groups: [row_crops, root_crops, sugar_beet]
+    season: spring
+    declaration_class:
+      code: sugar_beet
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 04-15, to: 04-26}
+      latest: 05-05
+      status: primary
+      notes:
+      - text: Sowing signal — daily mean > 10 °C for three days in a row
+        status: primary
+        src:
+        - {id: Zemdirbyste-beet, page: 2, where: 'Įvadas: >+10 ºC tris dienas'}
+      src:
+      - {id: Zemdirbyste-beet, page: 2, where: 'Įvadas: Rumokų bandymų stotyje 1973–1975 m.'}
+      latest_severity: soft
+      note: 'Window 15–26 Apr (to 05-05 in a late spring) — result of the Rumokai trials 1973–1975, retold in a 2008 article; old data, latest is soft'
+    harvest:
+      from: 09-20
+      to: 10-31
+      status: secondary
+      note: '"end of September – October", WebFetch retelling'
+      src:
+      - {id: VLE-beet, page: null, where: article}
+    vegetation_days:
+      value: [160, 170]
+      status: secondary
+      src:
+      - {id: VLE-beet, page: null, where: article}
+    gdd: {base_c: null, sowing_to_maturity_c: null, todo: beet is not in GDD}
+    previous_crops:
+      good:
+      - ref: winter_cereals
+        reason: the most suitable preceding crop
+        severity: soft
+        status: secondary
+        src:
+        - {id: VLE-beet, page: null, where: article}
+      bad: []
+      todo: LAMMC preceding-crop table for beet
+    return_interval_years:
+      min: 5
+      recommended: null
+      scope: sugar_beet
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, Beta vulgaris (1:5)'}
+      alt:
+        min: 2
+        recommended: 3
+        status: secondary
+        src:
+        - {id: VLE-beet, page: null, where: article}
+      severity: soft
+      basis: Best4Soil
+    vulnerable_phases: []
+  potato:
+    names: {lt: bulvės, ru: картофель, en: potato}
+    groups: [row_crops, potatoes]
+    season: spring
+    declaration_class: {code: null, todo: 'the 2024–2025 declarations have no separate potato class; probably inside "Daržovės" or "Kita ariama žemė" — not checked'}
+    sowing:
+      optimal: {from: 04-21, to: 05-10}
+      latest: null
+      rule: soil_temp
+      soil_temp_c:
+        value: [7, 8]
+        depth_cm: 10
+        note: sprouted — from 6 °C
+      notes:
+      - text: Better to rely on soil temperature than on the calendar
+        src:
+        - {id: IKOK-POT, page: 10, where: 7. Sodinimo laikas}
+      src:
+      - {id: IKOK-POT, page: 10, where: 7. Sodinimo laikas (balandžio III – gegužės I dešimtadienis)}
+      status: estimate
+      note: 'Source: 3rd ten-day period of April – 1st ten-day period of May; the from/to dates are our conversion'
+    harvest:
+      from: null
+      to: null
+      todo: digging dates; the source gives only a weather condition
+      notes:
+      - text: Dig in warm weather (> +12 °C); at +3…4 °C up to 80% of tubers are damaged
+        src:
+        - {id: IKOK-POT, page: 43, where: VII. Derliaus nuėmimas ir saugojimas}
+    gdd: {base_c: null, sowing_to_maturity_c: null, todo: potato is not in GDD}
+    previous_crops:
+      good:
+      - ref: winter_cereals
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+      - ref: brassicas
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+      - ref: legumes
+        reason: good preceding crop (incl. lupin)
+        severity: soft
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+        - {id: IKOK-POT, page: 40, where: Bulviniai cistiniai nematodai}
+      - ref: root_crops
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+      - ref: maize
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+      - ref: fallow
+        reason: good preceding crop
+        severity: soft
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+      bad:
+      - ref: perennial_grasses
+        reason: wireworm (click beetles) and soil pests; on p. 40 the same source names grasses as a good preceding crop against nematodes — check wireworm
+        severity: soft
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+        - {id: IKOK-POT, page: 40, where: Bulviniai cistiniai nematodai}
+      - ref: potatoes
+        reason: repeated sowing raises disease risk; seed potato — not after potato
+        severity: soft
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+      notes:
+      - text: 'On cultivated, well-fertilised soils the preceding crop has little effect on yield'
+        src:
+        - {id: IKOK-POT, page: 5, where: 1. Sėjomaina}
+    return_interval_years:
+      min: 3
+      recommended: 4
+      scope: potatoes
+      src:
+      - {id: IKOK-POT, page: 5, where: 1. Sėjomaina (po 3–4 metų)}
+      - {id: IKOK-POT, page: 40, where: Bulviniai cistiniai nematodai}
+      alt:
+        min: 5
+        scope: potatoes
+        src:
+        - {id: Best4Soil, page: 2, where: '1 lentelė, Bulviniai (1:5)'}
+      severity: hard
+      basis: LAMMC
+    vulnerable_phases:
+    - phase: Colorado potato beetle larvae
+      months: [6, 7]
+      hazard: Colorado potato beetle
+      threshold: 10% of plants with 10–15 larvae
+      src:
+      - {id: IKOK-POT, page: 40, where: 3. Cheminės apsaugos priemonės}
+    - phase: digging
+      months: [9, 10]
+      hazard: cold during digging
+      threshold: < +12 °C — mechanical damage
+      src:
+      - {id: IKOK-POT, page: 43, where: VII. Derliaus nuėmimas ir saugojimas}
+    planner_note: 'The declarations have no potato class, early and late are not distinguished: rules with potato and early_potato cannot be checked against field history. Apply only to a crop entered by the agronomist'
+  perennial_grasses:
+    names: {lt: daugiametės žolės, ru: многолетние травы, en: perennial grasses / leys}
+    groups: [perennial_grasses]
+    season: perennial
+    declaration_class:
+      code: perennial_grass
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      latest: null
+      todo: no source (usually undersown under a cover crop — not checked)
+    harvest: {from: null, to: null, todo: 'no date found for incorporation (ploughing-in) of the sward; 09-01 is the deadline for mandatory mowing (policy_rules.mow_grass_legumes_by_0901), not a harvest'}
+    gdd: {base_c: null, sowing_to_maturity_c: null, todo: none}
+    previous_crops:
+      good: []
+      bad: []
+      todo: no source
+    return_interval_years: {min: null, recommended: null, todo: 'the Best4Soil row "Migliniai" (1:3) refers to cereals in general — not applied to grasses'}
+    vulnerable_phases: []
+    ley: {duration_years: null, termination: null, todo: duration of use and ploughing-in date — ask the agronomist}
+  clover:
+    names: {lt: dobilai, ru: клевер, en: clover}
+    groups: [legumes, forage_legumes, perennial_grasses]
+    season: perennial
+    declaration_class:
+      code: perennial_grass
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: null, to: null}
+      latest: null
+      todo: no source on dates
+      notes:
+      - text: Can be undersown together with winter rapeseed or into rapeseed
+        src:
+        - {id: IKOK-WR, page: 8, where: 6. Tarpiniai pasėliai}
+    harvest: {from: null, to: null, todo: 'no date found for incorporation (ploughing-in) of the sward; 09-01 is the deadline for mandatory mowing (policy_rules.mow_grass_legumes_by_0901), not a harvest'}
+    gdd: {base_c: null, sowing_to_maturity_c: null, todo: none}
+    previous_crops:
+      good: []
+      bad: []
+      todo: no source
+    return_interval_years:
+      min: 6
+      recommended: null
+      scope: legumes
+      status: estimate
+      note: clover is assigned to Ankštiniai by us
+      src:
+      - {id: Best4Soil, page: 2, where: '1 lentelė, Ankštiniai (1:6)'}
+      severity: soft
+      basis: estimate
+    vulnerable_phases: []
+    ley: {duration_years: null, termination: null, todo: duration of use and ploughing-in date — ask the agronomist}
+  buckwheat:
+    names: {lt: grikiai, ru: гречиха, en: buckwheat}
+    groups: []
+    season: spring
+    declaration_class:
+      code: buckwheat
+      src:
+      - {id: K, page: null, where: crop classes table}
+    sowing:
+      optimal: {from: 05-11, to: 05-31}
+      latest: null
+      status: secondary
+      note: '"mid and second half of May", WebFetch retelling'
+      src:
+      - {id: VLE-buckwheat, page: null, where: article}
+    harvest:
+      from: null
+      to: null
+      todo: harvest date; it is known to be late (IKOK-WR)
+      src:
+      - {id: IKOK-WR, page: 5, where: '1 lentelė, žymė *'}
+    vegetation_days:
+      value: [65, 80]
+      status: secondary
+      src:
+      - {id: VLE-buckwheat, page: null, where: article}
+    gdd: {base_c: null, sowing_to_maturity_c: null, todo: buckwheat is not in GDD}
+    previous_crops:
+      good:
+      - ref: row_crops
+        reason: sown after row crops
+        severity: soft
+        status: secondary
+        src:
+        - {id: VLE-buckwheat, page: null, where: article}
+      - ref: legumes
+        reason: sown after legumes
+        severity: soft
+        status: secondary
+        src:
+        - {id: VLE-buckwheat, page: null, where: article}
+      - ref: winter_cereals
+        reason: sown after winter crops
+        severity: soft
+        status: secondary
+        src:
+        - {id: VLE-buckwheat, page: null, where: article}
+      bad: []
+    return_interval_years: {min: null, recommended: null, todo: none}
+    vulnerable_phases:
+    - phase: emergence
+      months: [5, 6]
+      hazard: frosts
+      threshold: seedlings die at −2…−3 °C
+      status: secondary
+      src:
+      - {id: VLE-buckwheat, page: null, where: article}
+derived_rules:
+- id: D1_window_feasibility
+  rule: 'For a winter crop c after a preceding crop p. Harvest date of p = actual date on the field (declaration, satellite — product P5), if known; otherwise p.harvest.from (or harvest.estimate.from). If harvest date + prep_days > c.sowing.optimal.to — soft penalty (D7) and the reason "sowing later than optimum". If any date is null — the result is "unknown": do not ban, show in the interface'
+  params:
+    prep_days: {value: 7, status: estimate, todo: check with agronomist}
+  severity: soft
+  status: estimate
+  note: 'v0.1 was hard and used harvest.to: this banned pairs recommended by LAMMC (winter cereals → winter rapeseed, clover → rapeseed). A ban for late harvest is set only through previous_crops.bad with severity: hard, where the source says so directly'
+- id: D2_wr_needs_harvest_by_mid_august
+  rule: 'Winter rapeseed: if the preceding crop frees the field later than ~08-18 (08-25 − prep_days), sowing falls outside the optimum — soft penalty via D1/D7'
+  inputs: [winter_rapeseed.sowing.optimal.to = 08-25, D1.prep_days]
+  severity: soft
+  status: estimate
+- id: D3_spring_rapeseed_not_before_wr
+  rule: 'Spring rapeseed before winter rapeseed: harvest 08-21…09-10 gives sowing after the optimum (D1, soft); in practice the pair is blocked anyway by the brassica interval (return_interval_years, hard)'
+  inputs: [spring_rapeseed.harvest = end of August – beginning of September, winter_rapeseed.sowing.optimal.to = 08-25]
+  severity: soft
+  status: estimate
+- id: D4_sugar_beet_before_winter_wheat
+  rule: 'Sugar beet before winter wheat: if harvest is later than ~10-03, wheat sowing falls beyond 10-10 — soft penalty (D1/D7); the beet harvest date is secondary'
+  inputs: [sugar_beet.harvest (secondary), winter_wheat.sowing.latest = 10-10, D1.prep_days]
+  severity: soft
+  status: estimate
+- id: D5_faba_before_winter_wheat
+  rule: 'Faba beans (harvest in September) before winter wheat are acceptable, but late harvest pushes sowing beyond the 09-25 optimum — soft penalty'
+  inputs: [faba_bean.harvest = 09-01..09-30, winter_wheat.sowing]
+  severity: soft
+  status: estimate
+- {id: D6_spring_crop_after_anything_window_ok, rule: 'For spring crops the sowing window is not limited by the harvest date of the preceding crop (harvest in year t-1, sowing in spring t)', severity: info, status: estimate}
+- id: D7_late_sowing_penalty
+  rule: 'Penalty per day of delay: faba beans 40–50 kg/ha; maize ~1%; winter rapeseed +10 days → overwintering down to 60%, −1…2 t/ha'
+  src:
+  - {id: IKOK-BEAN, page: 9, where: 6. Sėjos laikas}
+  - {id: IKOK-MAIZE, page: 7, where: 4. Sėjos laikas}
+  - {id: IKOK-WR, page: 8, where: 5. Sėjos laikas ir sėklos norma}
+  severity: soft
+  status: estimate

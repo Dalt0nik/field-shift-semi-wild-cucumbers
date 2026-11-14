@@ -1,0 +1,27 @@
+// Plain-language explanations of the terms the challenge asks to explain (R7). Used by the <Term> tooltips, the
+// Glossary drawer and the Assistant. Definitions are simplified on purpose.
+export const GLOSSARY: Record<string, { term: string; text: string }> = {
+  ndvi: { term: 'NDVI', text: 'How green the field is, computed from red and near-infrared light. About 0.1–0.2 is bare soil, 0.6–0.9 is dense green cover. The satellite sees it only where there are no clouds.' },
+  hls: { term: 'HLS', text: 'Harmonized Landsat and Sentinel-2: NASA’s combined record of two satellite families at 30 m, a clear view every few days in summer. From November to February clouds, snow and low sun leave almost no clear views in Lithuania.' },
+  bareDays: { term: 'Bare-soil days', text: 'How long the soil lies uncovered in a year, in bare-soil-equivalent days: a day at half cover counts as half a day. Measured from HLS greenness. Stubble and residues are not visible to the satellite, so they count as bare.' },
+  waterBalance: { term: 'Water balance', text: 'Rain minus the evaporative demand of the air, here for May–July. A strongly negative balance means crops needed more water than fell.' },
+  et: { term: 'Evapotranspiration (ET)', text: 'Water that leaves the field into the air, from the soil and through plants. ET0 is the demand of the air for a reference grass cover, here estimated from temperature (Hargreaves).' },
+  drySeason: { term: 'Dry season', text: 'A season in the lowest fifth of the May–July water balance of 2001–2025 (IMERG rain minus ET0 from POWER temperature). In such seasons spring cereals yielded about 16 % below normal in Lithuania.' },
+  wetHarvest: { term: 'Wet harvest', text: 'A season in the highest fifth of rain between 20 July and 31 August. Harvest is delayed and grain quality suffers.' },
+  imerg: { term: 'GPM IMERG', text: 'NASA’s satellite rain record, one value per cell of about 10 km. It matched monthly rain at Lithuanian stations closely (r = 0.92). One cell covers the whole farm.' },
+  power: { term: 'NASA POWER', text: 'NASA’s daily weather record from the MERRA-2 reanalysis, one value per cell of about 50 km. Used here for temperature, frost and heat.' },
+  nasadem: { term: 'NASADEM', text: 'NASA’s 30 m elevation model. It gives slope and low spots, but it was too coarse to reproduce the official 12 % slope rule, so the rule uses the paying agency’s layer.' },
+  replay: { term: 'Season replay', text: 'Each plan is “grown” through every past season 2006–2024: that season’s yield and price deviations are applied to today’s normal levels, all crops in the same season. It shows the spread, it does not forecast.' },
+  worstFifth: { term: 'Bad seasons', text: 'The mean margin of the worst fifth of the replayed seasons: what the plan earned when the year went wrong.' },
+  p10p90: { term: '10–90 % range', text: 'Eight seasons in ten fell inside this range. It is a spread of past seasons, not a guarantee.' },
+  nonDominated: { term: 'Not beaten', text: 'A variant is kept when no other variant is at least as good on all four comparison characteristics and better on one. The system does not rank the kept variants: the choice is the agronomist’s.' },
+  gaec5: { term: 'GAEC 5', text: 'EU standard on erosion as it applies in Lithuania (GAAB 5): no root or tuber crops on land in the official erosion-sensitive layer (slopes above 12 %). Checked on the official layer of the paying agency.' },
+  gaec6: { term: 'GAEC 6', text: 'EU standard on winter soil cover as it applies in Lithuania (GAAB 6): from 15 November to 1 March crops, stubble or residues on at least 65 % of arable land (50 % for farms up to 50 ha). Stubble counts, so the rule limits autumn ploughing.' },
+  gaec7: { term: 'GAEC 7', text: 'EU standard on crop rotation as it applies in Lithuania (GAAB 7). One of three routes is enough: the crop changes on 35 % of arable land and no crop stands a fourth year; or catch crops on 35 %; or diversification (three crops, largest at most 75 %).' },
+  eco: { term: 'Eco-scheme', text: 'A voluntary payment for a practice beyond the rules. “Augalų kaita” (crop rotation) pays when the farm has four crops with a legume, the main crop at most half, and no crop repeated on a field.' },
+  catchCrop: { term: 'Catch crop', text: 'A crop sown after the harvest only to cover the soil until the next spring crop. It cuts bare-soil days and earns an eco-scheme payment.' },
+  slot: { term: 'Slot', text: 'A free gap on a field’s timeline between two crops. A field is planned as a timeline of slots, not as “one crop per year”.' },
+  margin: { term: 'Margin', text: 'Yield × price + payments − variable costs, per hectare and year. Costs are illustrative, so compare variants with each other rather than reading the euros as a forecast.' },
+  cellValue: { term: 'Cell value', text: 'Weather layers are coarse: one value for a cell of 10–50 km. The inspector shows the value of the cell that covers the point, the same for every field of the farm.' },
+};
+export type TermId = keyof typeof GLOSSARY;
