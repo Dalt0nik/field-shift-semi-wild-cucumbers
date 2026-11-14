@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import puppeteer from 'puppeteer-core';
 
-const BASE = process.env.BASE ?? 'http://localhost:3002';
+const BASE = process.env.BASE ?? 'http://localhost:3000';
 const OUT = path.resolve('screenshots');
 const widths = process.argv.slice(2).map(Number).filter(Boolean);
 const WIDTHS = widths.length ? widths : [1100, 1280, 1600];

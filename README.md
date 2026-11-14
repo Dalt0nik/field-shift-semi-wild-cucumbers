@@ -34,7 +34,7 @@ In the diagram, R1, R4, R5 and R9 are requirement numbers of the challenge page;
 
 ```bash
 npm install
-npm run dev        # http://localhost:3002
+npm run dev        # http://localhost:3000
 npm test           # engine unit tests (vitest)
 npm run build      # production build; needs a Node server because of the assistant route
 npm run shots      # screenshots of every state at 1100, 1280 and 1600 px, and a fit report (needs npm run dev)
