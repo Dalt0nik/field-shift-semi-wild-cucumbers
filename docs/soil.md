@@ -95,18 +95,18 @@ Decision day 1 August 2026, default crop set (`pipeline/90_engine_check.ts`, `pi
 
 | Plan | Margin, €/ha | S1e | S1 | S5 | S6 | Cereal after cereal |
 |---|---|---|---|---|---|---|
-| Usual practice (typical statistical farm, [usual-practice.md](usual-practice.md)) | 319 | 156 | 180 | 94 | −53 | 38 % |
-| Highest margin | 440 | 150 | 171 | 91 | −21 | 18 % |
-| Best in a bad year | 435 | 149 | 172 | 92 | +8 | 8 % |
-| Best for soil | 298 | 139 | 162 | 74 | +34 | 0 % |
-| Balanced | 398 | 142 | 165 | 85 | +59 | 0 % |
+| Usual practice (typical statistical farm, [usual-practice.md](usual-practice.md)) | 307 | 156 | 185 | 101 | −38 | 36 % |
+| Highest margin | 430 | 148 | 171 | 88 | +54 | 0 % |
+| Best in a bad year (the same plan) | 430 | 148 | 171 | 88 | +54 | 0 % |
+| Best for soil | 327 | 139 | 161 | 76 | +51 | 5 % |
+| Balanced | 419 | 142 | 166 | 85 | +61 | 0 % |
 
-- Usual practice was the hand-written wheat and rapeseed habit until 14 November 2026: 984 €/ha, S1e 151, S1 171, S5 91, S6 −29, 23 %. It is now the typical farm drawn from the declarations around the pilot. Against it, Best for soil keeps 17 fewer erosion-weighted days at −21 €/ha. Margins are farm net income ([money.md](money.md), section 7a).
+- Usual practice was the hand-written wheat and rapeseed habit until 14 November 2026: 984 €/ha, S1e 151, S1 171, S5 91, S6 −29, 23 %. It is now the typical farm drawn from the declarations around the pilot. Against it, Best for soil keeps 17 fewer erosion-weighted days at +20 €/ha. Margins are farm net income ([money.md](money.md), section 7a).
 - Exact lower bound of S1e (the best option of every field, rules ignored): 138.5. The search finds 139.
-- Price of soil protection along the non-dominated set (highest margin at each S1e): 150 → 440, 148 → 437, 146 → 430, 144 → 425, 143 → 422, 142 → 398, 141 → 380, 140 → 359, 139 → 298.
+- Price of soil protection along the non-dominated set (highest margin at each S1e): 148 → 430, 146 → 429, 145 → 428, 144 → 421, 142 → 419, 141 → 392, 140 → 369, 139 → 329 (the Best-for-soil card at 139 days: 327, the tie broken on erosion-sensitive land).
 - Erosivity at the farm: June–August 54 % of the year, December–February 13 %, the half-months without clear satellite views (16 Nov – 31 Jan) 8 %; 264 storms, the 15 largest carry 31 %.
 - By sequence, S1e: cereal then winter cereal 164, cereal then winter rapeseed 145, cereal then spring crop 184 (174 after a green autumn), grass 105.
-- Sensitivity: with the six other sets of shares the plan shown as Best for soil stays first of 38 plans in five and sixth in one (`dailyWarm2`).
+- Sensitivity: with the six other sets of shares the plan shown as Best for soil stays first of 16 plans in four, second in one (`stormsSmoothed`) and third in one (`dailyWarm2`).
 - S4 is 0 ha for every plan of the default crop set: only sugar beet and grain maize have typically wet windows.
 
 ## 9. Sources

@@ -63,16 +63,16 @@ The most likely option on every field is not used: after winter cereals it would
 
 | | Margin | Bad seasons | S1e, days | Cereal after cereal |
 |---|---|---|---|---|
-| 1 Aug · usual practice (typical farm) | 319 | −129 | 156 | 38 % |
-| 1 Aug · statistical farms, 10th / 50th / 90th percentile | 215 / 314 / 375 | −184 / −128 / −103 | 153 / 156 / 160 | 23 / 37 / 51 % |
-| 14 Nov · usual practice (typical farm) | 289 | −140 | 155 | 38 % |
-| 14 Nov · the old hand-written habit | 393 | −95 | 151 | 29 % |
+| 1 Aug · usual practice (typical farm) | 307 | −132 | 156 | 36 % |
+| 1 Aug · statistical farms, 10th / 50th / 90th percentile | 208 / 303 / 356 | −187 / −136 / −114 | 153 / 156 / 160 | 23 / 37 / 51 % |
+| 14 Nov · usual practice (typical farm) | 276 | −148 | 155 | 38 % |
+| 14 Nov · the old hand-written habit | 372 | −107 | 151 | 29 % |
 
 How the old habit compares:
 - It beat every statistical farm on margin: it always sowed rapeseed where the interval allowed and never sowed spring cereals after winter cereals.
 - Its 14 Nov plan stays in `tests/money.test.ts`, where it checks the money steps.
 
-On 1 August the highest-margin plan beats 100 % of the statistical farms on all four axes. Best for soil beats 41 % on margin and 100 % on soil.
+On 1 August the highest-margin plan beats 100 % of the statistical farms on all four axes. Best for soil beats 68 % on margin and 100 % on soil.
 
 The choices behind the table move the typical farm little (prototype of 14 Nov, gross margins before the fixes of 14 November):
 - three other seeds: 852–860 €/ha;

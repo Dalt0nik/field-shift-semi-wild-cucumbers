@@ -63,6 +63,16 @@ describe('regulatory module', () => {
     expect(ecoRotation(state({ area: new Map([['winter_wheat', 55], ['winter_rapeseed', 20], ['peas', 15], ['oats', 10]]) })).ok).toBe(false);
     expect(ecoRotation(state({ area: new Map([['winter_wheat', 45], ['winter_rapeseed', 25], ['spring_barley', 15], ['oats', 15]]) })).ok).toBe(false);
   });
+  it('the rotation eco-scheme needs legumes on a tenth of its area', () => {
+    expect(ecoRotation(state({ area: new Map([['winter_wheat', 45], ['winter_rapeseed', 30], ['oats', 17], ['peas', 8]]) })).ok).toBe(false);
+    expect(ecoRotation(state({ area: new Map([['winter_wheat', 45], ['winter_rapeseed', 30], ['oats', 15], ['peas', 10]]) })).ok).toBe(true);
+  });
+  it('leaves grass that stays out of the eco-scheme area and pays on the rest', () => {
+    const area = new Map([['winter_wheat', 40], ['winter_rapeseed', 25], ['peas', 15], ['oats', 15], ['perennial_grasses', 5]]);
+    const r = ecoRotation(state({ area, repeatedHa: 5, stay: new Map([['perennial_grasses', 5]]) }));
+    expect(r.ok).toBe(true); expect(r.paidShare).toBeCloseTo(0.95, 6);
+    expect(ecoRotation(state({ area, repeatedHa: 5 })).ok).toBe(false);
+  });
 });
 
 describe('stage 6: characteristics', () => {

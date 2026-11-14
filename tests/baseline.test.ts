@@ -53,7 +53,7 @@ describe('typical statistical farm', () => {
   });
   it('gives the reference values of docs/usual-practice.md on 1 August 2026', () => {
     const c = r.baseline.ch;
-    expect([c.marginMean, c.marginWorstFifth, c.bareErosive.p50, Math.round(c.cerealAfterCereal * 100)]).toEqual([319, -129, 156, 38]);
+    expect([c.marginMean, c.marginWorstFifth, c.bareErosive.p50, Math.round(c.cerealAfterCereal * 100)]).toEqual([307, -132, 156, 36]);
   });
   it('is beaten by the highest-margin plan of the full search on margin by almost every statistical farm', () => {
     const full = search(ctx);

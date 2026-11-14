@@ -16,7 +16,7 @@ A plan is replayed through past seasons (`REPLAY` in `src/pilot/demo.ts`: 2006�
 For field f, plan year t with crop c after preceding crop p, and replayed season s:
 
 ```
-Y(f,c,s) = Ynorm(c) × FI(f,c) × dY(c,s) × PC(c,p)                 yield, t/ha
+Y(f,c,s) = Ynorm(c) × FI(f,c) × dY(c,s) × PC(c,p) × SF(c,p)       yield, t/ha
 R(f,c,s) = Y(f,c,s) × Pnorm(c) × dP(c,s)                          revenue, €/ha
 M(f,t,s) = R(f,c,s) − WH(f,c,s) + payments(f,t) − costs(c,t)      margin, €/ha
 
@@ -31,6 +31,7 @@ F(s)     = Σf M(f,s) × area(f) / farm area + rotation eco-scheme bonus + farm 
 | farm costs, farm payments | Per ha a year, the same for every plan: Lithuanian FADN 2024 costs beyond the variable costs (491 €/ha) and the redistributive payment (46 €/ha for 102 ha) | `ctx.farmLevel`, `FARM_COSTS`, `redistributivePerHa` |
 | FI | Field index: the field's usual yield against neighbouring fields of the same crop group (NASA HLS) | `fieldFactor` |
 | PC | Preceding-crop factor, cereals only: after a cereal 0.93, after oilseed 1.02, after a legume 1.06, else 1 | `precropFactor` |
+| SF | Late-sowing factor: the yield lost when the crop can be sown only after the preceding harvest (section 7b); 1 for a crop already in the ground | `sowingFactor` |
 | WH | Wet-harvest loss in seasons with a rainy harvest (NASA GPM IMERG) | `wetHarvestLoss` |
 | payments, costs | 2025 payment rates; illustrative variable costs per crop, plus the catch-crop cost when a catch crop precedes the crop | `optionPart`, `PAYMENTS_2025`, `CATCH_CROP_COST` |
 
@@ -133,7 +134,7 @@ Field parts add up over fields, so the search evaluates a plan by summing precom
 
 ```
 F(s)  = Σ margin[s] / farm area + ecoBonus
-ecoBonus = PAYMENTS_2025.ecoRotation × share of plan years in which the farm meets the rotation eco-scheme
+ecoBonus = PAYMENTS_2025.ecoRotation × mean over the plan years of (scheme area / arable area if the scheme is met, else 0)
 ```
 
 | Characteristic | Definition |
@@ -182,21 +183,33 @@ Check against the same accounts: TF15 farms earned a farm net income of 152 €/
 
 `moneySteps.farmLevel = false` switches the step off (gross margin), as the money-step tests do.
 
+## 7b. Late sowing and the rotation eco-scheme
+
+**Late sowing — `sowingFactor(ctx, prev, crop)`.** A crop sown right after the preceding harvest is sown late when that harvest is late. The harvest of the preceding crop falls on any day of its harvest window with equal chance; the field is sown `PREP_DAYS` (10) days later, not before the crop's own sowing window opens; the yield follows the pilot's points of yield against sowing day (`LATE_SOWING` in `src/pilot/economics.ts`), linear between them. A crop already in the ground (a fixed plan year) keeps factor 1.
+
+| Crop | Points (sowing day → share of the yield of a 20 August sowing) | Source |
+|---|---|---|
+| Winter oilseed rape | 20 Aug 1.00 · 30 Aug 0.98 · 10 Sep 0.72 | Field trial of Aleksandras Stulginskis University, harvests 2009 and 2010, varieties 'Sunday' and 'Kronos', mean of both (Pupalienė, Velička, Butkevičienė 2013, *Rural Development*, figure 1). The LAMMC crop guide (IKOK, žieminiai rapsai, 2024) agrees: 10 days after 20–25 August cost 1.0–2.0 t/ha |
+
+Winter rapeseed after winter wheat (harvest 25 July – 31 August) keeps 0.95 of its yield; after winter barley (harvest by 31 July) 1.00. No other crop has points yet.
+
+**Rotation eco-scheme on the scheme area.** Order 3D-92 (p. 42–43) pays "Augalų kaita" on the area the farmer declares under it. The engine leaves fields where a perennial crop stays out of that area (grass kept for years cannot meet "no crop twice in a row") and checks the conditions on the rest: at least 4 crops, legumes on at least 10 % (p. 43.4, as amended in 2026), the main crop at most 50 %, no crop repeated on a field. The payment is made on the scheme area only (`RuleResult.paidShare`).
+
 ## 9. Pilot reference values
 
 Two set-ups of the demo farm. The money steps were first checked on the decision day **14 November 2026**, when 75 of 102 ha carried a winter crop; `tests/money.test.ts` keeps that set-up (`makeSetup({ decisionDate: '2026-11-14' })`). The demo now runs on **1 August 2026**, with every field open (`npx tsx pipeline/90_engine_check.ts 2026-08-01 2026-11-14` prints both).
 
 | | Usual season | Bad seasons | Wet harvest |
 |---|---|---|---|
-| 14 Nov · Old usual practice, both steps off, gross | 821 | 342 | 743 |
-| 14 Nov · Old usual practice, wet harvest only, gross | 799 | 326 | 632 |
-| 14 Nov · Old usual practice, both steps, gross | 838 | 350 | 666 |
-| 14 Nov · Old usual practice, both steps, farm net income | 393 | −95 | 221 |
-| 1 Aug · Usual practice (typical statistical farm) | 319 | −129 | 156 |
-| 1 Aug · Highest margin | 440 | −81 | 259 |
-| 1 Aug · Balanced plan | 398 | −89 | 224 |
+| 14 Nov · Old usual practice, both steps off, gross | 801 | 330 | 726 |
+| 14 Nov · Old usual practice, wet harvest only, gross | 779 | 314 | 615 |
+| 14 Nov · Old usual practice, both steps, gross | 817 | 338 | 649 |
+| 14 Nov · Old usual practice, both steps, farm net income | 372 | −107 | 204 |
+| 1 Aug · Usual practice (typical statistical farm) | 307 | −132 | 164 |
+| 1 Aug · Highest margin (also best in a bad year) | 430 | −54 | 260 |
+| 1 Aug · Balanced plan | 419 | −65 | 244 |
 
-All values in €/ha. "Old usual practice" is the plan of the hand-written wheat and rapeseed habit that usual practice was until 14 November 2026. `tests/money.test.ts` keeps it as a fixed plan, so the money steps are checked on the same plan as before. Usual practice is now the typical farm drawn from the declarations around the pilot ([usual-practice.md](usual-practice.md)); 1 August rows are farm net income with both money steps. Before the replay was scaled and before the farm costs (14 November 2026) the same rows read 857 / 379 / 654, 988 / 444 / 763 and 955 / 451 / 744: gross margins, and about 90 €/ha too high.
+All values in €/ha. "Old usual practice" is the plan of the hand-written wheat and rapeseed habit that usual practice was until 14 November 2026. `tests/money.test.ts` keeps it as a fixed plan, so the money steps are checked on the same plan as before. Usual practice is now the typical farm drawn from the declarations around the pilot ([usual-practice.md](usual-practice.md)); 1 August rows are farm net income with both money steps, late sowing and the eco-scheme on its scheme area. Before late sowing and the scheme area (14 November 2026) they read 319 / −129 / 156, 440 / −81 / 259 and 398 / −89 / 224. Before the replay was scaled and before the farm costs (14 November 2026) the same rows read 857 / 379 / 654, 988 / 444 / 763 and 955 / 451 / 744: gross margins, and about 90 €/ha too high.
 
 Single values:
 - FI(F12, winter wheat) = 0.813.

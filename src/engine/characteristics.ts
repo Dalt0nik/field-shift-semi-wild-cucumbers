@@ -14,7 +14,7 @@
 //  Rules     — EU conditionality (GAEC 6, GAEC 7) as implemented in Lithuania, eco-scheme and payments.
 import { CLASS_INFO, CROPS, crop } from '../pilot/regional';
 import { PAYMENTS_2025, ecoRotation, gaec6, gaec7, type YearState } from '../pilot/rules';
-import { catchBefore, familyOf, lastHistoryCrop, type PlanSetup } from './plan';
+import { PREP_DAYS, catchBefore, familyOf, lastHistoryCrop, type PlanSetup } from './plan';
 import type { Characteristics, CropId, FieldInfo, FieldOption, Range, RuleResult } from './types';
 
 export interface EconCrop { yieldTHa: Record<string, number>; priceEurT: Record<string, number>; costEurHa: number | null }
@@ -90,6 +90,9 @@ export interface Context {
    *  variable costs (overheads, depreciation, rent, wages, interest, land tax) and payments per holding (redistributive).
    *  Absent: both 0, and the margin stays a gross margin. */
   farmLevel?: { costsEurHa: number; paymentsEurHa: number };
+  /** yield of a crop by its sowing day, as a share of the yield at the best sowing: points ['MM-DD', factor], linear
+   *  between them, the last slope continued after the last point (set by the pilot from field trials) */
+  lateSowing?: Record<CropId, [string, number][]>;
   /** soil-protection climate and coefficients (absent: every half-month weighs the same, S4-S6 are zero) */
   soil?: SoilParams;
 }
@@ -118,6 +121,30 @@ export function precropFactor(c: CropId, prev: string | null): number {
 }
 
 /** Field index of a field for a crop (1 = as the district). */
+const dayOfYear = (md: string) => Date.UTC(2001, +md.slice(0, 2) - 1, +md.slice(3, 5)) / 864e5 - Date.UTC(2001, 0, 0) / 864e5;
+/** Yield factor of a crop sown on day-of-year `d`, from the pilot's late-sowing points (1 before the first point). */
+function sowingCurve(points: [string, number][], d: number): number {
+  const p = points.map(([md, v]) => [dayOfYear(md), v] as const);
+  if (d <= p[0][0]) return p[0][1];
+  for (let i = 1; i < p.length; i++) if (d <= p[i][0]) return p[i - 1][1] + (p[i][1] - p[i - 1][1]) * (d - p[i - 1][0]) / (p[i][0] - p[i - 1][0]);
+  const [a, b] = [p[p.length - 2], p[p.length - 1]];
+  return Math.max(0, b[1] + (b[1] - a[1]) / (b[0] - a[0]) * (d - b[0]));
+}
+/** Expected yield factor of a crop that is sown only after the preceding crop leaves the field: the harvest of the
+ *  preceding crop falls on any day of its harvest window with equal chance, the field is sown PREP_DAYS later (not before
+ *  the crop's own sowing window opens), and the yield follows the pilot's late-sowing points. 1 for crops without points
+ *  and after a perennial crop or an unknown one. */
+export function sowingFactor(ctx: Context, prev: string | null, c: CropId): number {
+  const points = ctx.lateSowing?.[c], from = CROPS[c]?.sowing.from;
+  if (!points?.length || !from || !prev) return 1;
+  const p = CROPS[prev] ?? CROPS[CLASS_INFO[prev]?.members[0] ?? ''];
+  if (!p || p.season === 'perennial' || !p.harvest.from || !p.harvest.to) return 1;
+  const open = dayOfYear(from), h0 = dayOfYear(p.harvest.from), h1 = dayOfYear(p.harvest.to);
+  let sum = 0, n = 0;
+  for (let h = h0; h <= h1; h++) { sum += sowingCurve(points, Math.max(open, h + PREP_DAYS)); n++; }
+  return n ? sum / n : 1;
+}
+
 export function fieldFactor(ctx: Context, fieldId: string, c: CropId): number {
   const fi = ctx.fieldIndex;
   if (!fi || ctx.moneySteps?.fieldIndex === false) return 1;
@@ -279,7 +306,8 @@ export function optionPart(pre: Prepared, f: FieldInfo, o: FieldOption): OptionP
     const payHa = PAYMENTS_2025.basic + (c.legume && c.season !== 'perennial' ? PAYMENTS_2025.coupledProtein : 0) + (catchB ? PAYMENTS_2025.ecoCatchCrop : 0);
     const costHa = (pre.normal[id]?.costEurHa ?? 0) + (catchB ? CATCH_CROP_COST * (ctx.costFactor ?? 1) : 0);
     // yield of this field = normal x field index x season deviation x preceding crop
-    const k = precropFactor(id, prev) * fieldFactor(ctx, f.id, id);
+    // a crop already in the ground was sown on time; a crop still to be sown waits for the preceding harvest
+    const k = precropFactor(id, prev) * fieldFactor(ctx, f.id, id) * (o.fixed[i] ? 1 : sowingFactor(ctx, prev, id));
     const rev = pre.revenue[id], revY = pre.revenueYield[id], dev = pre.yieldDev[id], nt = pre.normal[id]?.yieldTHa ?? 0;
     const wh = ctx.wetHarvest;
     for (let s = 0; s < margin.length; s++) {
@@ -314,7 +342,7 @@ const sameCrop = (a: string | null, b: string) => !!a && (a === b || (!CROPS[a] 
 export function yearStates(ctx: Context, options: FieldOption[]): YearState[] {
   const byField = new Map(ctx.fields.map(f => [f.id, f]));
   return ctx.setup.planYears.map((year, i) => {
-    const s: YearState = { year, area: new Map(), arableHa: 0, changedHa: 0, catchHa: 0, fourthYearHa: 0, repeatedHa: 0, winterGreenHa: 0, winterStubbleHa: 0, winterExemptHa: 0 };
+    const s: YearState = { year, area: new Map(), arableHa: 0, changedHa: 0, catchHa: 0, fourthYearHa: 0, repeatedHa: 0, winterGreenHa: 0, winterStubbleHa: 0, winterExemptHa: 0, stay: new Map() };
     for (const o of options) {
       const f = byField.get(o.fieldId)!; const id = o.crops[i]; const c = crop(id);
       const hist = (y: number) => f.history[y]?.crop ?? f.history[y]?.cropClass ?? null;
@@ -322,6 +350,7 @@ export function yearStates(ctx: Context, options: FieldOption[]): YearState[] {
       const prev = before(1);
       s.arableHa += f.areaHa; s.area.set(id, (s.area.get(id) ?? 0) + f.areaHa);
       if (!sameCrop(prev, id)) s.changedHa += f.areaHa; else s.repeatedHa += f.areaHa;
+      if (c.season === 'perennial' && sameCrop(prev, id)) s.stay!.set(id, (s.stay!.get(id) ?? 0) + f.areaHa);
       // "no crop for more than three years on a plot" concerns annual crops; perennial grass is meant to stay
       if (c.season !== 'perennial' && sameCrop(before(1), id) && sameCrop(before(2), id) && sameCrop(before(3), id)) s.fourthYearHa += f.areaHa;
       const catchB = catchBefore(o, i);
@@ -334,23 +363,23 @@ export function yearStates(ctx: Context, options: FieldOption[]): YearState[] {
   });
 }
 
-export function rulesFor(ctx: Context, options: FieldOption[]): { rules: RuleResult[]; eco: boolean[]; feasible: boolean; states: YearState[] } {
+export function rulesFor(ctx: Context, options: FieldOption[]): { rules: RuleResult[]; eco: boolean[]; ecoShare: number[]; feasible: boolean; states: YearState[] } {
   const states = yearStates(ctx, options);
   const total = ctx.fields.reduce((t, f) => t + f.areaHa, 0);
-  const rules: RuleResult[] = []; const eco: boolean[] = []; let feasible = true;
+  const rules: RuleResult[] = []; const eco: boolean[] = [], ecoShare: number[] = []; let feasible = true;
   for (const s of states) {
     const r7 = gaec7(s), r6 = gaec6(s, total), re = ecoRotation(s);
-    rules.push(r7, r6, re); eco.push(re.ok);
+    rules.push(r7, r6, re); eco.push(re.ok); ecoShare.push(re.ok ? re.paidShare ?? 1 : 0);
     if (!r7.ok || !r6.ok) feasible = false; // strict mode: payment conditions act as prohibitions
   }
-  return { rules, eco, feasible, states };
+  return { rules, eco, ecoShare, feasible, states };
 }
 
 /** Stage 6 for one variant, from the field-level parts of its options. */
 export function characteristics(pre: Prepared, options: FieldOption[], parts: OptionPart[]): Characteristics {
   const { ctx, seasons, types, totalHa } = pre;
-  const { rules, eco, feasible, states } = rulesFor(ctx, options);
-  const ecoBonus = eco.reduce((t, ok) => t + (ok ? PAYMENTS_2025.ecoRotation : 0), 0) / eco.length; // EUR/ha/yr, farm level
+  const { rules, eco, ecoShare, feasible, states } = rulesFor(ctx, options);
+  const ecoBonus = ecoShare.reduce((t, share) => t + share * PAYMENTS_2025.ecoRotation, 0) / ecoShare.length; // EUR/ha/yr, farm level, on the scheme area
   // money that is the same for every plan of this farm: it moves the level of every margin, never the order of plans
   const fl = ctx.moneySteps?.farmLevel === false ? undefined : ctx.farmLevel;
   const farmPay = fl?.paymentsEurHa ?? 0, farm = farmPay - (fl?.costsEurHa ?? 0);
