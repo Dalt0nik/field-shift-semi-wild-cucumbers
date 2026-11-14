@@ -20,7 +20,7 @@ const NAV: Item[] = [
   { href: '/settings', label: 'Crops', hint: 'Crops the farm can grow, limits', icon: I('M4 6h10m4 0h2M4 12h4m4 0h8M4 18h12m4 0h0M14 4v4M8 10v4M16 16v4') },
   { group: 'Plan' },
   { href: '/planner', label: 'Planner', hint: 'Suggested plans, comparison, your custom plan', icon: I('M12 21V10m0 0c0-3 2-6 6-7 0 4-2 7-6 7Zm0 3c0-3-2-5-6-6 0 4 2 6 6 6Z') },
-  { href: '/analytics', label: 'Analytics', hint: 'Bare soil and erosive rain, weather risk, risk zones, method', icon: I('M4 20V4m0 16h16M8 16l4-5 3 3 5-7') },
+  { href: '/analytics', label: 'Analytics', hint: 'Bare soil and erosive rain, weather risk, risk zones', icon: I('M4 20V4m0 16h16M8 16l4-5 3 3 5-7') },
   { href: '/rules', label: 'Checks', hint: 'Rule checks of a plan', icon: I('M5 12l4 4L19 6M4 20h16') },
 ];
 // the next step of the path, always at the right end of the top bar; the last screen has none

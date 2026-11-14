@@ -54,7 +54,7 @@ TypeScript on Node 24, Next.js 16, React 19, MapLibre GL.
 | Fields | What grew on each field this year and when it is free; field timelines with free slots |
 | Crops | Crops the farm can grow, catch crops, limits |
 | Planner | The suggested plans with money and the soil health score, the comparison table, the custom plan, the sowing list of the chosen plan |
-| Analytics | The data behind the numbers: when fields are bare and rain is erosive, when the weather can hurt the selected plan's crops, risk zones, the method |
+| Analytics | The data behind the numbers: when fields are bare and rain is erosive, when the weather can hurt the selected plan's crops, risk zones |
 | Checks | The farm rules applied to the selected plan |
 
 The button to the next screen sits at the right of the top bar. Every tab and view has its own URL. Technical terms are underlined where they appear and explained on hover (`src/components/glossary.ts`).

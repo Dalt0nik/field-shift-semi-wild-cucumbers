@@ -50,12 +50,6 @@ export const SCREENS: Record<string, ScreenNote> = {
     why: 'Erosion uses the paying agency’s official layer because NASADEM slope agreed with it on only 36 % of the cropland it marked steeper than 12 %. The “what if” re-weights past seasons in the replay; it does not invent a new climate. Dry seasons type the past seasons; they do not forecast yield.',
     ask: ['Why not use the NASA elevation model for erosion?', 'What does the dry-season slider actually change?', 'How is a dry season defined?'],
   },
-  'analytics/method': {
-    title: 'Analytics · Method',
-    shows: 'How each characteristic of a plan is built and how it was checked on Lithuanian data, the soil measures included; the NDVI season profile of a field; the yield ranges the replay uses; the days without cover by crop sequence; and the methods that were tested and not used.',
-    why: 'Every characteristic was kept only after a check on real data, and methods that failed are listed rather than hidden: soil-moisture products showed no link to yields, autumn greenness is only a hint, crop residue could not be told from ploughed soil, a field-level yield model cannot be verified without field yields.',
-    ask: ['How was the margin range checked?', 'How were the soil numbers checked?', 'How far can I trust these yields for my farm?'],
-  },
   rules: {
     title: 'Plan checks',
     shows: 'The rule checks of the selected plan, one line per rule with pass or fail; the text of the rule and the numbers behind it open on a click. The map shows the plan’s crops and the rule layers.',

@@ -1,29 +1,28 @@
 'use client';
-// Analytics: what the plan characteristics are built from. Seasons (when fields are bare, which months are
-// risky), risk zones with a "what if" on season frequency, and the evidence behind each characteristic.
+// Analytics: what the NASA data show about the farm. Bare soil (when fields are bare, when bare soil erodes or
+// loses nitrate), weather risk for the selected plan's crops, and risk zones with a "what if" on dry seasons.
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
-import { Intervals, NdviProfile, WaterBalance } from '@/components/Charts';
-import { cropColor, rampCss, rampFor } from '@/components/colors';
+import { WaterBalance } from '@/components/Charts';
+import { rampCss, rampFor } from '@/components/colors';
 import { grid, layerImage } from '@/components/grid';
-import { MonthRisk, SoilHelpButton, soilCheck } from '@/components/Soil';
+import { MonthRisk, SoilHelpButton } from '@/components/Soil';
 import { useScreen, useStore } from '@/components/store';
-import { Check, More, Panel, Select, Sw, Tabs, Term, pct, useQueryState } from '@/components/ui';
+import { Check, Panel, Select, Sw, Tabs, Term, pct, useQueryState } from '@/components/ui';
 import { DryMargin } from '@/components/DryMargin';
 import { WeatherRisk, weatherClashes } from '@/components/WeatherRisk';
 import hazardsJson from '@/data/hazards.json';
-import { DECISION_DATE, DECISION_YEAR, PLAN_YEARS, coverModel, fieldIndex, fields, niceDate, products, weather } from '@/pilot/demo';
-import { bareCalendar, seasonCover, series } from '@/pilot/satellite';
-import { soilClimate, soilParams } from '@/pilot/soil';
-import { coverDays } from '@/engine/characteristics';
+import { DECISION_DATE, DECISION_YEAR, PLAN_YEARS, fields, niceDate, products, weather } from '@/pilot/demo';
+import { bareCalendar, seasonCover } from '@/pilot/satellite';
+import { soilClimate } from '@/pilot/soil';
 import { partsOf } from '@/engine/editor';
-import { CROPS, cropLabel } from '@/pilot/regional';
+import { CROPS } from '@/pilot/regional';
 
 const FarmMap = dynamic(() => import('@/components/FarmMap'), { ssr: false });
 const hazards = hazardsJson as any;
 const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const quant = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y); const i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
-type Tab = 'bare' | 'weather' | 'zones' | 'method';
+type Tab = 'bare' | 'weather' | 'zones';
 type Zone = 'erosion' | 'low' | 'dry';
 
 // the crops of the selected plan (no grass): Weather risk shows when they are sown and harvested
@@ -136,82 +135,13 @@ function Zones({ head }: { head: React.ReactNode }) {
   );
 }
 
-function Evidence() {
-  const s = useStore();
-  const [year, setYear] = useState(String(DECISION_YEAR));
-  const f = s.fields.find(x => x.id === s.field)!;
-  const soil = soilParams();
-  const stay = soilCheck.variants.filter(v => v.basePlanRank === 1).length;
-  // greenness of the last four years, as seen up to the decision day
-  const ndvi = useMemo(() => Object.fromEntries(Object.entries(series(f.id)).filter(([k]) => +k.slice(0, 4) >= DECISION_YEAR - 3)), [f.id]);
-  const yields = useMemo(() => s.cropSet.filter(c => s.ws.pre.normal[c] && s.ws.pre.revenueYield[c] && c !== 'sugar_beet').map(c => {
-    const n = s.ws.pre.normal[c], ys = s.ws.pre.revenueYield[c].map(r => r / n.priceEurT);
-    return { label: CROPS[c].name, color: cropColor(c), lo: quant(ys, 0.1), mid: n.yieldTHa, hi: quant(ys, 0.9) };
-  }), [s.cropSet, s.ws]);
-  const seq = ['mid>august', 'mid>september', 'mid>spring_early>green_autumn', 'mid>spring_early>open_autumn', 'late>spring_late', 'grass>grass'];
-  return (
-    <>
-      <Panel title="How each number of a plan is built, and how it was checked">
-        <div className="scroll-x">
-          <table>
-            <thead><tr><th>Measure of a plan</th><th>Built from</th><th>How it was checked</th></tr></thead>
-            <tbody>
-              <tr><td><b><Term id="margin">Margin</Term></b>, usual and <Term id="worstFifth">bad seasons</Term></td><td>District yields, prices, 2025 payment rates, <Term id="replay">replayed</Term> through {s.ctx.replay.firstSeason}–{s.ctx.replay.lastSeason}</td><td>Yield ranges held the real yield in 80 % of 3 319 cases.</td></tr>
-              <tr><td><b><Term id="fieldIndex">Field index</Term></b> in the margin</td><td>NASA <Term id="hls">HLS</Term> season peak <Term id="ndvi">NDVI</Term> of each field against neighbours with the same crop, seasons {fieldIndex.seasons.join(', ')}; district yields for the conversion</td><td>A field keeps its place for years (r 0.31–0.40 up to 5 years apart); predicted 2026 from earlier seasons with r 0.52 on 1 075 fields.</td></tr>
-              <tr><td><b>Margin in a <Term id="wetHarvest">wet harvest</Term></b></td><td>NASA <Term id="imerg">GPM IMERG</Term> rain 20 Jul – 31 Aug; elevator drying tariffs and buyer price lists 2025</td><td>Drying 7.5 € per tonne per % moisture is a published tariff; the extra moisture and the feed share are estimates.</td></tr>
-              <tr><td><b>Margin in <Term id="drySeason">dry seasons</Term></b></td><td>NASA <Term id="imerg">GPM IMERG</Term> rain, NASA <Term id="power">POWER</Term> temperature</td><td>In dry seasons spring cereals yielded 16 % below normal.</td></tr>
-              <tr><td><b><Term id="soilScore">Soil health score</Term></b></td><td>Three parts, each on a scale from the weakest tenth of local farms (0) to the best plan found (100), averaged with equal weights: soil cover (days of bare soil under heavy rain), crop variety (cereal after cereal, crop groups), organic matter (humus balance)</td><td>No source sets weights between soil measures, so they are equal. With any part counted double or half, the Best-for-soil plan stays within 5 points of the top (unit test).</td></tr>
-              <tr><td><b><Term id="soilDays">Soil without cover</Term></b>, weighted by erosive rain</td><td>NASA <Term id="hls">HLS</Term>, 30 m, 1 700 declared fields, by half-month; NASA <Term id="imerg">GPM IMERG</Term> half-hourly rain {soilClimate.period}</td><td>With equal weights it equals the plain days (unit test). The plan with the fewest such days stays first of {soilCheck.plans} under {stay} of {soilCheck.variants.length} other ways to compute the weights.</td></tr>
-              <tr><td><b><Term id="bareDays">Days without living cover</Term></b></td><td>NASA <Term id="hls">HLS</Term>, 30 m, 1 700 declared fields</td><td>Cover curves follow the declared crops: {Math.min(...seq.slice(0, 5).map(k => coverModel.model[k]?.total[1] ?? 999))} to {Math.max(...seq.map(k => coverModel.model[k]?.total[1] ?? 0))} bare days by crop sequence.</td></tr>
-              <tr><td><b>The same on erosion-sensitive land</b></td><td>Official layer with the HLS cover model and the IMERG weights</td><td><Term id="nasadem">NASADEM</Term> slope alone was rejected: 36 % agreement with the official layer.</td></tr>
-              <tr><td><b>Bare soil in the <Term id="leaching">leaching season</Term></b>; <Term id="wetSoilHarvest">harvest on wet soil</Term></td><td>NASA HLS cover; NASA GPM IMERG rain and NASA <Term id="power">POWER</Term> temperature</td><td>Not validated: they show exposure, not leached nitrogen or compaction.</td></tr>
-              <tr><td><b><Term id="humus">Humus balance</Term></b></td><td>Coefficients of the VDLUFA method, yields as in the margin</td><td>An accounting indicator: it compares plans and does not predict measured soil carbon.</td></tr>
-              <tr><td><b>Cereal after cereal</b>, legumes, crop families</td><td>Crop guides (LAMMC), field history</td><td>Yield effects are from literature, not local trials.</td></tr>
-              <tr><td><b>Rules and payments</b></td><td>EU farm-payment conditions as they apply in Lithuania</td><td>Thresholds checked against the acts.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-      <div className="cols">
-        <Panel title={<><Term id="ndvi">Greenness</Term> through the year · {f.id}</>} right={<><Select small label="Field" value={s.field} onChange={s.setField} options={fields.map(x => ({ value: x.id, label: x.id }))} /><Select small label="Year" value={year} onChange={setYear} options={[DECISION_YEAR - 2, DECISION_YEAR - 1, DECISION_YEAR].map(y => ({ value: String(y), label: String(y) }))} /></>}>
-          <NdviProfile ndvi={ndvi} year={+year} />
-          <div className="legend"><span><Sw c="#17231c" />{year}: {cropLabel(f.history[+year]?.crop ?? f.history[+year]?.cropClass)}</span><span><Sw c="#c6dcb4" />range of the other years</span>{+year === DECISION_YEAR && <span>seen up to {niceDate(DECISION_DATE)}</span>}</div>
-        </Panel>
-        <Panel title={<>Yield ranges the <Term id="replay">replay</Term> uses</>} sub="t/ha · low season · normal · high season">
-          <Intervals rows={yields} unit="t/ha" />
-          <div style={{ marginTop: 8 }}><Check>these are district averages; each field’s yield is this times its <Term id="fieldIndex">field index</Term> (Fields screen).</Check></div>
-        </Panel>
-      </div>
-      <Panel>
-        <div style={{ display: 'grid', gap: 10 }}>
-          <More label="Tested and not used">
-            <ul className="plain">
-              <li><b>Satellite soil moisture</b> (SMAP) and three other drought indicators: no link to district yields.</li>
-              <li><b>“Green in autumn = winter crop”</b>: right for three fields in four, so it only pre-fills the entry.</li>
-              <li><b>Crop residue from the satellite</b>: could not separate stubble from ploughed soil.</li>
-              <li><b><Term id="nasadem">NASA elevation model</Term> for the slope rule</b>: disagrees with the official layer.</li>
-              <li><b>A field-level yield model</b>: no field yields exist to check it against.</li>
-            </ul>
-          </More>
-          <More label="Days without cover by crop sequence">
-            <div className="scroll-x"><table>
-              <thead><tr><th>After a crop harvested</th><th>Next crop sown</th><th className="n">Fields</th><th className="n"><Term id="bareDays">Days without living cover</Term></th><th className="n"><Term id="soilDays">Weighted by erosive rain</Term></th><th className="n">In the <Term id="leaching">leaching season</Term></th></tr></thead>
-              <tbody>{seq.map(key => { const m = coverModel.model[key]; const [p, n, c] = key.split('>'); return m && (
-                <tr key={key}><td>{({ mid: 'July–August', late: 'September–October', grass: 'grass' } as any)[p]}</td><td>{({ august: 'August (winter rapeseed)', september: 'September (winter cereals)', spring_early: 'April', spring_late: 'May (maize, beet)', grass: 'stays grass' } as any)[n]}{c === 'green_autumn' ? ', after a catch crop' : c === 'open_autumn' ? ', open autumn' : ''}</td><td className="n">{m.n}</td><td className="n">{m.total[1]} <span className="muted">({m.total[0]}–{m.total[2]})</span></td><td className="n"><b>{Math.round(coverDays(m.half.mean, soil).s1e)}</b></td><td className="n">{Math.round(coverDays(m.half.mean, soil).s5)}</td></tr>); })}</tbody>
-            </table></div>
-          </More>
-        </div>
-      </Panel>
-    </>
-  );
-}
-
 export default function AnalyticsPage() {
-  const [tab, setTab] = useQueryState<Tab>('tab', 'bare');
+  const [asked, setTab] = useQueryState<Tab>('tab', 'bare');
+  const tab: Tab = asked === 'weather' || asked === 'zones' ? asked : 'bare'; // an old link to ?tab=method opens Bare soil
   const s = useStore();
-  const head = <><div className="page-head"><h1>Analytics</h1><Tabs label="Analytics views" tabs={[{ id: 'bare', label: 'Bare soil' }, { id: 'weather', label: 'Weather risk' }, { id: 'zones', label: 'Risk zones' }, { id: 'method', label: 'Method' }]} value={tab} onChange={setTab} /></div></>;
+  const head = <><div className="page-head"><h1>Analytics</h1><Tabs label="Analytics views" tabs={[{ id: 'bare', label: 'Bare soil' }, { id: 'weather', label: 'Weather risk' }, { id: 'zones', label: 'Risk zones' }]} value={tab} onChange={setTab} /></div></>;
   useScreen(tab === 'zones' ? null : `analytics/${tab}`, tab === 'bare' ? { selectedField: s.field, bareDaysLastSeason: Object.fromEntries(fields.map(f => [f.id, seasonCover(f.id).at(-1)?.total ?? null])), erosiveRainShareByMonthJanToDec: soilClimate.erosivity.byMonth, leachingSeasonSurplusMm: soilClimate.leaching.seasonSurplusMm }
-    : tab === 'weather' ? { selectedPlan: s.plan?.name, thingsToWatch: weatherClashes(planCrops(s)), hazardsByMonthShareOfYears: Object.fromEntries(hazards.hazards.map((h: any) => [h.label, h.byMonth])) } : { selectedField: s.field });
+    : tab === 'weather' ? { selectedPlan: s.plan?.name, thingsToWatch: weatherClashes(planCrops(s)), hazardsByMonthShareOfYears: Object.fromEntries(hazards.hazards.map((h: any) => [h.label, h.byMonth])) } : {});
   if (tab === 'zones') return <Zones head={head} />;
-  return <div className="page">{head}{tab === 'method' ? <Evidence /> : <Seasons part={tab === 'weather' ? 'weather' : 'bare'} />}</div>;
+  return <div className="page">{head}<Seasons part={tab === 'weather' ? 'weather' : 'bare'} /></div>;
 }

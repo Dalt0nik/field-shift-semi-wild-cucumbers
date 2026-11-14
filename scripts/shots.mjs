@@ -45,7 +45,6 @@ const STATES = [
   { name: 'analytics-zones-erosion', url: '/analytics?tab=zones', map: true, plans: true },
   { name: 'analytics-zones-low', url: '/analytics?tab=zones&view=low', map: true, plans: true },
   { name: 'analytics-zones-dry', url: '/analytics?tab=zones&view=dry', map: true, plans: true, act: p => p.evaluate(() => { const r = document.querySelector('#dryk'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(r, '2'); r.dispatchEvent(new Event('input', { bubbles: true })); }) },
-  { name: 'analytics-method', url: '/analytics?tab=method' },
   { name: 'assistant-open', url: '/planner', plans: true, viewport: true, act: p => click(p, '.chat-fab') },
   { name: 'term-explained', url: '/analytics', viewport: true, act: async p => { await (await p.$('th.n .term'))?.hover(); } },
 ];
