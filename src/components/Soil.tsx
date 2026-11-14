@@ -1,6 +1,7 @@
 'use client';
 // Soil in the interface: the soil health score on every plan card, the charts of bare soil against erosive rain (Analytics), and the panel that explains in
 // plain words how the score is counted, with its sources.
+import { useState } from 'react';
 import { coverDays } from '@/engine/characteristics';
 import { SOIL_TIE_POINTS, soilBand, type SoilBand } from '@/engine/soil-score';
 import type { Characteristics } from '@/engine/types';
@@ -51,6 +52,54 @@ const SEQ: { key: string; label: string; color: string }[] = [
   { key: 'mid>spring_early', label: 'cereal, then spring crop', color: '#7d8b80' },
   { key: 'mid>spring_early>green_autumn', label: 'the same after a green autumn (catch crop)', color: '#2f6b3c' },
 ];
+// Analytics: one measure by month, July to June (one harvest to the next), for a cereal followed by a spring crop,
+// in per cent: the share of the year's heavy rain (erosion) or of the autumn-winter drainage water (nitrate) that
+// falls on bare soil, i.e. Σ bare fraction × share of the rain or water. Not "days": split by month, the day-like
+// unit of the plan measure (× 365) gives numbers above a month's length.
+const MONTHS = ['July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June'];
+const BASE_SEQ = 'mid>spring_early', CATCH_SEQ = 'mid>spring_early>green_autumn';
+const RISK_KIND = {
+  erosion: { weight: (h: number) => P0.erosivity[h], cls: 'erosion', of: 'the year’s heavy rain', on: 'falls on bare soil', comes: 'of the heavy rain comes' },
+  nitrate: { weight: (h: number) => P0.leaching[h], cls: 'nitrate', of: 'the autumn and winter drainage water', on: 'drains through bare soil', comes: 'of the drainage comes' },
+};
+type RiskKind = keyof typeof RISK_KIND;
+const halfOf = (seq: string): number[] => coverModel.model[seq]?.half.mean ?? [];
+const perMonth = (f: (h: number) => number) => MONTHS.map((_, m) => (f(2 * m) + f(2 * m + 1)) * 100);
+const byMonth = (kind: RiskKind, seq: string) => { const half = halfOf(seq); return perMonth(h => (half[h] ?? 0) * RISK_KIND[kind].weight(h)); };
+const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
+const bareWords = (b: number) => (b < 0.2 ? 'mostly green' : b < 0.4 ? 'bare about a third of the month' : b < 0.6 ? 'bare about half the month' : b < 0.85 ? 'bare most of the month' : 'bare the whole month');
+// worst months: those within a quarter of the peak; a run of three or more reads as "November to February"
+const names = (ms: number[]) => ms.length > 2 && ms.at(-1)! - ms[0] === ms.length - 1 ? `${MONTHS[ms[0]]} to ${MONTHS[ms.at(-1)!]}` : ms.map(m => MONTHS[m]).join(ms.length > 2 ? ', ' : ' and ');
+
+/** A month chart for farmers: the worst months stand out and carry their number; hover or focus a month to read it. */
+export function MonthRisk({ kind }: { kind: RiskKind }) {
+  const k = RISK_KIND[kind], row = byMonth(kind, BASE_SEQ), total = Math.round(sum(row)), withCatch = Math.round(sum(byMonth(kind, CATCH_SEQ)));
+  const rain = perMonth(k.weight), half = halfOf(BASE_SEQ), bare = MONTHS.map((_, m) => ((half[2 * m] ?? 0) + (half[2 * m + 1] ?? 0)) / 2);
+  const max = Math.max(...row) || 1, worst = row.flatMap((v, m) => (v >= max * 0.75 ? [m] : []));
+  const [hover, setHover] = useState<number | null>(null);
+  const W = 560, H = 170, pb = 24, pt = 24, gw = W / 12;
+  const y = (v: number) => pt + (H - pb - pt) * (1 - v / max);
+  const live = hover === null
+    ? <>On a field left bare from harvest to spring sowing, <b>{total} %</b> of {k.of} {k.on}, most of it in {names(worst)}.</>
+    : <><b>{MONTHS[hover]}</b>: <b>{Math.round(row[hover])} %</b> of {k.of} {k.on}. {Math.round(rain[hover])} % {k.comes} in {MONTHS[hover]}, and the field is {bareWords(bare[hover])}.</>;
+  return (
+    <div className={`mrisk ${k.cls}`}>
+      <div className="mrisk-head">Worst: {names(worst)}</div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="chart" role="img" aria-label={`Share of ${k.of} that ${k.on}, by month; worst in ${names(worst)}`} onMouseLeave={() => setHover(null)}>
+        {row.map((v, m) => { const hot = worst.includes(m), h = Math.max(2, H - pb - y(v)); return (
+          <g key={m} tabIndex={0} onMouseEnter={() => setHover(m)} onFocus={() => setHover(m)} onBlur={() => setHover(null)} className={`mrisk-bar${hot ? ' hot' : ''}${hover === m ? ' on' : ''}`}>
+            <rect x={m * gw} y={0} width={gw} height={H} fill="transparent" />
+            <rect className="b" x={m * gw + 7} width={gw - 14} y={H - pb - h} height={h} rx={4} />
+            {(hot || hover === m) && v >= 0.5 && <text x={m * gw + gw / 2} y={H - pb - h - 7} textAnchor="middle" className="v">{Math.round(v)} %</text>}
+            <text x={m * gw + gw / 2} y={H - 7} textAnchor="middle" className="m">{MONTHS[m].slice(0, 3)}</text>
+          </g>); })}
+        <line x1={0} x2={W} y1={H - pb} y2={H - pb} className="base" />
+      </svg>
+      <p className="mrisk-live" aria-live="polite">{live}</p>
+      {withCatch < total && <p className="mrisk-tip">A <Term id="catchCrop">catch crop</Term> in autumn lowers it from {total} % to <b>{withCatch} %</b>.</p>}
+    </div>
+  );
+}
 /** How the headline is calculated: the share of erosive rain in each half-month (bars) and how bare the soil is
  *  under four crop sequences (lines). The measure multiplies the two and adds up. */
 export function ErosivityChart({ leaching = false }: { leaching?: boolean }) {

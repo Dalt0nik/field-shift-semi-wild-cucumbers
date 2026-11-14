@@ -212,6 +212,16 @@ table.mini { width: auto; } table.mini td { padding: 2px 18px 2px 0; border: 0; 
 .tl-now { position: absolute; top: 0; } .tl-now i { position: absolute; top: 4px; right: 5px; font-style: normal; font-size: 0.72rem; font-weight: 700; color: var(--dry); white-space: nowrap; }
 .tl-nowline { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--dry); }
 
+/* month risk chart (Analytics): worst months strong, the rest pale; a live line under it reads the hovered month */
+.mrisk { --hot: var(--dry); --pale-bar: #efd3c9; display: grid; gap: 8px; }
+.mrisk.nitrate { --hot: #2c6e8f; --pale-bar: #cfe1ea; }
+.mrisk-head { font-family: var(--font-display), sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--hot); }
+.mrisk-bar { cursor: default; outline: none; } .mrisk-bar .b { fill: var(--pale-bar); transition: fill 0.15s; }
+.mrisk-bar.hot .b, .mrisk-bar.on .b { fill: var(--hot); } .mrisk-bar:focus-visible .b { stroke: var(--rape); stroke-width: 3; }
+.mrisk-bar .v { font-size: 13px; font-weight: 700; fill: var(--hot); } .mrisk-bar .m { font-size: 11px; fill: var(--muted); } .mrisk-bar.hot .m, .mrisk-bar.on .m { fill: var(--ink); font-weight: 700; }
+.mrisk .base { stroke: var(--ink); stroke-width: 1.5; }
+.mrisk-live { min-height: 2.9em; font-size: 0.92rem; }
+.mrisk-tip { font-size: 0.86rem; padding: 6px 10px; border-left: 3px solid var(--field); background: #eef5ef; }
 .chart { width: 100%; height: auto; display: block; } .chart .tick { font-size: 10px; fill: var(--muted); } .chart .tick.strong { fill: var(--dry); font-weight: 700; } .chart .axis { font-size: 11px; fill: var(--ink); font-weight: 600; } .chart .dot { cursor: pointer; }
 
 /* assistant: a support-style chat in the corner */

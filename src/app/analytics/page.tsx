@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Intervals, NdviProfile, WaterBalance } from '@/components/Charts';
 import { cropColor, rampCss, rampFor } from '@/components/colors';
 import { grid, layerImage } from '@/components/grid';
-import { ErosivityChart, ErosivityLegend, SoilHelpButton, soilCheck } from '@/components/Soil';
+import { MonthRisk, SoilHelpButton, soilCheck } from '@/components/Soil';
 import { useScreen, useStore } from '@/components/store';
 import { Check, More, Panel, Select, Sw, Tabs, Term, pct, useQueryState } from '@/components/ui';
 import hazardsJson from '@/data/hazards.json';
@@ -42,6 +42,7 @@ function Seasons({ part }: { part: 'bare' | 'weather' }) {
   return (
     <>
       {part === 'bare' && <Panel title="When are the fields bare?" sub={<>share of the years 2016–{DECISION_YEAR} in which the field was mostly bare, by half-month · NASA <Term id="hls">HLS</Term>, as seen up to {niceDate(DECISION_DATE)}</>}>
+        <p className="lead">Bare soil is what heavy rain washes away and what drainage water strips of nitrate; green plants hold both. The fewer bare weeks, especially in summer and autumn, the better.</p>
         <div className="scroll-x">
           <table className="heat">
             <thead><tr><th>Field</th>{M.map((m, i) => <th key={i} className="c" colSpan={2}>{m}</th>)}<th className="n"><Term id="bareDays">Days without cover</Term> a year</th></tr></thead>
@@ -58,12 +59,12 @@ function Seasons({ part }: { part: 'bare' | 'weather' }) {
       </Panel>}
       {part === 'bare' && <div className="cols">
         <Panel title="When does bare soil erode?" sub={<>NASA <Term id="imerg">GPM IMERG</Term>, {soilClimate.period}</>} right={<SoilHelpButton />}>
-          <ErosivityChart /><ErosivityLegend />
-          <p className="note" style={{ marginTop: 8 }}>Bars: the share of the year’s <Term id="erosivity">erosive rain</Term> in each half-month, July to June. June to August carry {Math.round(soilClimate.erosivity.summary[soilClimate.erosivity.base].junToAug * 100)} %, December to February {Math.round(soilClimate.erosivity.summary[soilClimate.erosivity.base].decToFeb * 100)} %. Lines: how bare the soil is under four crop sequences (NASA <Term id="hls">HLS</Term>, 1 700 declared fields). The plan measure multiplies the two: the numbers in the legend are <Term id="soilDays">days without cover a year, weighted by erosive rain</Term>.</p>
+          <MonthRisk kind="erosion" />
+          <p className="note" style={{ marginTop: 8 }}><Term id="erosivity">Heavy rain</Term> washes bare soil off the field. It comes mostly in summer, right after the cereal harvest. Each bar: how much of the year’s heavy rain falls on bare soil in that month. Lower is better.</p>
         </Panel>
         <Panel title="When does bare soil lose nitrate?" sub={<>NASA GPM IMERG and <Term id="power">POWER</Term>, {soilClimate.period}</>}>
-          <ErosivityChart leaching /><ErosivityLegend leaching />
-          <p className="note" style={{ marginTop: 8 }}>Bars: the share of the <Term id="leaching">leaching season</Term>’s water surplus (rain above <Term id="et">evaporative demand</Term>, September to February: {soilClimate.leaching.seasonSurplusMm} mm in a median season). The numbers in the legend are days of bare soil in that season. A green autumn, a <Term id="catchCrop">catch crop</Term> or an early-sown winter crop, is what lowers it.</p>
+          <MonthRisk kind="nitrate" />
+          <p className="note" style={{ marginTop: 8 }}>From September to February more rain falls than dries up, and water drains through the soil taking nitrate with it (the <Term id="leaching">leaching season</Term>). A green autumn holds it back.</p>
         </Panel>
       </div>}
 
