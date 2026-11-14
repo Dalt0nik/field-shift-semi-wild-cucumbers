@@ -85,7 +85,11 @@ export interface Context {
   /** wet-harvest loss parameters (absent: no loss) */
   wetHarvest?: WetHarvestParams;
   /** switch single money steps off, for checks and sensitivity runs (default: on when their data are given) */
-  moneySteps?: { fieldIndex?: boolean; wetHarvest?: boolean };
+  moneySteps?: { fieldIndex?: boolean; wetHarvest?: boolean; farmLevel?: boolean };
+  /** money of the whole farm that no crop choice changes, EUR/ha a year (set by the pilot): costs beyond the crops'
+   *  variable costs (overheads, depreciation, rent, wages, interest, land tax) and payments per holding (redistributive).
+   *  Absent: both 0, and the margin stays a gross margin. */
+  farmLevel?: { costsEurHa: number; paymentsEurHa: number };
   /** soil-protection climate and coefficients (absent: every half-month weighs the same, S4-S6 are zero) */
   soil?: SoilParams;
 }
@@ -147,8 +151,26 @@ export interface Prepared {
   revenue: Record<CropId, number[]>;
   /** per crop: revenue per ha with that season's yield deviation at the normal price (isolates weather from prices) */
   revenueYield: Record<CropId, number[]>;
-  normal: Record<CropId, { yieldTHa: number; priceEurT: number; costEurHa: number; seasonsUsed: number }>;
+  normal: Record<CropId, { yieldTHa: number; priceEurT: number; costEurHa: number; seasonsUsed: number; seasonsFilled: number }>;
 }
+
+/** A season's deviation needs at least this many of the five seasons before it. */
+export const MIN_PREV_SEASONS = 3;
+/** Deviation of season s: its value over the mean of the (up to five) seasons before it; null when the value of s is
+ *  missing or fewer than MIN_PREV_SEASONS of the seasons before it are known. */
+export function deviation(get: (year: number) => number | undefined, s: number): number | null {
+  const v = get(s), prev = [1, 2, 3, 4, 5].map(d => get(s - d)).filter((x): x is number => x !== undefined);
+  return v !== undefined && prev.length >= MIN_PREV_SEASONS ? v / mean(prev) : null;
+}
+/** A missing deviation is never "an ordinary season": it takes the mean deviation of the same family's crops in that
+ *  season; 1 only when no crop of the family has data (counted in seasonsFilled). */
+function fillDev(dev: Record<CropId, (number | null)[]>, id: CropId, i: number): number {
+  const own = dev[id]?.[i];
+  if (own !== null && own !== undefined) return own;
+  const fam = Object.keys(dev).filter(o => o !== id && familyOf(o) === familyOf(id)).map(o => dev[o][i]).filter((v): v is number => v !== null);
+  return fam.length ? mean(fam) : 1;
+}
+const unitMean = (a: number[]) => { const m = mean(a); return a.map(v => v / m); };
 
 /** Economics module: normal levels and the replay table (crop x season). */
 export function prepare(ctx: Context): Prepared {
@@ -159,22 +181,27 @@ export function prepare(ctx: Context): Prepared {
   const rankOf = new Map(ctx.weather.years.map(y => [y.year, y.harvestRainRank ?? 0]));
   const wh = ctx.moneySteps?.wetHarvest === false ? undefined : ctx.wetHarvest;
   const wet = seasons.map(s => !!wh && (rankOf.get(s) ?? 0) >= wh.rankFrom);
+  // own deviations of every crop with economics (null where the data are missing), the source of the family fill
+  const devY: Record<CropId, (number | null)[]> = {}, devP: Record<CropId, (number | null)[]> = {};
+  for (const [id, e] of Object.entries(ctx.econ.crops)) {
+    devY[id] = seasons.map(s => deviation(k => e.yieldTHa[String(k)], s));
+    devP[id] = seasons.map(s => deviation(k => e.priceEurT[String(k)], s));
+  }
   for (const id of ctx.setup.cropSet) {
     const e = ctx.econ.crops[id];
     if (!e) continue;
     const y = (k: number) => e.yieldTHa[String(k)], p = (k: number) => e.priceEurT[String(k)];
     const lastY = ctx.replay.normalYieldYears.map(y).filter(v => v !== undefined), lastP = ctx.replay.normalPriceYears.map(p).filter(v => v !== undefined);
     const ny = mean(lastY), np = mean(lastP);
-    let used = 0;
-    yieldDev[id] = seasons.map(s => { const py = [1, 2, 3, 4, 5].map(d => y(s - d)).filter(v => v !== undefined); return y(s) !== undefined && py.length === 5 ? y(s) / mean(py) : 1; });
-    revenueYield[id] = yieldDev[id].map(ry => ny * ry * np);
-    revenue[id] = seasons.map(s => {
-      const py = [1, 2, 3, 4, 5].map(d => y(s - d)).filter(v => v !== undefined), pp = [1, 2, 3, 4, 5].map(d => p(s - d)).filter(v => v !== undefined);
-      const ry = y(s) !== undefined && py.length === 5 ? y(s) / mean(py) : 1, rp = p(s) !== undefined && pp.length === 5 ? p(s) / mean(pp) : 1;
-      if (y(s) !== undefined && py.length === 5 && p(s) !== undefined && pp.length === 5) used++;
-      return ny * ry * np * rp;
-    });
-    normal[id] = { yieldTHa: ny, priceEurT: np, costEurHa: (e.costEurHa ?? 0) * (ctx.costFactor ?? 1), seasonsUsed: used };
+    // dY and dP: own deviation where the data allow, else the crop family's deviation of that season; then each series
+    // is scaled to mean 1 over the replayed seasons, so that the replay keeps today's level (the trend is in the level
+    // already). dY and dP are scaled separately: their covariance, the natural hedge of price and yield, stays.
+    const dY = unitMean(seasons.map((_, i) => fillDev(devY, id, i))), dP = unitMean(seasons.map((_, i) => fillDev(devP, id, i)));
+    const own = seasons.filter((_, i) => devY[id][i] !== null && devP[id][i] !== null).length;
+    yieldDev[id] = dY;
+    revenueYield[id] = dY.map(ry => ny * ry * np);
+    revenue[id] = dY.map((ry, i) => ny * ry * np * dP[i]);
+    normal[id] = { yieldTHa: ny, priceEurT: np, costEurHa: (e.costEurHa ?? 0) * (ctx.costFactor ?? 1), seasonsUsed: own, seasonsFilled: seasons.length - own };
   }
   return { ctx, seasons, types: seasons.map(s => typeOf.get(s) ?? 'normal'), wet, totalHa: ctx.fields.reduce((t, f) => t + f.areaHa, 0), revenue, revenueYield, normal, yieldDev };
 }
@@ -324,11 +351,14 @@ export function characteristics(pre: Prepared, options: FieldOption[], parts: Op
   const { ctx, seasons, types, totalHa } = pre;
   const { rules, eco, feasible, states } = rulesFor(ctx, options);
   const ecoBonus = eco.reduce((t, ok) => t + (ok ? PAYMENTS_2025.ecoRotation : 0), 0) / eco.length; // EUR/ha/yr, farm level
-  const series = seasons.map((s, i) => parts.reduce((t, p) => t + p.margin[i], 0) / totalHa + ecoBonus);
+  // money that is the same for every plan of this farm: it moves the level of every margin, never the order of plans
+  const fl = ctx.moneySteps?.farmLevel === false ? undefined : ctx.farmLevel;
+  const farmPay = fl?.paymentsEurHa ?? 0, farm = farmPay - (fl?.costsEurHa ?? 0);
+  const series = seasons.map((s, i) => parts.reduce((t, p) => t + p.margin[i], 0) / totalHa + ecoBonus + farm);
   const sorted = [...series].sort((a, b) => a - b);
   const nWorst = Math.max(1, Math.round(series.length / 5));
   // season types are compared at normal prices, so that a price spike in a dry or wet year does not pass for weather
-  const seriesY = seasons.map((_, i) => parts.reduce((t, p) => t + p.marginYield[i], 0) / totalHa + ecoBonus);
+  const seriesY = seasons.map((_, i) => parts.reduce((t, p) => t + p.marginYield[i], 0) / totalHa + ecoBonus + farm);
   const pick = (t: string) => seriesY.filter((_, i) => types[i] === t);
   const dry = pick('dry'), wet = pick('wetHarvest'), normal = pick('normal');
   const rows = seasons.map((s, i) => ({ season: String(s), margin: Math.round(series[i]), type: types[i] }));
@@ -351,7 +381,7 @@ export function characteristics(pre: Prepared, options: FieldOption[], parts: Op
     humus: Math.round(sum(p => p.humus) / totalHa), humusStrawLeft: ctx.soil?.humus.strawLeft ?? true,
     cerealAfterCereal: +(sum(p => p.cerealAfterCereal) / (totalHa * ny)).toFixed(3), legumeShare: +(sum(p => p.legume) / (totalHa * ny)).toFixed(3),
     largestCropShare: +largest.toFixed(3), cropsPerYear: states.map(s => s.area.size),
-    paymentsEurHa: Math.round(sum(p => p.payments) / totalHa + ecoBonus), ecoRotationEligible: eco,
+    paymentsEurHa: Math.round(sum(p => p.payments) / totalHa + ecoBonus + farmPay), ecoRotationEligible: eco,
     softWarnings: options.reduce((t, o) => t + o.warnings.length, 0), rules, feasible,
   };
 }

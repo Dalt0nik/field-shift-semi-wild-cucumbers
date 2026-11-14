@@ -90,6 +90,7 @@ Tabs and views are in the URL (`/planner?tab=compare`, `/analytics?tab=zones&vie
 - Real: field boundaries, crops 2024–2026, satellite series, weather, yields, prices, payment rates, the erosion-sensitive and peat layers.
 - Preset: the decision day (1 August 2026), the crop set, and, for decision days after the autumn sowing, which crops are in the ground (`SOWN_IN_AUTUMN`). The crops of 2026 are pre-filled from the paying agency's layer and can be corrected on the Fields screen.
 - Illustrative: variable costs per crop (no open source exists for Lithuania); preceding-crop yield factors (literature).
+- From farm accounts: the costs of running the farm (overheads, depreciation, rent, wages, interest; 491 €/ha) of Lithuanian cereal farms in 2024 (FADN), the same for every plan. Margins are farm net income.
 - Estimates: the extra grain moisture and the feed share of wheat in a wet harvest (drying tariffs are published).
 - Soil numbers: cover and erosive rain are measured (NASA HLS, NASA GPM IMERG); harvest on wet soil and bare soil in the leaching season are unvalidated proxies; the humus balance is an accounting with published coefficients. None is an erosion rate or measured carbon ([docs/soil.md](docs/soil.md)).
 - The farm is 12 neighbouring declared fields, not one real holding: open declarations carry no farm identifier.

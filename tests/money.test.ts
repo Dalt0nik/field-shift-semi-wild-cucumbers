@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { characteristics, fieldFactor, optionPart, prepare, wetHarvestLoss, type Context } from '@/engine/characteristics';
 import { fieldIndex, fields, makeContext, makeSetup } from '@/pilot/demo';
-import { WET_HARVEST } from '@/pilot/economics';
+import { FARM_COSTS_EUR_HA, WET_HARVEST, redistributivePerHa } from '@/pilot/economics';
 import type { FieldOption } from '@/engine/types';
 
 // Reference set-up of docs/money.md, section 9: the decision day 14 November 2026, with the autumn sowing in the ground.
@@ -58,14 +58,21 @@ describe('money of a field and of the farm', () => {
     const pre = prepare(ctx);
     const f2 = fields.find(f => f.id === 'F2')!;
     const p = optionPart(pre, f2, { fieldId: 'F2', crops: ['faba_bean', 'winter_wheat'], catchAfter: [false, false], fixed: [false, false], warnings: [] } as any);
-    expect(p.margin[pre.seasons.indexOf(2006)] / f2.areaHa).toBeCloseTo(445.7, -0.5);
+    expect(p.margin[pre.seasons.indexOf(2006)] / f2.areaHa).toBeCloseTo(63.5, -0.5);
   });
-  it('gives the earlier numbers with both steps off, and the wet-harvest numbers with the field index off', () => {
-    const off = habitMoney({ ...ctx, moneySteps: { fieldIndex: false, wetHarvest: false } });
-    expect([off.marginMean, off.marginWorstFifth, off.marginWetHarvest]).toEqual([910, 400, 792]);
-    const wh = habitMoney({ ...ctx, moneySteps: { fieldIndex: false } });
-    expect([wh.marginMean, wh.marginWorstFifth, wh.marginWetHarvest]).toEqual([887, 383, 676]);
-    const both = habitMoney(ctx);
-    expect([both.marginMean, both.marginWorstFifth, both.marginWetHarvest]).toEqual([929, 409, 711]);
+  it('gives the earlier numbers with both steps off, and the wet-harvest numbers with the field index off (gross margin)', () => {
+    const off = habitMoney({ ...ctx, moneySteps: { fieldIndex: false, wetHarvest: false, farmLevel: false } });
+    expect([off.marginMean, off.marginWorstFifth, off.marginWetHarvest]).toEqual([821, 342, 743]);
+    const wh = habitMoney({ ...ctx, moneySteps: { fieldIndex: false, farmLevel: false } });
+    expect([wh.marginMean, wh.marginWorstFifth, wh.marginWetHarvest]).toEqual([799, 326, 632]);
+    const both = habitMoney({ ...ctx, moneySteps: { farmLevel: false } });
+    expect([both.marginMean, both.marginWorstFifth, both.marginWetHarvest]).toEqual([838, 350, 666]);
+  });
+  it('takes the farm costs (Lithuanian FADN 2024) and the redistributive payment off every season alike', () => {
+    const gross = habitMoney({ ...ctx, moneySteps: { farmLevel: false } }), net = habitMoney(ctx);
+    expect(FARM_COSTS_EUR_HA).toBe(491);
+    expect(redistributivePerHa(fields.reduce((t, f) => t + f.areaHa, 0))).toBeCloseTo(45.97, 2);
+    expect([net.marginMean, net.marginWorstFifth, net.marginWetHarvest]).toEqual([393, -95, 221]);
+    gross.marginSeries.forEach((s, i) => expect(Math.abs(net.marginSeries[i].margin - (s.margin - 491 + 45.97))).toBeLessThanOrEqual(1));
   });
 });

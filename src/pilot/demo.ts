@@ -11,7 +11,7 @@ import weatherJson from '../data/weather.json';
 import coverJson from '../data/cover-model.json';
 import productsJson from '../data/products.json';
 import fieldIndexJson from '../data/field-index.json';
-import { FIELD_GROUP, WET_HARVEST } from './economics';
+import { FARM_COSTS_EUR_HA, FIELD_GROUP, WET_HARVEST, redistributivePerHa } from './economics';
 import { CROPS } from './regional';
 import { soilClimate, soilParams } from './soil';
 import { FARMER_MODEL, farmerTransitions } from './farmers';
@@ -142,6 +142,8 @@ export function makeSetup(over: Partial<PlanSetup> = {}): PlanSetup {
 }
 export function makeContext(setup: PlanSetup = makeSetup(), opts: SetupOptions | number = {}): Context {
   const o: SetupOptions = typeof opts === 'number' ? { costFactor: opts } : opts;
-  return { fields: fieldsWith(o.confirmed ?? {}), setup, econ: economics as Economics, weather: weather as Weather, cover: coverModel as CoverModel, replay: REPLAY, usual: FARMER_MODEL, costFactor: o.costFactor ?? 1,
-    fieldIndex: fieldIndexAt(setup.decisionDate), fieldGroup: FIELD_GROUP, wetHarvest: WET_HARVEST, soil: soilParams(o.strawLeft ?? true, o.erosivity) };
+  const fs = fieldsWith(o.confirmed ?? {}), ha = fs.reduce((t, f) => t + f.areaHa, 0);
+  return { fields: fs, setup, econ: economics as Economics, weather: weather as Weather, cover: coverModel as CoverModel, replay: REPLAY, usual: FARMER_MODEL, costFactor: o.costFactor ?? 1,
+    fieldIndex: fieldIndexAt(setup.decisionDate), fieldGroup: FIELD_GROUP, wetHarvest: WET_HARVEST, soil: soilParams(o.strawLeft ?? true, o.erosivity),
+    farmLevel: { costsEurHa: FARM_COSTS_EUR_HA, paymentsEurHa: redistributivePerHa(ha) } };
 }
