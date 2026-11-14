@@ -10,7 +10,7 @@ import type { Characteristics, CropId, EvaluatedVariant, FieldInfo, FieldOption,
 
 /** Comparison characteristics (axes of the non-dominated set). sign +1 = larger is better. */
 export const AXES: { key: string; label: string; unit: string; sign: 1 | -1; get: (c: Characteristics) => number; hint: string }[] = [
-  { key: 'marginMean', label: 'Margin, usual season', unit: 'EUR/ha', sign: 1, get: c => c.marginMean, hint: 'Mean over the replayed past seasons: yield x price + payments - variable costs.' },
+  { key: 'marginMean', label: 'Margin, usual season', unit: 'EUR/ha', sign: 1, get: c => c.marginMean, hint: 'Mean over the replayed past seasons: field yield x price - wet-harvest loss + payments - variable costs.' },
   { key: 'marginWorstFifth', label: 'Margin, bad seasons', unit: 'EUR/ha', sign: 1, get: c => c.marginWorstFifth, hint: 'Mean of the worst fifth of replayed seasons.' },
   { key: 'bareDays', label: 'Bare soil', unit: 'days/yr', sign: -1, get: c => c.bareDays.p50, hint: 'Bare-soil-equivalent days per hectare and year, from NASA HLS cover curves of declared Lithuanian fields.' },
   { key: 'cerealAfterCereal', label: 'Cereal after cereal', unit: '% area', sign: -1, get: c => c.cerealAfterCereal * 100, hint: 'Share of area where a cereal follows a cereal: disease, pest and weed pressure.' },

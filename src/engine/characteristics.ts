@@ -4,7 +4,7 @@
 //              deviations of past seasons, all crops of a variant replayed in the same season (backtest: experiment F).
 //              Yield of a field = normal yield x field index (NASA HLS: the field against its neighbours) x season
 //              deviation x preceding crop; in wet-harvest seasons (NASA IMERG) extra drying and feed-grade wheat are
-//              subtracted.
+//              subtracted. Described in docs/money.md.
 //  Seasons   — each replayed season is typed by NASA data: dry = lowest fifth of the May-July water balance
 //              (IMERG rain minus ET0 from POWER temperature), wet harvest = highest fifth of IMERG rain 20 Jul - 31 Aug.
 //  Bare soil — bare-soil-equivalent days from NASA HLS cover curves of 1 700 declared fields, by crop sequence (C4, C6).

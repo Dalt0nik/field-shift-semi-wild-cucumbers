@@ -17,7 +17,7 @@ The application follows the agronomist's path in seven stages. Stages 1–5 answ
 | 3 | Slot search | Builds the timeline of each field and finds the free gaps up to the plan horizon | Fields, `src/engine/plan.ts` |
 | 4 | Candidates | Admits a crop to a slot if its sowing window fits, its harvest ends before the next crop, and no field rule forbids it | Crops, `src/engine/plan.ts` |
 | 5 | Plan variants | Searches for combinations across all fields that pass the farm rules | `src/engine/search.ts` |
-| 6 | Variant characteristics | Measures every variant the same way: money over past seasons with each field's index from HLS and the wet-harvest loss from IMERG, bare soil from HLS, dry seasons from IMERG and POWER, rotation | Fields, Satellite, Analytics, `src/engine/characteristics.ts` |
+| 6 | Variant characteristics | Measures every variant the same way: money over past seasons with each field's index from HLS and the wet-harvest loss from IMERG ([docs/money.md](docs/money.md)), bare soil from HLS, dry seasons from IMERG and POWER, rotation | Fields, Satellite, Analytics, `src/engine/characteristics.ts` |
 | 7 | Variants for the agronomist | Shows the best variant for each characteristic and lets the agronomist compare, edit and choose | Planner, Checks |
 
 Principles behind it:
@@ -55,7 +55,7 @@ Copy `.env.example` to `.env`. `GEE_KEY` and the CDSE S3 keys (`CDSE_S3_ACCESS_K
 | `src/components/` | Frame, store, map, timeline, charts, 30 m grid, glossary, chat, small building blocks (`ui.tsx`) |
 | `pipeline/` | Scripts that build `src/data` from NASA and Lithuanian sources: [pipeline/README.md](pipeline/README.md) |
 | `tests/` | Unit tests of the engine and of the plan editor |
-| `docs/` | The framework diagram (`framework.svg` and its PNG) |
+| `docs/` | The framework diagram (`framework.svg` and its PNG); [money.md](docs/money.md): how the engine computes the money of a plan |
 | `scripts/shots.mjs` | Screenshots of every state and the fit report (`screenshots/`, not committed) |
 
 ## Screens
