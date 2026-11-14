@@ -212,6 +212,29 @@ table.mini { width: auto; } table.mini td { padding: 2px 18px 2px 0; border: 0; 
 .tl-now { position: absolute; top: 0; } .tl-now i { position: absolute; top: 4px; right: 5px; font-style: normal; font-size: 0.72rem; font-weight: 700; color: var(--dry); white-space: nowrap; }
 .tl-nowline { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--dry); }
 
+/* weather risk (Analytics): the weather by month on top, the plan's crops below on the same half-month grid */
+.wx-cal { display: grid; gap: 4px; min-width: 760px; }
+.wx-row { display: grid; grid-template-columns: 190px 1fr; align-items: center; }
+.wx-months { grid-template-columns: 190px repeat(12, 1fr); font-size: 0.78rem; font-weight: 700; color: var(--muted); }
+.wx-m { text-align: center; border-left: 1px solid var(--line); }
+.wx-lab { display: flex; align-items: center; gap: 4px; font-weight: 600; font-size: 0.86rem; }
+.wx-track { position: relative; display: grid; grid-template-columns: repeat(24, 1fr); height: 30px; }
+.wx-h { grid-row: 1; border-left: 1px solid var(--line); background: #f6f8f4; } .wx-h.odd { border-left: 1px dashed #e1e7de; }
+.wx-cell { grid-row: 1; z-index: 1; margin: 2px 1px; display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; border-radius: 3px; }
+.wx-win { grid-row: 1; z-index: 1; margin: 3px 1px; display: flex; align-items: center; padding: 0 0 0 5px; border: 0; font-size: 0.74rem; font-weight: 700; white-space: nowrap; overflow: visible; border-radius: 3px; text-align: left; }
+.wx-win:disabled { cursor: default; color: inherit; }
+.wx-win.sow { background: #8dbb6a; color: #10301a; } .wx-win.harvest { background: var(--rape); color: var(--ink); } .wx-win.winter { background: #cfe1ea; color: #1d4a60; }
+.wx-win.bad { cursor: pointer; outline: 2px dashed var(--dry); outline-offset: 1px; }
+.wx-win.bad.strong { outline: 2.5px solid var(--dry); color: var(--dry); }
+.wx-win.bad:hover { filter: brightness(0.95); } .wx-win.on { box-shadow: 0 0 0 5px rgba(181, 69, 44, 0.25); }
+.wx-sw.sow { background: #8dbb6a; } .wx-sw.harvest { background: var(--rape); } .wx-sw.winter { background: #cfe1ea; }
+.wx-sw.bad { background: #fff; outline: 2px dashed var(--dry); outline-offset: -2px; } .wx-sw.bad.strong { outline-style: solid; }
+.wx-pop { position: fixed; left: 0; top: 0; z-index: 210; visibility: hidden; width: min(400px, calc(100vw - 16px)); padding: 12px 14px; background: var(--sheet); border: 1.5px solid var(--ink); border-top: 4px solid var(--dry); box-shadow: 5px 5px 0 rgba(23, 35, 28, 0.18); display: grid; gap: 6px; outline: none; }
+.wx-pop-h { display: flex; justify-content: space-between; align-items: start; gap: 10px; } .wx-pop h3 { font-size: 1.1rem; } .wx-pop small { color: var(--muted); }
+.wx-x { border: 0; background: none; font-size: 1.3rem; line-height: 1; padding: 0 2px; color: var(--muted); } .wx-x:hover { color: var(--ink); }
+.wx-pop ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
+.wx-pop li { display: grid; grid-template-columns: 105px 1fr; gap: 10px; align-items: baseline; }
+.wx-n { color: var(--dry); white-space: nowrap; } .wx-n b { font-size: 1.3rem; }
 /* month risk chart (Analytics): worst months strong, the rest pale; a live line under it reads the hovered month */
 .mrisk { --hot: var(--dry); --pale-bar: #efd3c9; display: grid; gap: 8px; }
 .mrisk.nitrate { --hot: #2c6e8f; --pale-bar: #cfe1ea; }

@@ -40,7 +40,7 @@ export const SCREENS: Record<string, ScreenNote> = {
   },
   'analytics/weather': {
     title: 'Analytics · Weather risk',
-    shows: 'A calendar: for each month, in what share of the years 2001–2025 a weather hazard occurred at the farm (frost, deep cold, heat, dry month, heavy rain, wet spell), and under it the sowing and harvest months of the crops of the selected plan.',
+    shows: 'Two panels on one half-month grid. "The weather at the farm": for each month, in how many years of 10 (2001–2025) frost, hard frost, heat, a dry month, a downpour and a rainy spell came. "When can the weather hurt your crops?": the sowing, harvest and (for winter crops) winter windows of the crops of the selected plan, by half-month, so a window across a month border shows on both sides. A window that meets bad weather in at least 3 years of 10 is outlined (solid from 6 years of 10, dashed below) and can be clicked; a popup next to it then says, for that crop and moment, how many years in 10 each kind of weather came and what it does (e.g. frost at April sowing can kill young plants).',
     why: 'The challenge asks which seasons make crops vulnerable. Rain comes from NASA GPM IMERG and temperature from NASA POWER; both are one coarse cell, the same for every field. A hazard month under a sowing or harvest month is a vulnerable season. Thresholds are working values to be set with an agronomist.',
     ask: ['Which months are most risky for spring crops here?', 'Why is the weather the same for all my fields?', 'How were the thresholds chosen?'],
   },

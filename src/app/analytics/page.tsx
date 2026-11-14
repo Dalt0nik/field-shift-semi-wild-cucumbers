@@ -9,6 +9,7 @@ import { grid, layerImage } from '@/components/grid';
 import { MonthRisk, SoilHelpButton, soilCheck } from '@/components/Soil';
 import { useScreen, useStore } from '@/components/store';
 import { Check, More, Panel, Select, Sw, Tabs, Term, pct, useQueryState } from '@/components/ui';
+import { WeatherRisk, weatherClashes } from '@/components/WeatherRisk';
 import hazardsJson from '@/data/hazards.json';
 import { DECISION_DATE, DECISION_YEAR, PLAN_YEARS, coverModel, fieldIndex, fields, niceDate, products, weather } from '@/pilot/demo';
 import { bareCalendar, seasonCover, series } from '@/pilot/satellite';
@@ -24,20 +25,13 @@ const quant = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - 
 type Tab = 'bare' | 'weather' | 'zones' | 'method';
 type Zone = 'erosion' | 'low' | 'dry';
 
-function cropMonths(id: string): (string | null)[] {
-  const c = CROPS[id]; const out: (string | null)[] = Array(12).fill(null);
-  if (!c?.sowing.from || !c.harvest.to || !c.harvest.from) return out;
-  const s0 = +c.sowing.from.slice(0, 2) - 1, s1 = +c.sowing.to!.slice(0, 2) - 1, h0 = +c.harvest.from.slice(0, 2) - 1, h1 = +c.harvest.to.slice(0, 2) - 1;
-  for (let m = (s1 + 1) % 12; m !== h0; m = (m + 1) % 12) out[m] = 'grow';
-  for (let m = s0; m <= s1; m++) out[m] = 'sow';
-  for (let m = h0; m <= h1; m++) out[m] = 'harvest';
-  return out;
-}
+// the crops of the selected plan (no grass): Weather risk shows when they are sown and harvested
+const planCrops = (s: ReturnType<typeof useStore>) => [...new Set((s.plan?.v.options ?? []).flatMap(o => o.crops))].filter(c => CROPS[c].season !== 'perennial').slice(0, 6);
 
 function Seasons({ part }: { part: 'bare' | 'weather' }) {
   const s = useStore();
-  // the crops of the selected plan: the calendar under the hazards shows when they are sown and harvested
-  const crops = [...new Set((s.plan?.v.options ?? []).flatMap(o => o.crops))].filter(c => CROPS[c].season !== 'perennial').slice(0, 6);  return (
+  const crops = planCrops(s);
+  return (
     <>
       {part === 'bare' && <Panel title="When are the fields bare?" sub={<>share of the years 2016–{DECISION_YEAR} in which the field was mostly bare, by half-month · NASA <Term id="hls">HLS</Term>, as seen up to {niceDate(DECISION_DATE)}</>}>
         <p className="lead">Bare soil is what heavy rain washes away and what drainage water strips of nitrate; green plants hold both. The fewer bare weeks, especially in summer and autumn, the better.</p>
@@ -66,24 +60,7 @@ function Seasons({ part }: { part: 'bare' | 'weather' }) {
         </Panel>
       </div>}
 
-      {part === 'weather' && <Panel title="Which months are risky here?" sub={<>share of the years {hazards.period} with the event · NASA <Term id="imerg">GPM IMERG</Term> rain, NASA <Term id="power">POWER</Term> temperature</>}>
-        <div className="scroll-x">
-          <table className="heat">
-            <thead><tr><th>Hazard</th>{M.map((m, i) => <th key={i} className="c">{m}</th>)}</tr></thead>
-            <tbody>
-              {hazards.hazards.map((h: any) => (
-                <tr key={h.id}><td className="lab" title={h.definition}>{h.label}</td>
-                  {h.byMonth.map((v: number | null, i: number) => <td key={i} className="cell" style={v ? { background: `rgba(181,69,44,${0.1 + v * 0.8})`, color: v > 0.45 ? '#fff' : 'inherit' } : undefined} title={v === null ? 'not counted in this month' : `${Math.round(v * 100)} % of years`}>{v ? Math.round(v * 100) : ''}</td>)}
-                </tr>))}
-              {crops.map((id, n) => { const cm = cropMonths(id); return (
-                <tr key={id}><td className="lab" style={n === 0 ? { paddingTop: 14 } : undefined}><Sw c={cropColor(id)} />{CROPS[id].name}</td>
-                  {cm.map((v, i) => <td key={i} className={`cell${v === 'grow' ? ' grow' : v ? ' key' : ''}`} style={n === 0 ? { borderTop: '8px solid #fff' } : undefined}>{v === 'grow' ? '' : v === 'harvest' ? 'harv' : v ?? ''}</td>)}
-                </tr>); })}
-            </tbody>
-          </table>
-        </div>
-        <p className="note" style={{ marginTop: 10 }}>Numbers are per cent of years. Below them, the sowing (sow) and harvest (harv) months of the crops of “{s.plan?.name ?? 'the selected plan'}” : a risky month under one of them is a vulnerable season.</p>
-      </Panel>}
+      {part === 'weather' && <WeatherRisk crops={crops} planName={s.plan?.name ?? 'the selected plan'} source={<>years {hazards.period} · NASA <Term id="imerg">GPM IMERG</Term> rain, NASA <Term id="power">POWER</Term> temperature</>} />}
     </>
   );
 }
@@ -247,7 +224,7 @@ export default function AnalyticsPage() {
   const s = useStore();
   const head = <><div className="page-head"><h1>Analytics</h1><Tabs label="Analytics views" tabs={[{ id: 'bare', label: 'Bare soil' }, { id: 'weather', label: 'Weather risk' }, { id: 'zones', label: 'Risk zones' }, { id: 'method', label: 'Method' }]} value={tab} onChange={setTab} /></div></>;
   useScreen(tab === 'zones' ? null : `analytics/${tab}`, tab === 'bare' ? { selectedField: s.field, bareDaysLastSeason: Object.fromEntries(fields.map(f => [f.id, seasonCover(f.id).at(-1)?.total ?? null])), erosiveRainShareByMonthJanToDec: soilClimate.erosivity.byMonth, leachingSeasonSurplusMm: soilClimate.leaching.seasonSurplusMm }
-    : tab === 'weather' ? { hazardsByMonthShareOfYears: Object.fromEntries(hazards.hazards.map((h: any) => [h.label, h.byMonth])), cropCalendarOfPlan: s.plan?.name } : { selectedField: s.field });
+    : tab === 'weather' ? { selectedPlan: s.plan?.name, thingsToWatch: weatherClashes(planCrops(s)), hazardsByMonthShareOfYears: Object.fromEntries(hazards.hazards.map((h: any) => [h.label, h.byMonth])) } : { selectedField: s.field });
   if (tab === 'zones') return <Zones head={head} />;
   return <div className="page">{head}{tab === 'method' ? <Evidence /> : <Seasons part={tab === 'weather' ? 'weather' : 'bare'} />}</div>;
 }
