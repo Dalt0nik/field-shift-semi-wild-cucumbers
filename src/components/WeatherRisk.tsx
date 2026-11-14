@@ -40,7 +40,7 @@ const niceDay = (d: string) => `${+d.slice(3, 5)} ${MONTHS[+d.slice(0, 2) - 1]}`
 const range = (a: string, b: string) => (a.slice(0, 2) === b.slice(0, 2) ? `${+a.slice(3, 5)}–${niceDay(b)}` : `${niceDay(a)} – ${niceDay(b)}`);
 const tenths = (v: number) => Math.max(1, Math.round(v * 10));
 
-type Risk = { what: string; why: string; month: number; share: number };
+type Risk = { hazard: string; what: string; why: string; month: number; share: number };
 type Window = { key: string; crop: string; stage: Stage; halves: number[]; text: string; risks: Risk[] };
 
 function windowsOf(id: string): Window[] {
@@ -56,7 +56,7 @@ function windowsOf(id: string): Window[] {
     const risks = HURTS.filter(r => r.stage === w.stage && (!r.only || c.season === r.only)).flatMap(r => {
       const h = byId(r.hazard); if (!h) return [];
       const [month, share] = months.map(m => [m, h.byMonth[m] ?? 0] as const).sort((a, b) => b[1] - a[1])[0];
-      return share >= RISKY ? [{ what: r.what, why: r.why, month, share }] : [];
+      return share >= RISKY ? [{ hazard: r.hazard, what: r.what, why: r.why, month, share }] : [];
     }).sort((a, b) => b.share - a.share);
     return { ...w, risks };
   });
@@ -74,7 +74,10 @@ function Row({ label, children, cls = '' }: { label: ReactNode; children: ReactN
     </div>
   );
 }
-const MonthHead = () => <div className="wx-row wx-months" role="row"><span role="columnheader" />{MONTHS.map(m => <span key={m} role="columnheader" className="wx-m">{m.slice(0, 3)}</span>)}</div>;
+const MonthHead = ({ on }: { on?: Set<number> }) => <div className="wx-row wx-months" role="row"><span role="columnheader" />{MONTHS.map((m, i) => <span key={m} role="columnheader" className={`wx-m${on?.has(i) ? ' on' : ''}`}>{m.slice(0, 3)}</span>)}</div>;
+/** The picked window as a band down the whole calendar, one piece per run (a winter window wraps over the new year). */
+const Band = ({ w }: { w?: Window }) => <>{w && runsOf(w.halves).map((r, i) => (
+  <span key={`${w.key}${i}`} className="wx-band" aria-hidden style={{ left: `calc(var(--lab) + (100% - var(--lab)) * ${r[0] / 24})`, width: `calc((100% - var(--lab)) * ${r.length / 24})` }} />))}</>;
 
 /** "What can go wrong" for one window, as a popup next to it; closes on Escape, a click outside, scrolling or ×. */
 function WindowPopup({ w, onClose }: { w: Window; onClose: () => void }) {
@@ -117,23 +120,28 @@ export function WeatherRisk({ crops, planName, source }: { crops: string[]; plan
   // a stable close for the popup's listeners (setPick changes with every render)
   const setRef = useRef(setPick); setRef.current = setPick;
   const close = useCallback(() => setRef.current(''), []);
+  // the months the picked window touches; the weather that makes it risky is ringed, the rest of the year fades
+  const onMonths = pick ? new Set(pick.halves.map(h => h >> 1)) : undefined;
+  const hit = (id: string, m: number) => !!pick?.risks.some(r => r.hazard === id && r.month === m);
 
   return (
     <>
       <Panel title="The weather at the farm" sub={source}>
-        <div className="scroll-x"><div className="wx-cal" role="table" aria-label="How many years in 10 each kind of bad weather came, by month">
-          <MonthHead />
+        <div className="scroll-x"><div className={`wx-cal${pick ? ' picking' : ''}`} role="table" aria-label="How many years in 10 each kind of bad weather came, by month">
+          <Band w={pick} />
+          <MonthHead on={onMonths} />
           {HAZARDS.map(h => (
-            <Row key={h.id} label={<span title={h.definition}>{SHORT[h.id] ?? h.label}</span>}>
-              {h.byMonth.map((v, m) => v ? <span key={m} className="wx-cell" style={{ gridColumn: `${2 * m + 1} / ${2 * m + 3}`, background: `rgba(181,69,44,${0.08 + v * 0.85})`, color: v >= 0.45 ? '#fff' : 'var(--ink)' }} title={`${MONTHS[m]}: ${tenths(v)} in 10 years`}>{tenths(v)}</span> : null)}
+            <Row key={h.id} label={<span title={h.definition}>{SHORT[h.id] ?? h.label}</span>} cls={pick?.risks.some(r => r.hazard === h.id) ? 'on' : ''}>
+              {h.byMonth.map((v, m) => v ? <span key={m} className={`wx-cell${hit(h.id, m) ? ' hit' : onMonths && !onMonths.has(m) ? ' dim' : ''}`} style={{ gridColumn: `${2 * m + 1} / ${2 * m + 3}`, background: `rgba(181,69,44,${0.08 + v * 0.85})`, color: v >= 0.45 ? '#fff' : 'var(--ink)' }} title={`${MONTHS[m]}: ${tenths(v)} in 10 years`}>{tenths(v)}</span> : null)}
             </Row>))}
         </div></div>
         <p className="note" style={{ marginTop: 8 }}>The number: in how many years of 10 it happened in that month (2001–2025). Darker is more often.</p>
       </Panel>
 
       <Panel title="When can the weather hurt your crops?" sub={<>the crops of “{planName}” · click an outlined window</>}>
-        <div className="scroll-x"><div className="wx-cal" role="table" aria-label="Sowing, harvest and winter of the plan's crops by half-month">
-          <MonthHead />
+        <div className="scroll-x"><div className={`wx-cal${pick ? ' picking' : ''}`} role="table" aria-label="Sowing, harvest and winter of the plan's crops by half-month">
+          <Band w={pick} />
+          <MonthHead on={onMonths} />
           {rows.map(id => (
             <Row key={id} label={<><Sw c={cropColor(id)} />{CROPS[id].name}</>}>
               {windows.filter(w => w.crop === id && (w.stage !== 'winter' || w.risks.length)).flatMap(w => {
