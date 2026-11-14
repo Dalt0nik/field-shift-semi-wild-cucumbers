@@ -14,7 +14,8 @@ import fieldIndexJson from '../data/field-index.json';
 import { FIELD_GROUP, WET_HARVEST } from './economics';
 import { CROPS } from './regional';
 import { soilClimate, soilParams } from './soil';
-import type { Context, CoverModel, Economics, FieldIndex, Replay, UsualPractice, Weather } from '../engine/characteristics';
+import { FARMER_MODEL, farmerTransitions } from './farmers';
+import type { Context, CoverModel, Economics, FieldIndex, Replay, Weather } from '../engine/characteristics';
 import type { PlanSetup } from '../engine/plan';
 import type { CropId, FieldInfo } from '../engine/types';
 
@@ -95,9 +96,6 @@ export const DEFAULT_CROP_SET: CropId[] = ['winter_wheat', 'winter_rapeseed', 'w
 /** Money replay: seasons with municipal yields and prices, and the years that define the normal level. Yields of a
  *  year are published in the following spring, prices a year later, so both end before the decision year. */
 export const REPLAY: Replay = { firstSeason: 2006, lastSeason: DECISION_YEAR - 2, normalYieldYears: [5, 4, 3, 2, 1].map(d => DECISION_YEAR - d), normalPriceYears: [6, 5, 4, 3, 2].map(d => DECISION_YEAR - d) };
-/** The wheat and rapeseed habit of the region: winter wheat after rapeseed, legumes and other crops; winter rapeseed
- *  after a cereal when its interval allows; spring cereals on fields that are free in spring. */
-export const USUAL_PRACTICE: UsualPractice = { openFirstYear: ['spring_wheat', 'spring_barley', 'oats'], afterCereal: ['winter_rapeseed', 'winter_wheat', 'spring_barley'], otherwise: ['winter_wheat', 'winter_rapeseed', 'spring_wheat'] };
 
 type FieldIndexFile = FieldIndex & { seasons: number[]; rho: number; beta90: Record<string, number[]>; check2026: { r: number; slope: number; fields: number }; radiusM: number };
 const fieldIndexAll = fieldIndexJson as unknown as FieldIndexFile;
@@ -131,6 +129,7 @@ export const PLAN_DATA: { id: string; label: string; until: string }[] = [
   { id: 'yields', label: `District yields ${REPLAY.firstSeason - 5}–${Math.max(...REPLAY.normalYieldYears)}`, until: `${Math.max(...REPLAY.normalYieldYears)}-12-31` },
   { id: 'prices', label: `Prices to ${Math.max(...REPLAY.normalPriceYears)}`, until: `${Math.max(...REPLAY.normalPriceYears)}-12-31` },
   { id: 'history', label: `Crops of ${DECISION_YEAR}: declared in spring, confirmed by the agronomist`, until: `${DECISION_YEAR}-06-30` },
+  { id: 'farmers', label: `Usual practice: what farms within ${farmerTransitions.radiusKm} km sowed after each crop, declarations ${farmerTransitions.years.join(' → ')}`, until: farmerTransitions.dataUntil },
 ];
 /** Satellite layers of the screens that are not inputs of the plan: last day of each, to label the later ones. */
 export const LAYER_UNTIL: Record<string, string> = { ndvi_peak_2025: '2025-07-15', ndvi_peak_2026: '2026-07-15', ndvi_autumn_2026: '2026-11-10', spring_bare: '2026-04-15', hls_truecolor_autumn2026: '2026-10-25' };
@@ -143,6 +142,6 @@ export function makeSetup(over: Partial<PlanSetup> = {}): PlanSetup {
 }
 export function makeContext(setup: PlanSetup = makeSetup(), opts: SetupOptions | number = {}): Context {
   const o: SetupOptions = typeof opts === 'number' ? { costFactor: opts } : opts;
-  return { fields: fieldsWith(o.confirmed ?? {}), setup, econ: economics as Economics, weather: weather as Weather, cover: coverModel as CoverModel, replay: REPLAY, usual: USUAL_PRACTICE, costFactor: o.costFactor ?? 1,
+  return { fields: fieldsWith(o.confirmed ?? {}), setup, econ: economics as Economics, weather: weather as Weather, cover: coverModel as CoverModel, replay: REPLAY, usual: FARMER_MODEL, costFactor: o.costFactor ?? 1,
     fieldIndex: fieldIndexAt(setup.decisionDate), fieldGroup: FIELD_GROUP, wetHarvest: WET_HARVEST, soil: soilParams(o.strawLeft ?? true, o.erosivity) };
 }

@@ -75,8 +75,8 @@ export interface Context {
   cover: CoverModel;
   /** which past seasons are replayed and which years define the normal level (set by the pilot, not by the engine) */
   replay: Replay;
-  /** the habit of the region, used to build the "usual practice" variant: preferred crops in order */
-  usual: UsualPractice;
+  /** the statistical farmer of the region, used to build the "usual practice" variant (set by the pilot) */
+  usual: FarmerModel;
   /** multiplies all variable costs (sensitivity of the ranking to the illustrative costs) */
   costFactor?: number;
   /** field index from NASA HLS and the crop group of each crop it applies to (absent: every field as the district) */
@@ -90,7 +90,19 @@ export interface Context {
   soil?: SoilParams;
 }
 export interface Replay { firstSeason: number; lastSeason: number; normalYieldYears: number[]; normalPriceYears: number[] }
-export interface UsualPractice { openFirstYear: CropId[]; afterCereal: CropId[]; otherwise: CropId[] }
+/** What farms of the region sow after each crop (docs/usual-practice.md). Plain data, so that the context can be posted
+ *  to the search worker.
+ *  - classOf: the class of the transition table for a crop id or a history class id (unknown: 'other')
+ *  - p[class][next class]: share of the area sown with the next class after the class
+ *  - share[class][crop]: split of a class into crops
+ *  - farms, seed: how many statistical farms to keep, and the seed of the draws */
+export interface FarmerModel {
+  classOf: Record<string, string>;
+  p: Record<string, Record<string, number>>;
+  share: Record<string, Record<CropId, number>>;
+  farms: number;
+  seed: number;
+}
 
 export const CATCH_CROP_COST = 60; // EUR/ha, seed and sowing of a catch crop (illustrative)
 export const GRASS_MARGIN_NOTE = 'Perennial grass has no market price here: its margin is payments only; forage value depends on livestock.';

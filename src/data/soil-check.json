@@ -20,8 +20,8 @@
   "margin": 859
  },
  "usual": {
-  "s1e": 151,
-  "margin": 984
+  "s1e": 156,
+  "margin": 857
  },
  "lowerBound": 138.5,
  "frontier": [
@@ -80,7 +80,7 @@
    "rho": 0.985,
    "bestDiffersOnFields": 8,
    "basePlanS1e": 141.9,
-   "usualS1e": 153.6
+   "usualS1e": 158.9
   },
   {
    "key": "dailyB15",
@@ -91,7 +91,7 @@
    "rho": 0.975,
    "bestDiffersOnFields": 4,
    "basePlanS1e": 142.5,
-   "usualS1e": 154.4
+   "usualS1e": 159.9
   },
   {
    "key": "dailyB20",
@@ -102,7 +102,7 @@
    "rho": 0.991,
    "bestDiffersOnFields": 4,
    "basePlanS1e": 141.5,
-   "usualS1e": 153
+   "usualS1e": 158.3
   },
   {
    "key": "dailyWarm2",
@@ -113,7 +113,7 @@
    "rho": 0.885,
    "bestDiffersOnFields": 9,
    "basePlanS1e": 137.6,
-   "usualS1e": 145.7
+   "usualS1e": 150.9
   },
   {
    "key": "stormsWithSnow",
@@ -124,7 +124,7 @@
    "rho": 0.988,
    "bestDiffersOnFields": 7,
    "basePlanS1e": 140.4,
-   "usualS1e": 152
+   "usualS1e": 157.2
   },
   {
    "key": "stormsSmoothed",
@@ -135,7 +135,7 @@
    "rho": 0.997,
    "bestDiffersOnFields": 4,
    "basePlanS1e": 139.2,
-   "usualS1e": 151.5
+   "usualS1e": 156.2
   }
  ]
 }

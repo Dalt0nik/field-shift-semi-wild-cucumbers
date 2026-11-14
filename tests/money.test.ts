@@ -1,12 +1,26 @@
 // Money steps on the pilot: field index (NASA HLS) and wet-harvest loss (NASA IMERG).
 import { describe, expect, it } from 'vitest';
-import { fieldFactor, optionPart, prepare, wetHarvestLoss } from '@/engine/characteristics';
+import { characteristics, fieldFactor, optionPart, prepare, wetHarvestLoss, type Context } from '@/engine/characteristics';
 import { fieldIndex, fields, makeContext, makeSetup } from '@/pilot/demo';
 import { WET_HARVEST } from '@/pilot/economics';
-import { search } from '@/engine/search';
+import type { FieldOption } from '@/engine/types';
 
 // Reference set-up of docs/money.md, section 9: the decision day 14 November 2026, with the autumn sowing in the ground.
 const ctx = makeContext(makeSetup({ decisionDate: '2026-11-14' }));
+
+// The plan the reference values of docs/money.md were computed on: usual practice of 14 November as it was before it
+// came from the declarations (the hand-written wheat and rapeseed habit). Kept fixed here, so the test checks the money
+// steps and not how usual practice is chosen.
+const HABIT_14_NOV: FieldOption[] = ([
+  ['F1', 'winter_wheat', 'winter_rapeseed', true], ['F2', 'spring_wheat', 'winter_wheat', false], ['F3', 'winter_rapeseed', 'winter_wheat', true],
+  ['F4', 'winter_wheat', 'winter_rapeseed', true], ['F5', 'winter_wheat', 'winter_wheat', true], ['F6', 'winter_wheat', 'winter_rapeseed', true],
+  ['F7', 'spring_wheat', 'winter_wheat', false], ['F8', 'winter_rapeseed', 'winter_wheat', true], ['F9', 'spring_wheat', 'winter_wheat', false],
+  ['F10', 'spring_wheat', 'winter_wheat', false], ['F11', 'perennial_grasses', 'perennial_grasses', true], ['F12', 'winter_wheat', 'winter_rapeseed', true],
+] as const).map(([fieldId, a, b, sown]) => ({ fieldId, crops: [a, b], catchAfter: [false], fixed: [sown, fieldId === 'F11'], warnings: [] }));
+const habitMoney = (c: Context) => {
+  const pre = prepare(c);
+  return characteristics(pre, HABIT_14_NOV, HABIT_14_NOV.map(o => optionPart(pre, fields.find(f => f.id === o.fieldId)!, o)));
+};
 
 describe('field index', () => {
   it('gives the pilot values', () => {
@@ -47,9 +61,11 @@ describe('money of a field and of the farm', () => {
     expect(p.margin[pre.seasons.indexOf(2006)] / f2.areaHa).toBeCloseTo(445.7, -0.5);
   });
   it('gives the earlier numbers with both steps off, and the wet-harvest numbers with the field index off', () => {
-    const off = search({ ...ctx, moneySteps: { fieldIndex: false, wetHarvest: false } }).baseline.ch;
+    const off = habitMoney({ ...ctx, moneySteps: { fieldIndex: false, wetHarvest: false } });
     expect([off.marginMean, off.marginWorstFifth, off.marginWetHarvest]).toEqual([910, 400, 792]);
-    const wh = search({ ...ctx, moneySteps: { fieldIndex: false } }).baseline.ch;
+    const wh = habitMoney({ ...ctx, moneySteps: { fieldIndex: false } });
     expect([wh.marginMean, wh.marginWorstFifth, wh.marginWetHarvest]).toEqual([887, 383, 676]);
+    const both = habitMoney(ctx);
+    expect([both.marginMean, both.marginWorstFifth, both.marginWetHarvest]).toEqual([929, 409, 711]);
   });
 });

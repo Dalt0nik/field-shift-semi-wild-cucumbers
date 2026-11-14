@@ -20,7 +20,7 @@ The application follows the agronomist's path in seven stages. Stages 1–5 answ
 | 4 | Candidates | Admits a crop to a slot if its sowing window fits, its harvest ends before the next crop, and no field rule forbids it | Crops, `src/engine/plan.ts` |
 | 5 | Plan variants | Searches for combinations across all fields that pass the farm rules | `src/engine/search.ts` |
 | 6 | Variant characteristics | Measures every variant the same way: money over past seasons with each field's index from HLS and the wet-harvest loss from IMERG ([docs/money.md](docs/money.md)); soil protection in six measures from HLS cover and IMERG rain ([docs/soil.md](docs/soil.md)); dry seasons from IMERG and POWER; rotation | Fields, Satellite, Analytics, `src/engine/characteristics.ts` |
-| 7 | Variants for the agronomist | Shows usual practice and the best variant for each measure (highest margin, best in a bad year, best for soil, balanced) and lets the agronomist compare, edit and choose | Planner, Checks |
+| 7 | Variants for the agronomist | Shows usual practice (a typical farm of the area, drawn from the field declarations: [docs/usual-practice.md](docs/usual-practice.md)) and the best variant for each measure (highest margin, best in a bad year, best for soil, balanced) and lets the agronomist compare, edit and choose | Planner, Checks |
 
 Principles behind it:
 
@@ -68,7 +68,7 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 | `src/components/` | Frame, store, map, timeline, charts, 30 m grid, glossary, chat, the soil block and its "?" panel (`Soil.tsx`), small building blocks (`ui.tsx`) |
 | `pipeline/` | Scripts that build `src/data` from NASA and Lithuanian sources: [pipeline/README.md](pipeline/README.md) |
 | `tests/` | Unit tests of the engine, the plan editor, the money, the soil measures, the satellite products and the decision day |
-| `docs/` | The framework diagram (`framework.svg` and its PNG); [money.md](docs/money.md): how the engine computes the money of a plan; [soil.md](docs/soil.md): how it measures soil protection |
+| `docs/` | The framework diagram (`framework.svg` and its PNG); [money.md](docs/money.md): how the engine computes the money of a plan; [soil.md](docs/soil.md): how it measures soil protection; [usual-practice.md](docs/usual-practice.md): how usual practice is drawn from what farms around the pilot sow |
 | `scripts/shots.mjs`, `scripts/check-day.mjs` | Screenshots of every state and the fit report (`screenshots/`, not committed); the app on another decision day |
 
 ## Screens

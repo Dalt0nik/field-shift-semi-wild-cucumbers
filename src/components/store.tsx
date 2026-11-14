@@ -4,6 +4,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DECISION_YEAR, DEFAULT_CROP_SET, DEMO_CURRENT, makeContext, makeSetup } from '@/pilot/demo';
 import { CROPS } from '@/pilot/regional';
+import { farmerTransitions } from '@/pilot/farmers';
 import { evaluatePlan, selectionOf, workspace, type EvaluatedPlan, type Selection, type Workspace } from '@/engine/editor';
 import type { PlanSetup } from '@/engine/plan';
 import { search } from '@/engine/search';
@@ -98,7 +99,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const plans = useMemo<PlanItem[]>(() => {
     if (!fresh) return [];
-    const out: PlanItem[] = [{ id: 'usual', name: 'Usual practice', sub: 'the wheat and rapeseed habit, no catch crops', letter: '0', kind: 'baseline', v: fresh.baseline }];
+    const out: PlanItem[] = [{ id: 'usual', name: 'Usual practice', sub: `what farms within ${farmerTransitions.radiusKm} km sow, no catch crops`, letter: '0', kind: 'baseline', v: fresh.baseline }];
     let n = 0;
     const tagged = new Set<string>();
     for (const [tag] of TAGS) {

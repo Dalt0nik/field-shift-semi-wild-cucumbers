@@ -95,12 +95,13 @@ Decision day 1 August 2026, default crop set (`pipeline/90_engine_check.ts`, `pi
 
 | Plan | Margin, €/ha | S1e | S1 | S5 | S6 | Cereal after cereal |
 |---|---|---|---|---|---|---|
-| Usual practice | 984 | 151 | 171 | 91 | −29 | 23 % |
+| Usual practice (typical statistical farm, [usual-practice.md](usual-practice.md)) | 857 | 156 | 180 | 94 | −53 | 38 % |
 | Highest margin | 988 | 149 | 171 | 91 | −4 | 8 % |
 | Best in a bad year | 949 | 147 | 180 | 100 | +46 | 0 % |
 | Best for soil | 859 | 139 | 162 | 77 | +55 | 0 % |
 | Balanced | 955 | 142 | 166 | 85 | +71 | 0 % |
 
+- Usual practice was the hand-written wheat and rapeseed habit until 14 November 2026: 984 €/ha, S1e 151, S1 171, S5 91, S6 −29, 23 %. It is now the typical farm drawn from the declarations around the pilot. Against it, Best for soil keeps 17 fewer erosion-weighted days at +2 €/ha.
 - Exact lower bound of S1e (the best option of every field, rules ignored): 138.5. The search finds 139.
 - Price of soil protection along the non-dominated set (highest margin at each S1e): 149 → 988, 146 → 981, 144 → 978, 142 → 955, 141 → 928, 140 → 892, 139 → 859.
 - Erosivity at the farm: June–August 54 % of the year, December–February 13 %, the half-months without clear satellite views (16 Nov – 31 Jan) 8 %; 264 storms, the 15 largest carry 31 %.

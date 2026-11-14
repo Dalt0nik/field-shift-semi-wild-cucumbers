@@ -4,7 +4,7 @@
 // and pushes towards the trade-off front of the comparison characteristics. It is a heuristic: the set shown is the
 // non-dominated part of the variants that were evaluated, not a proof that no better variant exists.
 import { characteristics, optionPart, prepare, rulesFor, type Context, type OptionPart, type Prepared } from './characteristics';
-import { baseTimeline, checkCandidate, fieldOptions, lastHistoryCrop, occupancyFor, familyOf } from './plan';
+import { baseTimeline, checkCandidate, fieldOptions, lastHistoryCrop, occupancyFor } from './plan';
 import { CROPS, crop } from '../pilot/regional';
 import type { Characteristics, CropId, EvaluatedVariant, FieldInfo, FieldOption, Occupancy } from './types';
 
@@ -24,6 +24,8 @@ export interface SearchResult {
   fieldOpts: { field: FieldInfo; options: FieldOption[]; rejected: { year: number; crop: CropId; after: CropId | null; reasons: string[] }[] }[];
   variants: EvaluatedVariant[]; // non-dominated set, sorted by margin
   baseline: EvaluatedVariant;
+  /** the statistical farms behind the baseline */
+  farmers: FarmerBand;
   evaluated: number;
   combinations: number;
 }
@@ -97,10 +99,10 @@ export function search(ctx: Context, opts: { seed?: number; population?: number;
   const lo = AXES.map(a => Math.min(...variants.map(v => a.sign * a.get(v.ch)))), hi = AXES.map(a => Math.max(...variants.map(v => a.sign * a.get(v.ch))));
   const score = (v: EvaluatedVariant) => Math.min(...AXES.map((a, i) => (a.sign * a.get(v.ch) - lo[i]) / (hi[i] - lo[i] || 1)));
   variants.reduce((x, y) => (score(y) > score(x) ? y : x)).tags.push('balanced');
-  const baseline = usualPractice(ctx, pre, fieldOpts, parts);
+  const { baseline, farmers } = typicalFarm(ctx, pre, fieldOpts, parts);
   baseline.nonDominated = !all.some(b => dominates(b.obj, AXES.map(a => a.sign * a.get(baseline.ch))));
   const combinations = fieldOpts.reduce((t, fo) => t * Math.max(1, fo.options.length), 1);
-  return { pre, fieldOpts, variants, baseline, evaluated, combinations };
+  return { pre, fieldOpts, variants, baseline, farmers, evaluated, combinations };
 }
 
 /** Best for soil: the lowest erosion-weighted days without cover (S1e); ties are broken by the same on erosion-sensitive
@@ -109,27 +111,93 @@ export function bestForSoil<T extends { ch: Characteristics }>(variants: T[]): T
   return [...variants].sort((a, b) => a.ch.bareErosive.p50 - b.ch.bareErosive.p50 || a.ch.bareOnSlopes - b.ch.bareOnSlopes || a.ch.cerealAfterCereal - b.ch.cerealAfterCereal || b.ch.marginMean - a.ch.marginMean)[0];
 }
 
-/** Current practice as a variant (challenge: compare with the existing rotation). The habit of the region comes from
- *  the pilot (ctx.usual): which crops are preferred after a cereal, after anything else, and in spring on a field
- *  that is open for the first plan year; no catch crops. It is shown even if it breaks a farm rule. */
-function usualPractice(ctx: Context, pre: Prepared, fieldOpts: SearchResult['fieldOpts'], parts: OptionPart[][]): EvaluatedVariant {
-  const idx = fieldOpts.map(fo => {
-    let prev = lastHistoryCrop(fo.field, ctx.setup.planYears[0]);
-    let cands = fo.options.map((o, k) => k).filter(k => !fo.options[k].catchAfter.some(Boolean) && !fo.options[k].catchFirst);
-    fo.options[0].crops.forEach((_, i) => {
-      // the habit by preceding crop; on a field that is open for the first plan year its winter crops come first
-      // and, when their sowing is no longer possible, the spring habit
-      const habit: CropId[] = prev && familyOf(prev) === 'cereal' ? ctx.usual.afterCereal : ctx.usual.otherwise;
-      const pref: CropId[] = i === 0 && !fo.options[0].fixed[0] ? [...habit.filter(c => CROPS[c]?.season === 'winter'), ...ctx.usual.openFirstYear, ...habit] : habit;
-      const avail = new Set(cands.map(k => fo.options[k].crops[i]));
-      const pick = pref.find(p => avail.has(p)) ?? [...avail][0];
-      cands = cands.filter(k => fo.options[k].crops[i] === pick); prev = pick;
+/** The statistical farms behind "usual practice": how many were kept and how they spread on each comparison axis. */
+export interface FarmerBand {
+  /** farms kept (they pass the farm rules) and farms drawn */
+  n: number;
+  drawn: number;
+  /** false when fewer than FARMS_MIN farms passed the farm rules and the drawn farms that fail them were kept too */
+  rulesPassed: boolean;
+  /** per AXES key, in the units of the axis: 10th, 50th and 90th percentile, and all values sorted ascending */
+  axes: Record<string, { p10: number; p50: number; p90: number; sorted: number[] }>;
+  /** per field: the share of the farmer probability that falls on options still open on the decision day */
+  keptMass: Record<string, number>;
+}
+const FARMS_MIN = 200;
+const quantileOf = (s: number[], p: number) => { const i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
+
+/** Share of the statistical farms that a plan beats on one comparison axis (strictly better). */
+export function shareBeaten(band: FarmerBand, key: string, c: Characteristics): number {
+  const a = AXES.find(x => x.key === key)!, v = a.get(c), s = band.axes[key].sorted;
+  return s.filter(x => a.sign * v > a.sign * x).length / s.length;
+}
+
+/** Current practice as a variant (challenge: compare with the existing rotation), from what farms around the pilot
+ *  actually sow (docs/usual-practice.md). Every field gets a probability for each of its admissible options without a
+ *  catch crop: the product over the open plan years of p(crop | crop of the year before), from the pilot's transition
+ *  table (ctx.usual). Farms are drawn field by field, those that pass the farm rules are kept, and the card shows the
+ *  typical one: the kept farm nearest to the median on the four comparison axes, each axis scaled by its interquartile
+ *  range. Fixed seed, so the same inputs give the same plan. */
+function typicalFarm(ctx: Context, pre: Prepared, fieldOpts: SearchResult['fieldOpts'], parts: OptionPart[][]): { baseline: EvaluatedVariant; farmers: FarmerBand } {
+  const m = ctx.usual;
+  const classOf = (id: string | null) => (id ? m.classOf[id] ?? 'other' : 'other');
+  // p(crop | preceding crop) over the annual crops of the plan's crop set; the rest of the class probability is dropped
+  const crops = ctx.setup.cropSet.filter(c => CROPS[c]?.season !== 'perennial');
+  const memo = new Map<string, Map<CropId, number>>();
+  const pCrop = (prev: string | null, c: CropId): number => {
+    const i = classOf(prev);
+    let row = memo.get(i);
+    if (!row) {
+      const raw = crops.map(k => { const cl = classOf(k); return [k, (m.p[i]?.[cl] ?? 0) * (m.share[cl]?.[k] ?? 0)] as const; });
+      const tot = raw.reduce((t, [, v]) => t + v, 0);
+      row = new Map(raw.map(([k, v]) => [k, tot > 0 ? v / tot : 0]));
+      memo.set(i, row);
+    }
+    return row.get(c) ?? 0;
+  };
+  const keptMass: Record<string, number> = {};
+  const dist = fieldOpts.map(fo => {
+    const prev0 = lastHistoryCrop(fo.field, ctx.setup.planYears[0]);
+    const w = fo.options.map(o => {
+      if (o.catchAfter.some(Boolean) || o.catchFirst) return 0;
+      let p = 1, prev: string | null = prev0;
+      o.crops.forEach((c, i) => { if (!o.fixed[i]) p *= pCrop(prev, c); prev = c; });
+      return p;
     });
-    return cands[0] ?? 0;
+    const kept = w.reduce((t, v) => t + v, 0);
+    keptMass[fo.field.id] = +kept.toFixed(3);
+    if (kept > 0) return w.map(v => v / kept);
+    // nothing farmers do here is still open: every option without a catch crop is equally likely
+    const plain: number[] = fo.options.map(o => (o.catchAfter.some(Boolean) || o.catchFirst ? 0 : 1)), n = plain.reduce((t, v) => t + v, 0);
+    return n ? plain.map(v => v / n) : fo.options.map((_, k) => (k === 0 ? 1 : 0));
   });
-  const options = idx.map((k, f) => fieldOpts[f].options[k]);
-  const ch = characteristics(pre, options, idx.map((k, f) => parts[f][k]));
-  return { id: 'usual', label: 'Usual practice', options, origin: 'baseline', ch, tags: ['current practice'] };
+  const rand = rng(m.seed);
+  const draw = (w: number[]) => { let u = rand(), last = 0; for (let k = 0; k < w.length; k++) { if (w[k] <= 0) continue; last = k; u -= w[k]; if (u <= 0) return k; } return last; };
+  type Farm = { idx: number[]; ch: Characteristics };
+  const measure = (idx: number[]): Farm => ({ idx, ch: characteristics(pre, idx.map((k, f) => fieldOpts[f].options[k]), idx.map((k, f) => parts[f][k])) });
+  const kept: Farm[] = [], failed: number[][] = [];
+  let drawn = 0;
+  while (kept.length < m.farms && drawn < 20 * m.farms) {
+    drawn++;
+    const idx = dist.map(draw);
+    if (rulesFor(ctx, idx.map((k, f) => fieldOpts[f].options[k])).feasible) kept.push(measure(idx));
+    else if (failed.length < m.farms) failed.push(idx);
+  }
+  const rulesPassed = kept.length >= FARMS_MIN;
+  const pool = rulesPassed ? kept : [...kept, ...failed.map(measure)];
+  const axes: FarmerBand['axes'] = {};
+  const scale = AXES.map(a => {
+    const sorted = pool.map(f => a.get(f.ch)).sort((x, y) => x - y);
+    axes[a.key] = { p10: quantileOf(sorted, 0.1), p50: quantileOf(sorted, 0.5), p90: quantileOf(sorted, 0.9), sorted };
+    return { a, med: axes[a.key].p50, iqr: quantileOf(sorted, 0.75) - quantileOf(sorted, 0.25) || sorted[sorted.length - 1] - sorted[0] || 1 };
+  });
+  let typical = pool[0], nearest = Infinity;
+  for (const f of pool) {
+    const d = scale.reduce((t, x) => t + ((x.a.get(f.ch) - x.med) / x.iqr) ** 2, 0);
+    if (d < nearest) { nearest = d; typical = f; }
+  }
+  const options = typical.idx.map((k, f) => fieldOpts[f].options[k]);
+  return { baseline: { id: 'usual', label: 'Usual practice', options, origin: 'baseline', ch: typical.ch, tags: ['current practice'] }, farmers: { n: kept.length, drawn, rulesPassed, axes, keptMass } };
 }
 
 export function isDominated(a: Characteristics, others: Characteristics[]): boolean {

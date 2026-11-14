@@ -163,14 +163,14 @@ Two set-ups of the demo farm. The money steps were first checked on the decision
 
 | | Usual season | Bad seasons | Wet harvest |
 |---|---|---|---|
-| 14 Nov · Usual practice, both steps off | 910 | 400 | 792 |
-| 14 Nov · Usual practice, wet harvest only | 887 | 383 | 676 |
-| 14 Nov · Usual practice, both steps | 929 | 409 | 711 |
-| 1 Aug · Usual practice, both steps | 984 | 426 | 755 |
+| 14 Nov · Old usual practice, both steps off | 910 | 400 | 792 |
+| 14 Nov · Old usual practice, wet harvest only | 887 | 383 | 676 |
+| 14 Nov · Old usual practice, both steps | 929 | 409 | 711 |
+| 1 Aug · Usual practice (typical statistical farm), both steps | 857 | 379 | 654 |
 | 1 Aug · Highest margin, both steps | 988 | 444 | 763 |
 | 1 Aug · Balanced plan, both steps | 955 | 451 | 744 |
 
-All values in €/ha. The balanced plan depends on the search axes; since the bare-soil axis became the erosion-weighted days, the balanced plan of 14 November is 958 / 444 / 744 (it was 963 / 449 / 750).
+All values in €/ha. "Old usual practice" is the plan of the hand-written wheat and rapeseed habit that usual practice was until 14 November 2026. `tests/money.test.ts` keeps it as a fixed plan, so the money steps are checked on the same plan as before. Usual practice is now the typical farm drawn from the declarations around the pilot ([usual-practice.md](usual-practice.md)); with the old habit it was 984 / 426 / 755 on 1 August. The balanced plan depends on the search axes; since the bare-soil axis became the erosion-weighted days, the balanced plan of 14 November is 958 / 444 / 744 (it was 963 / 449 / 750).
 
 Single values:
 - FI(F12, winter wheat) = 0.813.
