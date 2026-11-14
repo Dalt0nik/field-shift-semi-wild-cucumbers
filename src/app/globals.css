@@ -105,6 +105,18 @@ td.best { font-weight: 800; text-decoration: underline; text-decoration-thicknes
 .kpi { font-family: var(--font-display), sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
 .kpi small { font-family: var(--font-body), sans-serif; font-size: 0.82rem; font-weight: 400; margin-left: 6px; }
 .bar { height: 6px; background: #e4e9e1; display: flex; } .bar i { display: block; height: 100%; }
+/* margin with more dry years (Analytics, Risk zones): one bar per plan; with the slider moved a pale ghost keeps the old length */
+.db-title { font-size: 1.05rem; margin-top: 6px; }
+.dry-q, .dry-now { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .dry-now { font-size: 0.86rem; margin-bottom: 6px; }
+.db { display: grid; gap: 12px; }
+.db-row { display: grid; gap: 4px; }
+.db-name { font-size: 0.86rem; font-weight: 600; color: var(--muted); } .db-name small { font-weight: 600; color: var(--ink); }
+.db-row.sel .db-name { color: var(--ink); }
+.db-track { position: relative; display: block; height: 22px; margin-right: 64px; }
+.db-ghost, .db-bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 6px 6px 0; transition: width 0.35s ease-out; }
+.db-ghost { background: repeating-linear-gradient(135deg, #f3dcd4 0 5px, #fbeee9 5px 10px); }
+.db-bar { background: #9aaa9e; } .db-row.sel .db-bar { background: var(--field); }
+.db-val { position: absolute; top: 50%; transform: translateY(-50%); margin-left: 8px; font-size: 0.95rem; white-space: nowrap; transition: left 0.35s ease-out; }
 .note { font-size: 0.84rem; color: var(--muted); max-width: 92ch; }
 .check { font-size: 0.84rem; color: var(--soil); max-width: 92ch; } .check b { font-weight: 700; }
 .demo { font-size: 0.84rem; border: 1.5px dashed var(--muted); padding: 8px 10px; background: var(--paper); }

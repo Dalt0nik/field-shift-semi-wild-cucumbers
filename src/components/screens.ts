@@ -46,7 +46,7 @@ export const SCREENS: Record<string, ScreenNote> = {
   },
   'analytics/zones': {
     title: 'Analytics · Risk zones',
-    shows: 'A map with one of three views: erosion-sensitive land (official layer) with how long each plan leaves it without cover, counted by erosive rain; low spots where cold air and water collect (NASADEM); dry seasons, with a chart of the May–July water balance by year and a slider that makes dry seasons more frequent to see how each plan’s margin responds.',
+    shows: 'A map with one of three views: erosion-sensitive land (official layer), with its area and a folded list of the fields that have it; low spots where cold air and water collect (NASADEM); dry seasons, with a chart of the May–July water balance by year and a slider that makes dry seasons more frequent to see how each plan’s margin responds.',
     why: 'Erosion uses the paying agency’s official layer because NASADEM slope agreed with it on only 36 % of the cropland it marked steeper than 12 %. The “what if” re-weights past seasons in the replay; it does not invent a new climate. Dry seasons type the past seasons; they do not forecast yield.',
     ask: ['Why not use the NASA elevation model for erosion?', 'What does the dry-season slider actually change?', 'How is a dry season defined?'],
   },

@@ -9,6 +9,7 @@ import { grid, layerImage } from '@/components/grid';
 import { MonthRisk, SoilHelpButton, soilCheck } from '@/components/Soil';
 import { useScreen, useStore } from '@/components/store';
 import { Check, More, Panel, Select, Sw, Tabs, Term, pct, useQueryState } from '@/components/ui';
+import { DryMargin } from '@/components/DryMargin';
 import { WeatherRisk, weatherClashes } from '@/components/WeatherRisk';
 import hazardsJson from '@/data/hazards.json';
 import { DECISION_DATE, DECISION_YEAR, PLAN_YEARS, coverModel, fieldIndex, fields, niceDate, products, weather } from '@/pilot/demo';
@@ -83,12 +84,9 @@ function Zones({ head }: { head: React.ReactNode }) {
   }, [zone, s.plan, s.yearIdx]);
   const weighted = (series: { margin: number; type: string }[]) => { let a = 0, b = 0; for (const x of series) { const w = x.type === 'dry' ? k : 1; a += w * x.margin; b += w; } return Math.round(a / b); };
   const steepHa = fields.reduce((a, f) => a + f.erosionShare * f.areaHa, 0);
-  const onSteep = (v: number) => Math.round(v / steepHa);
-  const maxSlopes = Math.max(1, ...shown.map(p => onSteep(p.v.ch.bareOnSlopes)));
-  const frost = hazards.hazards.find((h: any) => h.id === 'frost').byMonth;
-  const steep = fields.filter(f => f.erosionShare > 0.005).sort((a, b) => b.erosionShare - a.erosionShare);
+  const steep = [...fields].sort((a, b) => b.erosionShare * b.areaHa - a.erosionShare * a.areaHa); // all fields, most erosion-sensitive hectares first
   useScreen('analytics/zones', { view: zone, selectedPlan: s.plan?.name, drySeasonsMultiplier: k,
-    bareOnErosionSensitiveByPlan: Object.fromEntries(shown.map(p => [p.name, p.v.ch.bareOnSlopes])), fieldBareOnErosionLand: Object.fromEntries(fields.map((f, i) => [f.id, parts[i] ? Math.round(parts[i]!.bareSlopes) : null])),
+    erosionSensitiveHa: Math.round(steepHa * 10) / 10, fieldBareOnErosionLand: Object.fromEntries(fields.map((f, i) => [f.id, parts[i] ? Math.round(parts[i]!.bareSlopes) : null])),
     marginIfDrySeasonsMoreOften: Object.fromEntries(shown.map(p => [p.name, weighted(p.v.ch.marginSeries)])) });
 
   return (
@@ -105,43 +103,32 @@ function Zones({ head }: { head: React.ReactNode }) {
         {head}
         <Select block label="Risk view" value={zone} onChange={setZone} options={[{ value: 'erosion', label: 'Erosion-sensitive land' }, { value: 'low', label: 'Low spots and late frost' }, { value: 'dry', label: 'Dry seasons' }]} />
         {zone === 'erosion' && <>
-          <p className="lead">Bare soil erodes most on the {steepHa.toFixed(0)} ha of erosion-sensitive land (red). How long each plan leaves that land without cover, counted by how erosive the rain is:</p>
+          <p className="lead">Bare soil erodes most on the {steepHa.toFixed(0)} ha of erosion-sensitive land (red).</p>
           <table>
-            <thead><tr><th>Plan</th><th className="n"><Term id="soilDays">Days without cover</Term> a year</th><th style={{ width: 90 }} /></tr></thead>
-            <tbody>{shown.map(p => (
-              <tr key={p.id} className={`click${p.id === s.planId ? ' sel' : ''}`} onClick={() => s.setPlanId(p.id)}>
-                <td>{p.name}</td><td className="n"><b>{onSteep(p.v.ch.bareOnSlopes)}</b></td><td><span className="bar"><i style={{ width: `${(onSteep(p.v.ch.bareOnSlopes) / maxSlopes) * 100}%`, background: 'var(--dry)' }} /></span></td>
-              </tr>))}</tbody>
+            <thead><tr><th>Field</th><th className="n">Erosion-sensitive land</th><th className="n">Share of the field</th></tr></thead>
+            <tbody>{steep.map(f => <tr key={f.id} className={`click${s.field === f.id ? ' sel' : ''}`} onClick={() => s.setField(f.id)}><td><b>{f.id}</b></td><td className="n">{f.erosionShare > 0.005 ? `${(f.erosionShare * f.areaHa).toFixed(1)} ha` : 'none'}</td><td className="n">{f.erosionShare > 0.005 ? pct(f.erosionShare) : '—'}</td></tr>)}</tbody>
           </table>
-          <More label={`${steep.length} fields have such land`}>
-            <table><tbody>{steep.map(f => <tr key={f.id} className={`click${s.field === f.id ? ' sel' : ''}`} onClick={() => s.setField(f.id)}><td><b>{f.id}</b></td><td className="n">{(f.erosionShare * f.areaHa).toFixed(1)} ha</td><td className="n">{pct(f.erosionShare)} of the field</td></tr>)}</tbody></table>
-          </More>
-          {fields.filter(x => s.current[x.id] && x.erosionShare > 0.005).length > steep.length / 2 && <p className="note">The plans differ little here: most of this land is already sown for {PLAN_YEARS[0]}.</p>}
-          <Check>gullies and drains are not visible at 30 m. Plough across the slope; walk the red zones after heavy rain.</Check>
         </>}
         {zone === 'low' && <>
           <p className="lead">Fields below their surroundings collect cold air and stay wet longer in spring (<Term id="nasadem">NASADEM</Term>).</p>
           <table>
             <thead><tr><th>Field</th><th className="n">Against surroundings</th><th className="n">Slope</th></tr></thead>
-            <tbody>{[...fields].sort((a, b) => products.fields[a.id].terrain.relHeight500m - products.fields[b.id].terrain.relHeight500m).slice(0, 6).map(f => { const t = products.fields[f.id].terrain; return (
+            <tbody>{[...fields].sort((a, b) => products.fields[a.id].terrain.relHeight500m - products.fields[b.id].terrain.relHeight500m).map(f => { const t = products.fields[f.id].terrain; return (
               <tr key={f.id} className={`click${s.field === f.id ? ' sel' : ''}`} onClick={() => s.setField(f.id)}><td><b>{f.id}</b></td><td className="n">{t.relHeight500m > 0 ? '+' : ''}{t.relHeight500m} m</td><td className="n">{t.slopePct} %</td></tr>); })}</tbody>
           </table>
-          <p className="small">Frost of −2 °C came in April in <b>{Math.round(frost[3] * 100)} %</b> of years and in May in <b>{Math.round(frost[4] * 100)} %</b>.</p>
-          <Check>the <Term id="cellValue">weather cell</Term> is about 50 km wide and cannot tell a hollow from a hilltop. Low spots are a place to look, not a frost map.</Check>
         </>}
         {zone === 'dry' && <>
           <p className="lead"><Term id="drySeason">Dry seasons</Term>: the lowest fifth of the May–July <Term id="waterBalance">water balance</Term> ({weather.dryYears.join(', ')}).</p>
           <WaterBalance years={weather.years} />
           <div>
-            <label className="lbl" htmlFor="dryk">What if dry years came more often? Now: {k === 1 ? 'as in the past (one year in five)' : `${k}× as often`}</label>
+            {/* two fixed single lines above the slider, so it never moves when the value changes */}
+            <label className="lbl dry-q" htmlFor="dryk">What if dry years came more often?</label>
+            <div className="dry-now">Now: <b>{k === 1 ? 'as in the past (1 year in 5)' : `${k}× as often`}</b></div>
             <input id="dryk" type="range" min={1} max={3} step={0.5} value={k} onChange={e => setK(+e.target.value)} />
             <div className="ramp-t"><span>as in the past</span><span>2×</span><span>3× as often</span></div>
           </div>
-          <table>
-            <thead><tr><th>Plan, <Term id="margin">margin</Term> in €/ha</th><th className="n">As in the past</th><th className="n">{k === 1 ? 'Move the slider' : `Dry years ${k}× as often`}</th></tr></thead>
-            <tbody>{shown.map(p => { const w = weighted(p.v.ch.marginSeries); return (
-              <tr key={p.id} className={`click${p.id === s.planId ? ' sel' : ''}`} onClick={() => s.setPlanId(p.id)}><td>{p.name}</td><td className="n">{p.v.ch.marginMean}</td><td className="n">{k === 1 ? '—' : <><b>{w}</b><span className="bad"> {w - p.v.ch.marginMean}</span></>}</td></tr>); })}</tbody>
-          </table>
+          <h3 className="db-title">What each plan <Term id="margin">earns</Term></h3>
+          <DryMargin k={k} rows={shown.map(p => ({ id: p.id, name: p.name, past: p.v.ch.marginMean, dry: weighted(p.v.ch.marginSeries), selected: p.id === s.planId }))} />
           <p className="note">The slider re-weights past seasons; it does not model a new climate.</p>
         </>}
       </aside>
