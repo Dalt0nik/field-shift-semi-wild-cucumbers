@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="990" viewBox="0 0 960 990" font-family="'Segoe UI', Inter, Arial, sans-serif">
+<title>Field Shift application framework</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#374151" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="960" height="990" fill="#FFFFFF"/>
+
+<g fill="#FFFFFF" stroke="#111827" stroke-width="1.8">
+<rect x="340" y="30" width="280" height="60" rx="8"/>
+<rect x="340" y="125" width="280" height="60" rx="8"/>
+<rect x="340" y="220" width="280" height="60" rx="8"/>
+<rect x="340" y="315" width="280" height="60" rx="8"/>
+<rect x="340" y="410" width="280" height="60" rx="8"/>
+<rect x="340" y="820" width="280" height="64" rx="8"/>
+</g>
+<rect x="340" y="520" width="280" height="258" rx="8" fill="#FFFFFF" stroke="#111827" stroke-width="3.5"/>
+
+<g fill="#F3F4F6" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="7 5">
+<rect x="670" y="30" width="260" height="60" rx="8"/>
+<rect x="670" y="125" width="260" height="60" rx="8"/>
+<rect x="670" y="220" width="260" height="60" rx="8"/>
+<rect x="670" y="315" width="260" height="60" rx="8"/>
+<rect x="670" y="410" width="260" height="60" rx="8"/>
+<rect x="670" y="520" width="260" height="54" rx="8"/>
+<rect x="670" y="588" width="260" height="54" rx="8"/>
+<rect x="670" y="656" width="260" height="54" rx="8"/>
+<rect x="670" y="724" width="260" height="54" rx="8"/>
+<rect x="30" y="520" width="260" height="54" rx="8"/>
+<rect x="30" y="588" width="260" height="54" rx="8"/>
+<rect x="30" y="656" width="260" height="54" rx="8"/>
+<rect x="30" y="724" width="260" height="54" rx="8"/>
+</g>
+<rect x="30" y="315" width="260" height="60" rx="8" fill="#FEF3C7" stroke="#B45309" stroke-width="1.8"/>
+
+<g stroke="#374151" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+<line x1="480" y1="90" x2="480" y2="122"/>
+<line x1="480" y1="185" x2="480" y2="217"/>
+<line x1="480" y1="280" x2="480" y2="312"/>
+<line x1="480" y1="375" x2="480" y2="407"/>
+<line x1="480" y1="470" x2="480" y2="516"/>
+<line x1="480" y1="778" x2="480" y2="816"/>
+<line x1="670" y1="60" x2="624" y2="60"/>
+<line x1="670" y1="155" x2="624" y2="155"/>
+<line x1="670" y1="250" x2="624" y2="250"/>
+<line x1="670" y1="335" x2="624" y2="335"/>
+<path d="M670 425 L648 425 L648 360 L624 360"/>
+<line x1="670" y1="450" x2="624" y2="450"/>
+<line x1="290" y1="345" x2="336" y2="345"/>
+<line x1="290" y1="547" x2="336" y2="547"/>
+<line x1="290" y1="615" x2="336" y2="615"/>
+<line x1="290" y1="683" x2="336" y2="683"/>
+<line x1="290" y1="751" x2="336" y2="751"/>
+<line x1="670" y1="547" x2="624" y2="547"/>
+<line x1="670" y1="615" x2="624" y2="615"/>
+<line x1="670" y1="683" x2="624" y2="683"/>
+<line x1="670" y1="751" x2="624" y2="751"/>
+</g>
+
+<g text-anchor="middle" dominant-baseline="central">
+<g fill="#111827" font-size="16" font-weight="600">
+<text x="480" y="51">1. Farm fields</text>
+<text x="480" y="146">2. Decision point</text>
+<text x="480" y="241">3. Slot search</text>
+<text x="480" y="336">4. Candidates for slots</text>
+<text x="480" y="431">5. Plan variants</text>
+<text x="480" y="610">6. Variant characteristics</text>
+<text x="480" y="842">7. Variants for the agronomist</text>
+</g>
+<g fill="#374151" font-size="13.5">
+<text x="480" y="71">agronomist marks the fields</text>
+<text x="480" y="166">which fields free up, and when</text>
+<text x="480" y="261">free gaps on the timeline</text>
+<text x="480" y="356">windows, field rules, crop set</text>
+<text x="480" y="451">combinations across the whole farm</text>
+<text x="480" y="636">for each variant, on all data</text>
+<text x="480" y="864">agronomist compares and chooses</text>
+</g>
+<text x="480" y="680" fill="#111827" font-size="13.5" font-weight="600">main analysis stage</text>
+
+<g fill="#111827" font-size="15" font-weight="600">
+<text x="800" y="51">Field boundaries</text>
+<text x="800" y="146">Current crops</text>
+<text x="800" y="241">Field history</text>
+<text x="800" y="336">Regional package</text>
+<text x="800" y="431">Regulatory module</text>
+<text x="800" y="538">Regulatory module</text>
+<text x="800" y="606">Climate risks</text>
+<text x="800" y="674">Soil water</text>
+<text x="800" y="742">Terrain and erosion</text>
+<text x="160" y="538">Economics</text>
+<text x="160" y="606">Soil</text>
+<text x="160" y="674">Soil cover</text>
+<text x="160" y="742">Other products</text>
+</g>
+<g fill="#374151" font-size="13">
+<text x="800" y="71">declarations, FTW, agronomist input</text>
+<text x="800" y="166">agronomist input, crop map</text>
+<text x="800" y="261">declarations, HRL, ML</text>
+<text x="800" y="356">sowing windows, preceding crops</text>
+<text x="800" y="451">field and farm prohibitions</text>
+<text x="800" y="558">payments and penalties</text>
+<text x="800" y="626">R5: frost, heat, drought</text>
+<text x="800" y="694">R5, R9: moisture, waterlogging</text>
+<text x="800" y="762">R9, GAEC 5: slopes, erosion</text>
+<text x="160" y="558">yield, prices, costs</text>
+<text x="160" y="626">R1: local soil data</text>
+<text x="160" y="694">R4: when the field is bare</text>
+<text x="160" y="762">not selected</text>
+</g>
+<text x="160" y="336" fill="#78350F" font-size="15" font-weight="600">Crop set</text>
+<text x="160" y="356" fill="#92400E" font-size="13">chosen by the agronomist</text>
+</g>
+
+<rect x="30" y="920" width="900" height="48" rx="8" fill="#F9FAFB" stroke="#D1D5DB" stroke-width="1"/>
+<rect x="200" y="935" width="18" height="18" rx="4" fill="#FFFFFF" stroke="#111827" stroke-width="1.8"/>
+<rect x="420" y="935" width="18" height="18" rx="4" fill="#F3F4F6" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="640" y="935" width="18" height="18" rx="4" fill="#FEF3C7" stroke="#B45309" stroke-width="1.8"/>
+<g fill="#111827" font-size="14" dominant-baseline="central">
+<text x="228" y="944">stage</text>
+<text x="448" y="944">input</text>
+<text x="668" y="944">agronomist input</text>
+</g>
+</svg>

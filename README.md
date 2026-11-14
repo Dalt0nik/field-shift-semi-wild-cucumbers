@@ -4,6 +4,32 @@ Crop-rotation decision support built on NASA Earth observation data, for the NAS
 
 The application shows what NASA satellites see on the farm (soil cover from HLS, rain from GPM IMERG, temperature from NASA POWER, relief from NASADEM), turns it into numbers per field, and uses those numbers to compare crop plans for the next two harvests. It does not choose for the agronomist: it shows the plans, what differs between them and why.
 
+## How it works
+
+The application follows the agronomist's path in seven stages. Stages 1–5 answer "what is possible at all"; stage 6 measures every possible plan on all the data; stage 7 leaves the choice to the agronomist.
+
+![Application framework](docs/framework.png)
+
+| # | Stage | What the system does | Where |
+|---|---|---|---|
+| 1 | Farm fields | Takes the fields of the whole farm | Map |
+| 2 | Decision point | Finds which fields free up and when, from what grows now | Fields |
+| 3 | Slot search | Builds the timeline of each field and finds the free gaps up to the plan horizon | Fields, `src/engine/plan.ts` |
+| 4 | Candidates | Admits a crop to a slot if its sowing window fits, its harvest ends before the next crop, and no field rule forbids it | Crops, `src/engine/plan.ts` |
+| 5 | Plan variants | Searches for combinations across all fields that pass the farm rules | `src/engine/search.ts` |
+| 6 | Variant characteristics | Measures every variant the same way: money over past seasons, bare soil from HLS, dry seasons from IMERG and POWER, rotation | Satellite, Analytics, `src/engine/characteristics.ts` |
+| 7 | Variants for the agronomist | Shows the best variant for each characteristic and lets the agronomist compare, edit and choose | Planner, Checks |
+
+Principles behind it:
+
+- **A field is a timeline of slots**, not "a crop for the year". Winter crops, spring crops and catch crops are special cases of a slot.
+- **The plan covers the whole farm**, because some rules are checked across all fields together.
+- **Variants are built first, then each is evaluated on all data.**
+- **NASA data enter through products**: a conclusion drawn from data that answers a question about a field, for example "in which months is this field bare".
+- **The system does not choose for the agronomist.** There are no priority weights.
+
+In the diagram, R1, R4, R5 and R9 are requirement numbers of the challenge page; the source of the picture is [docs/framework.svg](docs/framework.svg).
+
 ## Run
 
 ```bash
@@ -29,6 +55,7 @@ Copy `.env.example` to `.env`. `GEE_KEY` is needed only to rebuild the data (`pi
 | `src/components/` | Frame, store, map, timeline, charts, 30 m grid, glossary, chat, small building blocks (`ui.tsx`) |
 | `pipeline/` | Scripts that build `src/data` from NASA and Lithuanian sources: [pipeline/README.md](pipeline/README.md) |
 | `tests/` | Unit tests of the engine and of the plan editor |
+| `docs/` | The framework diagram (`framework.svg` and its PNG) |
 | `scripts/shots.mjs` | Screenshots of every state and the fit report (`screenshots/`, not committed) |
 
 ## Screens
