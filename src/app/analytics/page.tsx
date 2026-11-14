@@ -37,9 +37,7 @@ function cropMonths(id: string): (string | null)[] {
 function Seasons({ part }: { part: 'bare' | 'weather' }) {
   const s = useStore();
   // the crops of the selected plan: the calendar under the hazards shows when they are sown and harvested
-  const crops = [...new Set((s.plan?.v.options ?? []).flatMap(o => o.crops))].filter(c => CROPS[c].season !== 'perennial').slice(0, 6);
-  const hz = (id: string, m: number) => Math.round((hazards.hazards.find((h: any) => h.id === id)?.byMonth[m] ?? 0) * 100);
-  return (
+  const crops = [...new Set((s.plan?.v.options ?? []).flatMap(o => o.crops))].filter(c => CROPS[c].season !== 'perennial').slice(0, 6);  return (
     <>
       {part === 'bare' && <Panel title="When are the fields bare?" sub={<>share of the years 2016–{DECISION_YEAR} in which the field was mostly bare, by half-month · NASA <Term id="hls">HLS</Term>, as seen up to {niceDate(DECISION_DATE)}</>}>
         <p className="lead">Bare soil is what heavy rain washes away and what drainage water strips of nitrate; green plants hold both. The fewer bare weeks, especially in summer and autumn, the better.</p>
@@ -84,8 +82,7 @@ function Seasons({ part }: { part: 'bare' | 'weather' }) {
             </tbody>
           </table>
         </div>
-        <p className="note" style={{ marginTop: 10 }}>Numbers are per cent of years. Below them, the sowing (sow) and harvest (harv) months of the crops of “{s.plan?.name ?? 'the selected plan'}” : a risky month under one of them is a vulnerable season. Frost of −2 °C came in April in {hz('frost', 3)} % of years, when spring crops emerge; heavy rain came in July in {hz('heavyRain', 6)} % of years, at cereal harvest.</p>
-        <div style={{ marginTop: 6 }}><Check>weather comes from <Term id="cellValue">one grid cell</Term> (10–50 km), the same for every field; thresholds are working values.</Check></div>
+        <p className="note" style={{ marginTop: 10 }}>Numbers are per cent of years. Below them, the sowing (sow) and harvest (harv) months of the crops of “{s.plan?.name ?? 'the selected plan'}” : a risky month under one of them is a vulnerable season.</p>
       </Panel>}
     </>
   );
