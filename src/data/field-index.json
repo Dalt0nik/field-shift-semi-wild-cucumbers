@@ -1,0 +1,234 @@
+{
+ "about": "Field index from NASA HLS: how much a field yields above or below the neighbouring fields of the same crop group. FI = clamp(1 + beta[group] x dShrunk, cap). d = season peak NDVI (90th percentile of clear NDVI, 1 Apr - 31 Jul, HLSL30 + HLSS30) minus the median of the same group within 8 km in the same season; dShrunk = mean d x reliability(k), reliability = Spearman-Brown with rho.",
+ "seasons": [
+  2021,
+  2024,
+  2025,
+  2026
+ ],
+ "radiusM": 8000,
+ "beta": {
+  "legumes": 2.87,
+  "rapeseed": 6.971,
+  "spring_cereals": 5.759,
+  "winter_cereals": 5.551
+ },
+ "beta90": {
+  "legumes": [
+   2.044,
+   3.798
+  ],
+  "rapeseed": [
+   5.59,
+   8.917
+  ],
+  "spring_cereals": [
+   5.053,
+   6.494
+  ],
+  "winter_cereals": [
+   4.991,
+   6.235
+  ]
+ },
+ "rho": 0.34,
+ "cap": [
+  0.8,
+  1.2
+ ],
+ "check2026": {
+  "r": 0.52,
+  "slope": 1.08,
+  "fields": 1075
+ },
+ "fields": {
+  "F1": {
+   "d": {
+    "2024": 0.0164,
+    "2025": 0.0014,
+    "2026": 0.0376
+   },
+   "percentile": {
+    "2024": 81,
+    "2025": 52,
+    "2026": 90
+   },
+   "k": 3,
+   "dMean": 0.0185,
+   "reliability": 0.607,
+   "dShrunk": 0.01121
+  },
+  "F2": {
+   "d": {
+    "2021": 0.0158,
+    "2024": -0.0223,
+    "2025": 0.0253,
+    "2026": 0.024
+   },
+   "percentile": {
+    "2021": 69,
+    "2024": 32,
+    "2025": 63,
+    "2026": 90
+   },
+   "k": 4,
+   "dMean": 0.0107,
+   "reliability": 0.673,
+   "dShrunk": 0.0072
+  },
+  "F3": {
+   "d": {
+    "2024": 0.0148,
+    "2025": 0.0053,
+    "2026": -0.008
+   },
+   "percentile": {
+    "2024": 60,
+    "2025": 55,
+    "2026": 39
+   },
+   "k": 3,
+   "dMean": 0.004,
+   "reliability": 0.607,
+   "dShrunk": 0.00245
+  },
+  "F4": {
+   "d": {
+    "2021": 0.0057,
+    "2024": 0.0101,
+    "2025": -0.0173,
+    "2026": 0.0296
+   },
+   "percentile": {
+    "2021": 57,
+    "2024": 56,
+    "2025": 35,
+    "2026": 80
+   },
+   "k": 4,
+   "dMean": 0.007,
+   "reliability": 0.673,
+   "dShrunk": 0.00473
+  },
+  "F5": {
+   "d": {
+    "2024": 0.0553,
+    "2025": -0.0029,
+    "2026": 0.0288
+   },
+   "percentile": {
+    "2024": 72,
+    "2025": 48,
+    "2026": 79
+   },
+   "k": 3,
+   "dMean": 0.0271,
+   "reliability": 0.607,
+   "dShrunk": 0.01643
+  },
+  "F6": {
+   "d": {
+    "2021": 0.0413,
+    "2024": 0.0148,
+    "2026": 0.0071
+   },
+   "percentile": {
+    "2021": 71,
+    "2024": 60,
+    "2026": 58
+   },
+   "k": 3,
+   "dMean": 0.0211,
+   "reliability": 0.607,
+   "dShrunk": 0.01279
+  },
+  "F7": {
+   "d": {
+    "2021": -0.088,
+    "2026": 0.0167
+   },
+   "percentile": {
+    "2021": 13,
+    "2026": 77
+   },
+   "k": 2,
+   "dMean": -0.0357,
+   "reliability": 0.507,
+   "dShrunk": -0.01809
+  },
+  "F8": {
+   "d": {
+    "2024": -0.0034,
+    "2025": 0.0118,
+    "2026": 0.0022
+   },
+   "percentile": {
+    "2024": 46,
+    "2025": 65,
+    "2026": 51
+   },
+   "k": 3,
+   "dMean": 0.0035,
+   "reliability": 0.607,
+   "dShrunk": 0.00215
+  },
+  "F9": {
+   "d": {
+    "2025": -0.0323,
+    "2026": -0.0101
+   },
+   "percentile": {
+    "2025": 16,
+    "2026": 38
+   },
+   "k": 2,
+   "dMean": -0.0212,
+   "reliability": 0.507,
+   "dShrunk": -0.01076
+  },
+  "F10": {
+   "d": {
+    "2025": -0.0235,
+    "2026": 0.0087
+   },
+   "percentile": {
+    "2025": 29,
+    "2026": 63
+   },
+   "k": 2,
+   "dMean": -0.0074,
+   "reliability": 0.507,
+   "dShrunk": -0.00376
+  },
+  "F11": {
+   "d": {},
+   "percentile": {},
+   "k": 0,
+   "dMean": 0.0,
+   "reliability": 0.0,
+   "dShrunk": 0.0
+  },
+  "F12": {
+   "d": {
+    "2024": -0.1169,
+    "2025": -0.023,
+    "2026": -0.0262
+   },
+   "percentile": {
+    "2024": 7,
+    "2025": 36,
+    "2026": 28
+   },
+   "k": 3,
+   "dMean": -0.0554,
+   "reliability": 0.607,
+   "dShrunk": -0.03362
+  }
+ },
+ "sources": [
+  "NASA HLS v2.0 HLSL30 + HLSS30 (Earth Engine NASA/HLS/HLSL30/v002, NASA/HLS/HLSS30/v002)",
+  "Crops of the field and neighbours: NMA declarations 2024-2025 (Fields of the World), EuroCrops LT 2021, NMA area-monitoring layer Heterogeniskumas_2026",
+  "Calibration: Statistics Lithuania S9R086 municipal yields 2021, 2024, 2025"
+ ],
+ "madeBy": "one-off analysis in Python (Earth Engine), see pipeline/README.md"
+}

@@ -178,6 +178,8 @@ function Evidence() {
             <thead><tr><th>Measure of a plan</th><th>Built from</th><th>How it was checked</th></tr></thead>
             <tbody>
               <tr><td><b><Term id="margin">Margin</Term></b>, usual and <Term id="worstFifth">bad seasons</Term></td><td>District yields, prices, 2025 payment rates, <Term id="replay">replayed</Term> through 2006–2024</td><td>Yield ranges held the real yield in 80 % of 3 319 cases.</td></tr>
+              <tr><td><b><Term id="fieldIndex">Field index</Term></b> in the margin</td><td>NASA <Term id="hls">HLS</Term> season peak <Term id="ndvi">NDVI</Term> of each field against neighbours with the same crop, 2021–2026; district yields for the conversion</td><td>A field keeps its place for years (r 0.31–0.40 up to 5 years apart); predicted 2026 from earlier seasons with r 0.52 on 1 075 fields.</td></tr>
+              <tr><td><b>Margin in a <Term id="wetHarvest">wet harvest</Term></b></td><td>NASA <Term id="imerg">GPM IMERG</Term> rain 20 Jul – 31 Aug; elevator drying tariffs and buyer price lists 2025</td><td>Drying 7.5 € per tonne per % moisture is a published tariff; the extra moisture and the feed share are estimates.</td></tr>
               <tr><td><b>Margin in <Term id="drySeason">dry seasons</Term></b></td><td>NASA <Term id="imerg">GPM IMERG</Term> rain, NASA <Term id="power">POWER</Term> temperature</td><td>In dry seasons spring cereals yielded 16 % below normal.</td></tr>
               <tr><td><b><Term id="bareDays">Bare soil</Term></b></td><td>NASA <Term id="hls">HLS</Term>, 30 m, 1 700 declared fields</td><td>Cover curves follow the declared crops: 132 to 255 bare days by crop sequence.</td></tr>
               <tr><td><b>Bare soil on erosion-sensitive land</b></td><td>Official layer with the HLS cover model</td><td>NASADEM slope alone was rejected: 36 % agreement with the official layer.</td></tr>
@@ -194,7 +196,7 @@ function Evidence() {
         </Panel>
         <Panel title="Yield ranges the replay uses" sub="t/ha · low season · normal · high season">
           <Intervals rows={yields} unit="t/ha" />
-          <div style={{ marginTop: 8 }}><Check>these are district averages. Enter the farm’s own yields where known.</Check></div>
+          <div style={{ marginTop: 8 }}><Check>these are district averages; each field’s yield is this times its field index (Fields screen).</Check></div>
         </Panel>
       </div>
       <Panel>

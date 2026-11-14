@@ -7,7 +7,8 @@ import { cropColor } from '@/components/colors';
 import { useScreen, useStore } from '@/components/store';
 import Timeline, { planRows } from '@/components/Timeline';
 import { Check, More, Panel, Pill, Select, Sw, Tabs, Term, pct, useQueryState } from '@/components/ui';
-import { DECISION_DATE, PLAN_YEARS, fields, products } from '@/pilot/demo';
+import { DECISION_DATE, PLAN_YEARS, fieldIndex, fields, products } from '@/pilot/demo';
+import { fieldFactor } from '@/engine/characteristics';
 import { occupancyFor } from '@/engine/plan';
 import { CROPS, cropLabel } from '@/pilot/regional';
 import type { CropId } from '@/engine/types';
@@ -24,8 +25,11 @@ export default function FieldsPage() {
   const f = fields.find(x => x.id === s.field)!;
   const fp = products.fields[s.field];
   const sown = fields.filter(x => s.current[x.id]);
+  const fi = fieldIndex.fields[s.field];
+  const idx = (c: CropId) => fieldFactor(s.ctx, s.field, c);
+  const signedPct = (v: number) => `${v >= 1 ? '+' : '−'}${Math.abs(Math.round((v - 1) * 100))} %`;
   const freeFrom = (id: string) => { const c = s.current[id]; if (!c) return `free for spring ${PLAN_YEARS[0]} sowing`; if (CROPS[c].season === 'perennial') return 'stays in grass'; const h = occupancyFor(c, PLAN_YEARS[0], 'current')?.harvest; return h ? `sown; free again after its harvest, ${day(h)}` : '—'; };
-  useScreen(`organization/${tab}`, { selectedField: f.id, growingNow: Object.fromEntries(fields.map(x => [x.id, s.current[x.id] ? CROPS[s.current[x.id]!].name : 'nothing sown'])), satelliteHintForSelected: fp.autumn2026 });
+  useScreen(`organization/${tab}`, { selectedField: f.id, growingNow: Object.fromEntries(fields.map(x => [x.id, s.current[x.id] ? CROPS[s.current[x.id]!].name : 'nothing sown'])), satelliteHintForSelected: fp.autumn2026, fieldIndexForSelected: fi ? { seasons: fi.k, percentileAmongNeighbours: fi.percentile, winterWheat: +idx('winter_wheat').toFixed(3), rapeseed: +idx('winter_rapeseed').toFixed(3), legumes: +idx('faba_bean').toFixed(3) } : null });
   const tabs = <Tabs label="Fields views" tabs={[{ id: 'fields', label: 'What grows now' }, { id: 'timelines', label: 'Field timelines' }]} value={tab} onChange={setTab} />;
 
   if (tab === 'timelines') return (
@@ -67,15 +71,18 @@ export default function FieldsPage() {
         <div className="mapcard">
           <h3>{f.id} <small>{f.areaHa.toFixed(1)} ha · {freeFrom(f.id)}</small></h3>
           <p className="small">{[2024, 2025, 2026].map(y => cropLabel(f.history[y]?.crop ?? f.history[y]?.cropClass).replace(' (class)', '')).join(' → ')}</p>
+          <p className="small"><Term id="fieldIndex">Yield against neighbours</Term> (NASA HLS): {fi && fi.k ? <><b>{signedPct(idx('winter_wheat'))}</b> wheat, <b>{signedPct(idx('winter_rapeseed'))}</b> rapeseed, <b>{signedPct(idx('faba_bean'))}</b> legumes</> : 'no season with a comparable crop: counted as the district'}</p>
           <p className="small"><Pill tone={fp.autumn2026.winterCropSuggested ? 'ok' : undefined}>{fp.autumn2026.winterCropSuggested ? 'NASA satellite hint: a winter crop is sown' : 'NASA satellite hint: no sign of sowing'}</Pill></p>
           <More label="More about this field">
             <dl className="kv">
               <dt>Autumn greenness</dt><dd><Term id="ndvi">NDVI</Term> {fp.autumn2026.minNdviAugOct?.toFixed(2)} → {fp.autumn2026.lateNdvi?.toFixed(2)}</dd>
+              <dt>Among neighbours</dt><dd>{fi && fi.k ? `${Object.entries(fi.percentile).map(([y, p]) => `${y}: ${p}th`).join(', ')} percentile of fields with the same crop within ${fieldIndex.radiusM / 1000} km; reliability ${fi.reliability.toFixed(2)}` : 'no comparable season'}</dd>
               <dt>Soil</dt><dd>{f.soilType ?? 'unknown'}, texture {f.soilTexture ?? 'unknown'}</dd>
               <dt>Relief</dt><dd>slope {fp.terrain.slopePct} %, {Math.abs(fp.terrain.relHeight500m)} m {fp.terrain.relHeight500m > 0 ? 'above' : 'below'} surroundings</dd>
               <dt>Rule layers</dt><dd>{pct(f.erosionShare)} erosion-sensitive, {pct(f.peatShare)} peat</dd>
             </dl>
             <Check>the satellite hint was right for three fields in four in our test, so it only pre-fills your entry.</Check>
+            <Check>the field index is calibrated on district yields, not on this field’s own harvests; it is capped at ±20 %.</Check>
           </More>
         </div>
         <div className="maplegend"><span><Sw c="#c79a1e" />sown for {PLAN_YEARS[0]} (colour = crop)</span><span><Sw c="#ffffff" />free now</span></div>

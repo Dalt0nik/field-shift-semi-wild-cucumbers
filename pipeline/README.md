@@ -13,7 +13,7 @@ TypeScript scripts that build `src/data/` and `public/overlays/` from NASA and L
 | `45_hazards.ts` | `hazards.json` | the POWER download cached by `40_` | cache |
 | `90_engine_check.ts`, `91_cost_sensitivity.ts` | console | engine smoke check; sensitivity of the comparison to costs | — |
 
-`src/data/cover-model.json` is a copy of `inputs/cover-model.json`.
+`src/data/cover-model.json` is a copy of `inputs/cover-model.json`; `src/data/field-index.json` is a copy of `inputs/field-index.json`.
 
 ## Prepared inputs
 
@@ -27,6 +27,7 @@ These files are committed in `inputs/`. They were prepared once, by hand or with
 | `yields.csv` | Municipal crop yields, Statistics Lithuania table S9R086 | Downloaded from the SDMX service of Statistics Lithuania |
 | `prices.csv` | Crop prices, Eurostat `apri_ap_crpouta`, deflated with HICP | Downloaded from the Eurostat API and deflated |
 | `areas.csv` | Sown and harvested area, Statistics Lithuania S9R088 and S9R089 | Downloaded from the SDMX service of Statistics Lithuania |
+| `field-index.json` | Field index of the 12 pilot fields: season peak NDVI from NASA HLS against the neighbouring fields of the same crop group within 8 km (2021, 2024–2026), the calibration β per crop group and the reliability ρ | A one-off analysis in Python: samples of declared fields across Lithuania and around the farm (NMA declarations 2024–2025, EuroCrops LT 2021, NMA layer `Heterogeniskumas_2026`), HLS season peaks through Earth Engine, calibration on municipal yields (S9R086) |
 
 ## Local files that are never committed
 

@@ -4,7 +4,9 @@ import econJson from '../data/economics.json';
 import weatherJson from '../data/weather.json';
 import coverJson from '../data/cover-model.json';
 import productsJson from '../data/products.json';
-import type { Context, CoverModel, Economics, Replay, UsualPractice, Weather } from '../engine/characteristics';
+import fieldIndexJson from '../data/field-index.json';
+import { FIELD_GROUP, WET_HARVEST } from './economics';
+import type { Context, CoverModel, Economics, FieldIndex, Replay, UsualPractice, Weather } from '../engine/characteristics';
 import type { PlanSetup } from '../engine/plan';
 import type { CropId, FieldInfo } from '../engine/types';
 
@@ -13,6 +15,8 @@ export const products = productsJson as any;
 export const weather = weatherJson as any;
 export const economics = econJson as any;
 export const coverModel = coverJson as any;
+/** NASA HLS field index of the 12 pilot fields (prepared input, see pipeline/README.md). */
+export const fieldIndex = fieldIndexJson as unknown as FieldIndex & { seasons: number[]; rho: number; beta90: Record<string, number[]>; check2026: { r: number; slope: number; fields: number }; radiusM: number };
 
 export const fields: FieldInfo[] = farm.fields.features.map((f: any) => {
   const p = f.properties;
@@ -47,5 +51,6 @@ export function makeSetup(over: Partial<PlanSetup> = {}): PlanSetup {
   return { decisionDate: DECISION_DATE, planYears: PLAN_YEARS, cropSet: DEFAULT_CROP_SET, excluded: {}, current: DEMO_CURRENT, catchCrops: true, ...over };
 }
 export function makeContext(setup: PlanSetup = makeSetup(), costFactor = 1): Context {
-  return { fields, setup, econ: economics as Economics, weather: weather as Weather, cover: coverModel as CoverModel, replay: REPLAY, usual: USUAL_PRACTICE, costFactor };
+  return { fields, setup, econ: economics as Economics, weather: weather as Weather, cover: coverModel as CoverModel, replay: REPLAY, usual: USUAL_PRACTICE, costFactor,
+    fieldIndex, fieldGroup: FIELD_GROUP, wetHarvest: WET_HARVEST };
 }

@@ -17,7 +17,7 @@ The application follows the agronomist's path in seven stages. Stages 1–5 answ
 | 3 | Slot search | Builds the timeline of each field and finds the free gaps up to the plan horizon | Fields, `src/engine/plan.ts` |
 | 4 | Candidates | Admits a crop to a slot if its sowing window fits, its harvest ends before the next crop, and no field rule forbids it | Crops, `src/engine/plan.ts` |
 | 5 | Plan variants | Searches for combinations across all fields that pass the farm rules | `src/engine/search.ts` |
-| 6 | Variant characteristics | Measures every variant the same way: money over past seasons, bare soil from HLS, dry seasons from IMERG and POWER, rotation | Satellite, Analytics, `src/engine/characteristics.ts` |
+| 6 | Variant characteristics | Measures every variant the same way: money over past seasons with each field's index from HLS and the wet-harvest loss from IMERG, bare soil from HLS, dry seasons from IMERG and POWER, rotation | Fields, Satellite, Analytics, `src/engine/characteristics.ts` |
 | 7 | Variants for the agronomist | Shows the best variant for each characteristic and lets the agronomist compare, edit and choose | Planner, Checks |
 
 Principles behind it:
@@ -77,6 +77,7 @@ Tabs and views are in the URL (`/planner?tab=compare`, `/analytics?tab=zones&vie
 - Real: field boundaries, crops 2024–2026, satellite series, weather, yields, prices, payment rates, the erosion-sensitive and peat layers.
 - Preset: which crops are in the ground on 14 November 2026 and the crop set.
 - Illustrative: variable costs per crop (no open source exists for Lithuania); preceding-crop yield factors (literature).
+- Estimates: the extra grain moisture and the feed share of wheat in a wet harvest (drying tariffs are published).
 - The farm is 12 neighbouring declared fields, not one real holding: open declarations carry no farm identifier.
 - The application is limited to the preloaded farm: drawing arbitrary fields is not supported.
 

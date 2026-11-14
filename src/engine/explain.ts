@@ -1,6 +1,6 @@
 // Plain-language reading of a plan, assembled from the engine's own numbers (challenge R3: why it was suggested,
 // evidence, benefits, gaps, risks). Nothing here is generated text: every sentence is a template filled from stage 6.
-import type { OptionPart } from './characteristics';
+import { fieldFactor, type OptionPart } from './characteristics';
 import type { Workspace } from './editor';
 import { CROPS, cropLabel } from '../pilot/regional';
 import type { EvaluatedVariant } from './types';
@@ -34,9 +34,9 @@ export function fiveAnswers(v: EvaluatedVariant, base: EvaluatedVariant, ws: Wor
   const failed = v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive');
   return {
     why,
-    evidence: `Margin: each crop replayed through the seasons ${ws.pre.seasons[0]}–${ws.pre.seasons[ws.pre.seasons.length - 1]} (municipal yields of Statistics Lithuania, Eurostat prices, 2025 payment rates). Season types: NASA GPM IMERG rain and NASA POWER temperature. Bare soil: NASA HLS cover curves of 1 700 declared fields, by crop sequence. Rules: orders 3D-107 and 3D-92.`,
+    evidence: `Margin: each crop replayed through the seasons ${ws.pre.seasons[0]}–${ws.pre.seasons[ws.pre.seasons.length - 1]} (municipal yields of Statistics Lithuania, Eurostat prices, 2025 payment rates). Field index: each field against its neighbours with the same crop, from NASA HLS season peak greenness 2021–2026. Season types: NASA GPM IMERG rain and NASA POWER temperature; in wet-harvest seasons extra drying and feed-grade wheat are taken off. Bare soil: NASA HLS cover curves of 1 700 declared fields, by crop sequence. Rules: orders 3D-107 and 3D-92.`,
     benefits,
-    gaps: `Variable costs are illustrative, not this farm's. Yields are municipal averages. Stubble and residues are not visible to the satellite.${estCrops.length ? ` Sowing or harvest windows are estimates for: ${estCrops.join(', ')}.` : ''} Pests and diseases enter only as "cereal after cereal".`,
+    gaps: `Variable costs are illustrative, not this farm's. Yields are municipal averages times the field index, which is calibrated on districts, not on this farm's harvests. Wet-harvest moisture and feed share are estimates. Stubble and residues are not visible to the satellite.${estCrops.length ? ` Sowing or harvest windows are estimates for: ${estCrops.join(', ')}.` : ''} Pests and diseases enter only as "cereal after cereal".`,
     risks: `${failed.length ? `Fails ${[...new Set(failed.map(r => r.title))].join(' and ')}: payments are at risk. ` : ''}Worst replayed seasons: ${v.ch.worstSeasons.map(s => `${s.season} (${s.margin} €/ha)`).join(', ')}. ${dry} ${v.ch.softWarnings ? `${v.ch.softWarnings} agronomic warning${v.ch.softWarnings > 1 ? 's' : ''} (late sowing, short intervals) to check on the farm.` : ''}`.trim(),
   };
 }
@@ -61,6 +61,8 @@ export function planDiff(a: EvaluatedVariant, b: EvaluatedVariant, ws: Workspace
       if (Math.abs(db) >= 3) bits.push(`${signed(db, 'bare days')}`);
       if (pa.cerealAfterCereal > 0 !== pb.cerealAfterCereal > 0) bits.push(pb.cerealAfterCereal > 0 ? 'adds a cereal after a cereal' : 'avoids a cereal after a cereal');
       if (pa.legume > 0 !== pb.legume > 0) bits.push(pb.legume > 0 ? 'adds a legume' : 'drops the legume');
+      const last = ob.crops[ob.crops.length - 1], fiB = fieldFactor(ws.ctx, f.id, last);
+      if (Math.abs(fiB - 1) >= 0.03) bits.push(`the field yields ${signed(Math.round((fiB - 1) * 100), '%')} against its neighbours for ${cropLabel(last).toLowerCase()} (NASA HLS)`);
     }
     out.push({ fieldId: f.id, areaHa: f.areaHa, a: describe(oa, years), b: describe(ob, years), reason: bits.join('; ') || 'about the same on this field' });
   });

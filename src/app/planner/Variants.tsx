@@ -61,7 +61,7 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
             {!c.v.ch.feasible && <Pill tone="bad">fails a farm rule</Pill>}
           </button>); })}
       </div>
-      <p className="note"><b>From NASA satellites:</b> <Term id="bareDays">days without crop cover</Term> and which past years were dry. <b>From local data:</b> yields, prices, rules and your own sowing. <Term id="margin">Margin</Term> rests on illustrative costs, so compare the plans with each other.</p>
+      <p className="note"><b>From NASA satellites:</b> how each field yields against its neighbours (<Term id="fieldIndex">field index</Term>), <Term id="bareDays">days without crop cover</Term>, which past years were dry and which had a <Term id="wetHarvest">wet harvest</Term>. <b>From local data:</b> yields, prices, rules and your own sowing. <Term id="margin">Margin</Term> rests on illustrative costs, so compare the plans with each other.</p>
 
       <Panel title={p.name} sub={p.sub}
         right={<>{s.chosen?.id === p.id ? <><Pill tone="ok">your chosen plan</Pill><button className="link small" onClick={() => s.choose(null)}>undo</button></> : <button className="btn pri" onClick={() => s.choose(p.id)}>Choose this plan</button>}<button className="btn" onClick={onEdit}>Change it field by field</button><Link className="btn" href="/rules">Check the rules</Link></>}>

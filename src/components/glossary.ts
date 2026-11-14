@@ -7,7 +7,8 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   waterBalance: { term: 'Water balance', text: 'Rain minus the evaporative demand of the air, here for May–July. A strongly negative balance means crops needed more water than fell.' },
   et: { term: 'Evapotranspiration (ET)', text: 'Water that leaves the field into the air, from the soil and through plants. ET0 is the demand of the air for a reference grass cover, here estimated from temperature (Hargreaves).' },
   drySeason: { term: 'Dry season', text: 'A season in the lowest fifth of the May–July water balance of 2001–2025 (IMERG rain minus ET0 from POWER temperature). In such seasons spring cereals yielded about 16 % below normal in Lithuania.' },
-  wetHarvest: { term: 'Wet harvest', text: 'A season in the highest fifth of rain between 20 July and 31 August. Harvest is delayed and grain quality suffers.' },
+  wetHarvest: { term: 'Wet harvest', text: 'A season in the highest fifth of rain between 20 July and 31 August (NASA GPM IMERG). Harvest is delayed, grain comes in wetter and must be dried at extra cost, and part of the wheat is sold as feed. The replay takes this off the margin in such seasons.' },
+  fieldIndex: { term: 'Field index', text: 'How much a field usually yields above or below the neighbouring fields of the same crop, measured by NASA HLS: the season peak of its greenness (NDVI) against the fields within 8 km, in every season with a known crop since 2021. It is shrunk by how reliable it is and turned into yield per crop group: rapeseed gains or loses most on a good or weak field, legumes least.' },
   imerg: { term: 'GPM IMERG', text: 'NASA’s satellite rain record, one value per cell of about 10 km. It matched monthly rain at Lithuanian stations closely (r = 0.92). One cell covers the whole farm.' },
   power: { term: 'NASA POWER', text: 'NASA’s daily weather record from the MERRA-2 reanalysis, one value per cell of about 50 km. Used here for temperature, frost and heat.' },
   nasadem: { term: 'NASADEM', text: 'NASA’s 30 m elevation model. It gives slope and low spots, but it was too coarse to reproduce the official 12 % slope rule, so the rule uses the paying agency’s layer.' },
@@ -21,7 +22,7 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   eco: { term: 'Eco-scheme', text: 'A voluntary payment for a practice beyond the rules. “Augalų kaita” (crop rotation) pays when the farm has four crops with a legume, the main crop at most half, and no crop repeated on a field.' },
   catchCrop: { term: 'Catch crop', text: 'A crop sown after the harvest only to cover the soil until the next spring crop. It cuts bare-soil days and earns an eco-scheme payment.' },
   slot: { term: 'Slot', text: 'A free gap on a field’s timeline between two crops. A field is planned as a timeline of slots, not as “one crop per year”.' },
-  margin: { term: 'Margin', text: 'Yield × price + payments − variable costs, per hectare and year. Costs are illustrative, so compare variants with each other rather than reading the euros as a forecast.' },
+  margin: { term: 'Margin', text: 'Yield × price + payments − variable costs, per hectare and year. The yield is the district yield times the field index (NASA HLS). Costs are illustrative, so compare variants with each other rather than reading the euros as a forecast.' },
   cellValue: { term: 'Cell value', text: 'Weather layers are coarse: one value for a cell of 10–50 km. The inspector shows the value of the cell that covers the point, the same for every field of the farm.' },
 };
 export type TermId = keyof typeof GLOSSARY;

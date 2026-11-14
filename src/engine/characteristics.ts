@@ -2,6 +2,9 @@
 // rules of the pilot (src/pilot/rules.ts).
 //  Money     — replay of past seasons: normal yield = mean of the last five municipal seasons, spread = relative
 //              deviations of past seasons, all crops of a variant replayed in the same season (backtest: experiment F).
+//              Yield of a field = normal yield x field index (NASA HLS: the field against its neighbours) x season
+//              deviation x preceding crop; in wet-harvest seasons (NASA IMERG) extra drying and feed-grade wheat are
+//              subtracted.
 //  Seasons   — each replayed season is typed by NASA data: dry = lowest fifth of the May-July water balance
 //              (IMERG rain minus ET0 from POWER temperature), wet harvest = highest fifth of IMERG rain 20 Jul - 31 Aug.
 //  Bare soil — bare-soil-equivalent days from NASA HLS cover curves of 1 700 declared fields, by crop sequence (C4, C6).
@@ -13,7 +16,27 @@ import type { Characteristics, CropId, FieldInfo, FieldOption, Range, RuleResult
 
 export interface EconCrop { yieldTHa: Record<string, number>; priceEurT: Record<string, number>; costEurHa: number | null }
 export interface Economics { crops: Record<string, EconCrop> }
-export interface Weather { years: { year: number; type: string; waterBalanceMayJul: number; harvestRain: number; frostDays: number }[] }
+export interface Weather { years: { year: number; type: string; waterBalanceMayJul: number; harvestRain: number; harvestRainRank?: number; frostDays: number }[] }
+/** Field index: per field the shrunk mean difference of season peak NDVI (NASA HLS) from the
+ *  neighbouring fields of the same crop group; beta converts it into a share of yield per crop group. */
+export interface FieldIndex {
+  beta: Record<string, number>;
+  cap: [number, number];
+  fields: Record<string, { dShrunk: number; k: number; reliability: number; d: Record<string, number>; percentile: Record<string, number> }>;
+}
+/** Wet-harvest loss: seasons with harvest rain at or above `rankFrom` (rank in 2001-2025). */
+export interface WetHarvestParams {
+  rankFrom: number;
+  /** extra moisture to dry over an ordinary season, percentage points */
+  extraMoisturePct: number;
+  /** drying tariff, EUR per tonne per percentage point; oilseeds have their own */
+  dryingEurPerTPct: number;
+  dryingOilseedEurPerTPct: number;
+  /** crops of which a share goes to feed at a discount (wheat) */
+  feedCrops: CropId[];
+  feedShare: number;
+  feedDiscount: number;
+}
 export interface CoverModel { model: Record<string, { n: number; autumn: number[]; winter: number[]; spring: number[]; total: number[] }> }
 
 export interface Context {
@@ -28,6 +51,13 @@ export interface Context {
   usual: UsualPractice;
   /** multiplies all variable costs (sensitivity of the ranking to the illustrative costs) */
   costFactor?: number;
+  /** field index from NASA HLS and the crop group of each crop it applies to (absent: every field as the district) */
+  fieldIndex?: FieldIndex;
+  fieldGroup?: Record<CropId, string>;
+  /** wet-harvest loss parameters (absent: no loss) */
+  wetHarvest?: WetHarvestParams;
+  /** switch single money steps off, for checks and sensitivity runs (default: on when their data are given) */
+  moneySteps?: { fieldIndex?: boolean; wetHarvest?: boolean };
 }
 export interface Replay { firstSeason: number; lastSeason: number; normalYieldYears: number[]; normalPriceYears: number[] }
 export interface UsualPractice { openFirstYear: CropId[]; afterCereal: CropId[]; otherwise: CropId[] }
@@ -41,6 +71,24 @@ export function precropFactor(c: CropId, prev: string | null): number {
   return f === 'cereal' ? 0.93 : f === 'oilseed' ? 1.02 : f === 'legume' ? 1.06 : 1;
 }
 
+/** Field index of a field for a crop (1 = as the district). */
+export function fieldFactor(ctx: Context, fieldId: string, c: CropId): number {
+  const fi = ctx.fieldIndex;
+  if (!fi || ctx.moneySteps?.fieldIndex === false) return 1;
+  const g = ctx.fieldGroup?.[c], beta = g ? fi.beta[g] : undefined, f = fi.fields[fieldId];
+  if (beta === undefined || !f) return 1;
+  return Math.min(fi.cap[1], Math.max(fi.cap[0], 1 + beta * f.dShrunk));
+}
+
+/** EUR/ha lost in a wet-harvest season by a crop with `tonnes` per ha and `revenue` per ha: extra drying, and for the
+ *  feed crops a share sold as feed at a discount. Grain and seed crops only. */
+export function wetHarvestLoss(p: WetHarvestParams, c: CropId, tonnes: number, revenue: number): number {
+  const k = crop(c);
+  if (!['cereal', 'oilseed', 'legume'].includes(k.family) || k.season === 'perennial') return 0;
+  const tariff = k.family === 'oilseed' ? p.dryingOilseedEurPerTPct : p.dryingEurPerTPct;
+  return tonnes * p.extraMoisturePct * tariff + (p.feedCrops.includes(c) ? revenue * p.feedShare * p.feedDiscount : 0);
+}
+
 const mean = (a: number[]) => (a.length ? a.reduce((t, v) => t + v, 0) / a.length : NaN);
 function quantile(a: number[], p: number): number { const s = [...a].sort((x, y) => x - y); const i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); }
 
@@ -48,7 +96,11 @@ export interface Prepared {
   ctx: Context;
   seasons: number[];
   types: string[];
+  /** wet-harvest season (harvest rain in the top fifth) and the loss is switched on */
+  wet: boolean[];
   totalHa: number;
+  /** per crop: yield deviation of each replayed season (1 = as expected) */
+  yieldDev: Record<CropId, number[]>;
   /** per crop: revenue per ha in each replayed season (that season's yield and price deviations) */
   revenue: Record<CropId, number[]>;
   /** per crop: revenue per ha with that season's yield deviation at the normal price (isolates weather from prices) */
@@ -61,7 +113,10 @@ export function prepare(ctx: Context): Prepared {
   const seasons: number[] = [];
   for (let s = ctx.replay.firstSeason; s <= ctx.replay.lastSeason; s++) seasons.push(s);
   const typeOf = new Map(ctx.weather.years.map(y => [y.year, y.type]));
-  const revenue: Prepared['revenue'] = {}, revenueYield: Prepared['revenueYield'] = {}, normal: Prepared['normal'] = {};
+  const revenue: Prepared['revenue'] = {}, revenueYield: Prepared['revenueYield'] = {}, normal: Prepared['normal'] = {}, yieldDev: Prepared['yieldDev'] = {};
+  const rankOf = new Map(ctx.weather.years.map(y => [y.year, y.harvestRainRank ?? 0]));
+  const wh = ctx.moneySteps?.wetHarvest === false ? undefined : ctx.wetHarvest;
+  const wet = seasons.map(s => !!wh && (rankOf.get(s) ?? 0) >= wh.rankFrom);
   for (const id of ctx.setup.cropSet) {
     const e = ctx.econ.crops[id];
     if (!e) continue;
@@ -69,7 +124,8 @@ export function prepare(ctx: Context): Prepared {
     const lastY = ctx.replay.normalYieldYears.map(y).filter(v => v !== undefined), lastP = ctx.replay.normalPriceYears.map(p).filter(v => v !== undefined);
     const ny = mean(lastY), np = mean(lastP);
     let used = 0;
-    revenueYield[id] = seasons.map(s => { const py = [1, 2, 3, 4, 5].map(d => y(s - d)).filter(v => v !== undefined); return ny * (y(s) !== undefined && py.length === 5 ? y(s) / mean(py) : 1) * np; });
+    yieldDev[id] = seasons.map(s => { const py = [1, 2, 3, 4, 5].map(d => y(s - d)).filter(v => v !== undefined); return y(s) !== undefined && py.length === 5 ? y(s) / mean(py) : 1; });
+    revenueYield[id] = yieldDev[id].map(ry => ny * ry * np);
     revenue[id] = seasons.map(s => {
       const py = [1, 2, 3, 4, 5].map(d => y(s - d)).filter(v => v !== undefined), pp = [1, 2, 3, 4, 5].map(d => p(s - d)).filter(v => v !== undefined);
       const ry = y(s) !== undefined && py.length === 5 ? y(s) / mean(py) : 1, rp = p(s) !== undefined && pp.length === 5 ? p(s) / mean(pp) : 1;
@@ -78,7 +134,7 @@ export function prepare(ctx: Context): Prepared {
     });
     normal[id] = { yieldTHa: ny, priceEurT: np, costEurHa: (e.costEurHa ?? 0) * (ctx.costFactor ?? 1), seasonsUsed: used };
   }
-  return { ctx, seasons, types: seasons.map(s => typeOf.get(s) ?? 'normal'), totalHa: ctx.fields.reduce((t, f) => t + f.areaHa, 0), revenue, revenueYield, normal };
+  return { ctx, seasons, types: seasons.map(s => typeOf.get(s) ?? 'normal'), wet, totalHa: ctx.fields.reduce((t, f) => t + f.areaHa, 0), revenue, revenueYield, normal, yieldDev };
 }
 
 const timing = (id: string | null, kind: 'harvest' | 'sowing'): string => {
@@ -119,11 +175,16 @@ export function optionPart(pre: Prepared, f: FieldInfo, o: FieldOption): OptionP
     const c = crop(id), catchBefore = i > 0 && o.catchAfter[i - 1];
     const payHa = PAYMENTS_2025.basic + (c.legume && c.season !== 'perennial' ? PAYMENTS_2025.coupledProtein : 0) + (catchBefore ? PAYMENTS_2025.ecoCatchCrop : 0);
     const costHa = (pre.normal[id]?.costEurHa ?? 0) + (catchBefore ? CATCH_CROP_COST * (ctx.costFactor ?? 1) : 0);
-    const k = precropFactor(id, prev);
-    const rev = pre.revenue[id], revY = pre.revenueYield[id];
+    // yield of this field = normal x field index x season deviation x preceding crop
+    const k = precropFactor(id, prev) * fieldFactor(ctx, f.id, id);
+    const rev = pre.revenue[id], revY = pre.revenueYield[id], dev = pre.yieldDev[id], nt = pre.normal[id]?.yieldTHa ?? 0;
+    const wh = ctx.wetHarvest;
     for (let s = 0; s < margin.length; s++) {
-      margin[s] += f.areaHa * ((rev ? rev[s] * k : 0) + payHa - costHa) / ny;
-      marginYield[s] += f.areaHa * ((revY ? revY[s] * k : 0) + payHa - costHa) / ny;
+      const r = rev ? rev[s] * k : 0, rY = revY ? revY[s] * k : 0;
+      const t = dev ? nt * dev[s] * k : 0;
+      const loss = pre.wet[s] && wh ? wetHarvestLoss(wh, id, t, r) : 0, lossY = pre.wet[s] && wh ? wetHarvestLoss(wh, id, t, rY) : 0;
+      margin[s] += f.areaHa * (r - loss + payHa - costHa) / ny;
+      marginYield[s] += f.areaHa * (rY - lossY + payHa - costHa) / ny;
     }
     pay += f.areaHa * payHa / ny;
     const b = bareFor(ctx.cover, prev, id, catchBefore);
