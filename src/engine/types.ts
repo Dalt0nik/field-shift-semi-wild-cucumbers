@@ -117,6 +117,8 @@ export interface Characteristics {
   largestCropShare: number;
   cropsPerYear: number[];
   paymentsEurHa: number;
+  /** the parts of paymentsEurHa, EUR per ha and year; cut: lost for a broken payment condition (negative or 0) */
+  paymentParts: { basic: number; topUp: number; legumes: number; catchCrops: number; rotation: number; cut: number };
   ecoRotationEligible: boolean[];
   softWarnings: number;
   rules: RuleResult[];

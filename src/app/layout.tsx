@@ -10,7 +10,7 @@ const body = Public_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-bo
 
 export const metadata: Metadata = {
   title: 'Field Shift',
-  description: 'Crop-rotation decision support for a Lithuanian farm on NASA data: satellite layers, rules, plan variants and your custom plan, compared on the same characteristics.',
+  description: 'Crop-rotation decision support for a Lithuanian farm on NASA data: satellite layers, EU farm rules, plan variants and your custom plan, compared on the same characteristics.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

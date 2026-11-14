@@ -13,7 +13,7 @@
 //              a typically wet window, S5 bare soil in the leaching season, S6 humus balance.
 //  Rules     — EU conditionality (GAEC 6, GAEC 7) as implemented in Lithuania, eco-scheme and payments.
 import { CLASS_INFO, CROPS, crop } from '../pilot/regional';
-import { PAYMENTS_2025, ecoRotation, gaec6, gaec7, type YearState } from '../pilot/rules';
+import { PAYMENTS_2025, PAYMENT_CUT, ecoRotation, gaec6, gaec7, type YearState } from '../pilot/rules';
 import { PREP_DAYS, catchBefore, familyOf, lastHistoryCrop, type PlanSetup } from './plan';
 import type { Characteristics, CropId, FieldInfo, FieldOption, Range, RuleResult } from './types';
 
@@ -292,18 +292,22 @@ export interface OptionPart {
   cerealAfterCereal: number; // ha-years
   legume: number; // ha-years
   payments: number; // EUR per year (field level)
+  payLegumes: number; // the part of payments for legumes (coupled support), EUR per year
+  payCatch: number; // the part of payments for catch crops (eco-scheme), EUR per year
 }
 
 /** Field-level part of the characteristics for one option: everything that adds up over fields. */
 export function optionPart(pre: Prepared, f: FieldInfo, o: FieldOption): OptionPart {
   const { ctx } = pre; const ny = ctx.setup.planYears.length;
   const margin = new Array(pre.seasons.length).fill(0), marginYield = new Array(pre.seasons.length).fill(0);
-  const bare = [0, 0, 0], bareE = [0, 0, 0]; let bareWinter = 0, bareSlopes = 0, bareLeach = 0, wetH = 0, humus = 0, cac = 0, leg = 0, pay = 0;
+  const bare = [0, 0, 0], bareE = [0, 0, 0]; let bareWinter = 0, bareSlopes = 0, bareLeach = 0, wetH = 0, humus = 0, cac = 0, leg = 0, pay = 0, payLeg = 0, payCatch = 0;
   const soil = ctx.soil;
   let prev = lastHistoryCrop(f, ctx.setup.planYears[0]);
   o.crops.forEach((id, i) => {
     const c = crop(id), catchB = catchBefore(o, i);
-    const payHa = PAYMENTS_2025.basic + (c.legume && c.season !== 'perennial' ? PAYMENTS_2025.coupledProtein : 0) + (catchB ? PAYMENTS_2025.ecoCatchCrop : 0);
+    const legHa = c.legume && c.season !== 'perennial' ? PAYMENTS_2025.coupledProtein : 0, catchHa = catchB ? PAYMENTS_2025.ecoCatchCrop : 0;
+    const payHa = PAYMENTS_2025.basic + legHa + catchHa;
+    payLeg += f.areaHa * legHa / ny; payCatch += f.areaHa * catchHa / ny;
     const costHa = (pre.normal[id]?.costEurHa ?? 0) + (catchB ? CATCH_CROP_COST * (ctx.costFactor ?? 1) : 0);
     // yield of this field = normal x field index x season deviation x preceding crop
     // a crop already in the ground was sown on time; a crop still to be sown waits for the preceding harvest
@@ -333,7 +337,7 @@ export function optionPart(pre: Prepared, f: FieldInfo, o: FieldOption): OptionP
     if (c.legume) leg += f.areaHa;
     prev = id;
   });
-  return { margin, marginYield, bare, bareErosive: bareE, bareWinter, bareSlopes, bareLeaching: bareLeach, wetHarvest: wetH, humus, cerealAfterCereal: cac, legume: leg, payments: pay };
+  return { margin, marginYield, bare, bareErosive: bareE, bareWinter, bareSlopes, bareLeaching: bareLeach, wetHarvest: wetH, humus, cerealAfterCereal: cac, legume: leg, payments: pay, payLegumes: payLeg, payCatch };
 }
 
 const sameCrop = (a: string | null, b: string) => !!a && (a === b || (!CROPS[a] && !!CLASS_INFO[a]?.members.includes(b)));
@@ -382,7 +386,13 @@ export function characteristics(pre: Prepared, options: FieldOption[], parts: Op
   const ecoBonus = ecoShare.reduce((t, share) => t + share * PAYMENTS_2025.ecoRotation, 0) / ecoShare.length; // EUR/ha/yr, farm level, on the scheme area
   // money that is the same for every plan of this farm: it moves the level of every margin, never the order of plans
   const fl = ctx.moneySteps?.farmLevel === false ? undefined : ctx.farmLevel;
-  const farmPay = fl?.paymentsEurHa ?? 0, farm = farmPay - (fl?.costsEurHa ?? 0);
+  const farmPay = fl?.paymentsEurHa ?? 0;
+  // a broken payment condition costs a share of all the payments of that year (only plans the search did not make)
+  const ny = ctx.setup.planYears.length;
+  const brokenYears = new Set(rules.filter(r => r.kind === 'payment_condition' && !r.ok).map(r => r.year)).size;
+  const fieldPay = parts.reduce((t, p) => t + p.payments, 0) / totalHa;
+  const cut = PAYMENT_CUT * (fieldPay + ecoBonus + farmPay) * brokenYears / ny;
+  const farm = farmPay - (fl?.costsEurHa ?? 0) - cut;
   const series = seasons.map((s, i) => parts.reduce((t, p) => t + p.margin[i], 0) / totalHa + ecoBonus + farm);
   const sorted = [...series].sort((a, b) => a - b);
   const nWorst = Math.max(1, Math.round(series.length / 5));
@@ -396,7 +406,7 @@ export function characteristics(pre: Prepared, options: FieldOption[], parts: Op
   const bare = range(p => p.bare);
   // S3: crop families on the farm in each plan year
   const families = states.map(s => new Set([...s.area.keys()].map(id => crop(id).family)).size);
-  const ny = ctx.setup.planYears.length;
+  const legumesPay = sum(p => p.payLegumes) / totalHa, catchPay = sum(p => p.payCatch) / totalHa;
   const largest = Math.max(...states.map(s => Math.max(...s.area.values()) / s.arableHa));
   return {
     marginMean: Math.round(mean(series)), marginP10: Math.round(quantile(series, 0.1)), marginP90: Math.round(quantile(series, 0.9)),
@@ -410,7 +420,9 @@ export function characteristics(pre: Prepared, options: FieldOption[], parts: Op
     humus: Math.round(sum(p => p.humus) / totalHa), humusStrawLeft: ctx.soil?.humus.strawLeft ?? true,
     cerealAfterCereal: +(sum(p => p.cerealAfterCereal) / (totalHa * ny)).toFixed(3), legumeShare: +(sum(p => p.legume) / (totalHa * ny)).toFixed(3),
     largestCropShare: +largest.toFixed(3), cropsPerYear: states.map(s => s.area.size),
-    paymentsEurHa: Math.round(sum(p => p.payments) / totalHa + ecoBonus + farmPay), ecoRotationEligible: eco,
+    paymentsEurHa: Math.round(fieldPay + ecoBonus + farmPay - cut),
+    paymentParts: { basic: Math.round(fieldPay - legumesPay - catchPay), topUp: Math.round(farmPay), legumes: Math.round(legumesPay), catchCrops: Math.round(catchPay), rotation: Math.round(ecoBonus), cut: 0 - Math.round(cut) },
+    ecoRotationEligible: eco,
     softWarnings: options.reduce((t, o) => t + o.warnings.length, 0), rules, feasible,
   };
 }

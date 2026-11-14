@@ -51,7 +51,7 @@ export default function Compare() {
                   <td>{r.label} <small>{r.unit}</small></td>
                   {cols.map((c, i) => <td key={c.id} className={`n${vals[i] !== null && vals[i] === best && !tie ? ' best' : ''}`}>{vals[i] === null ? '—' : r.show ? r.show(c.v.ch) : vals[i]}</td>)}
                 </tr>); })}
-              <tr><td>Farm rules</td>{cols.map(c => { const bad = [...new Set(c.v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => r.title.split(' — ')[1] ?? r.title))]; return <td key={c.id} className={`n ${bad.length ? 'bad' : ''}`}>{bad.length ? `fails ${bad.join(', ')}` : 'pass'}</td>; })}</tr>
+              <tr><td>EU farm rules</td>{cols.map(c => { const bad = [...new Set(c.v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => r.title.split(' — ')[1] ?? r.title))]; return <td key={c.id} className={`n ${bad.length ? 'bad' : ''}`}>{bad.length ? `fails ${bad.join(', ')}` : 'pass'}</td>; })}</tr>
               <tr><td><Term id="nonDominated">Is this plan beaten on every measure?</Term></td>{cols.map(c => <td key={c.id} className="n">{isDominated(c.v.ch, all.filter(x => x !== c.v.ch)) ? 'yes' : 'no'}</td>)}</tr>
               <tr><td />{cols.map(c => <td key={c.id} className="n">{s.chosen?.id === c.id ? <b className="ok">chosen</b> : <button className="btn sm" onClick={e => { e.stopPropagation(); s.setPlanId(c.id); }}>Choose</button>}</td>)}</tr>
             </tbody>

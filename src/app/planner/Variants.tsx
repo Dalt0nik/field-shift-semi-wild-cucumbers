@@ -2,6 +2,7 @@
 // Planner, first tab: the typical local plan next to the best plan for each characteristic (challenge R2, R3), and the
 // selected plan as a sowing list and on the field timelines. Every card carries the soil health score. The plans are not ranked:
 // the agronomist chooses.
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { cropColor } from '@/components/colors';
 import MiniMap from '@/components/MiniMap';
@@ -54,7 +55,7 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
   const soilOf = (c: PlanItem) => ({ soilHealthScore: c.v.ch.soilScore, daysWithoutCoverWeightedByErosiveRain: c.v.ch.bareErosive.p50, daysWithoutLivingCover: c.v.ch.bareDays.p50, bareInLeachingSeason: c.v.ch.bareLeaching, humusBalanceKgCPerHa: c.v.ch.humus, cropFamiliesPerYear: c.v.ch.familiesPerYear, cerealAfterCereal: c.v.ch.cerealAfterCereal, harvestOnWetSoilHa: c.v.ch.wetHarvestHa });
   useScreen('planner/variants', p && base ? { cardsShown: cards.map(c => ({ name: c.name, marginUsualYear: c.v.ch.marginMean, marginWorstYearOfFive: c.v.ch.marginWorstFifth, soil: soilOf(c), differsFromUsualPracticeOn: changedFields(c, base) })), selected: p.name, chosen: s.chosen?.name ?? 'none yet',
     sowingListOfSelected: p.v.options.map(o => ({ field: o.fieldId, crops: o.crops.map((c, i) => `${PLAN_YEARS[i]} ${catchBefore(o, i) ? 'catch crop, then ' : ''}${CROPS[c].name}${o.fixed[i] ? ' (fixed)' : ''}`) })), why: five?.why, marginBySeason: p.v.ch.marginSeries } : { state: 'searching for plans' });
-  if (!p || !base || !five) return <Panel><p className="muted">Searching for plans that pass the farm rules…</p></Panel>;
+  if (!p || !base || !five) return <Panel><p className="muted">Searching for plans that pass the EU farm rules…</p></Panel>;
 
   // the best value of each measure among the cards is marked, as in the comparison table
   const top = { m: Math.max(...cards.map(c => c.v.ch.marginMean)), w: Math.max(...cards.map(c => c.v.ch.marginWorstFifth)), s: Math.max(...cards.map(c => c.v.ch.soilScore?.total ?? 0)) };
@@ -82,12 +83,13 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
             <span className="kpi"><span className={mark(c.v.ch.marginMean === top.m)}>{c.v.ch.marginMean}</span><small>€/ha, usual year</small></span>
             <span className="stat"><span><Term id="worstFifth">Worst year of five</Term></span><b className={mark(c.v.ch.marginWorstFifth === top.w)}>{c.v.ch.marginWorstFifth} €/ha</b></span>
             <SoilBlock c={c.v.ch} best={top.s} />
-            {!c.v.ch.feasible && <Pill tone="bad">fails a farm rule</Pill>}
+            {!c.v.ch.feasible && <Pill tone="bad">fails an EU farm rule</Pill>}
           </div>); })}
       </div>
       <dl className="srcnote">
         <dt>NASA satellites</dt><dd><Term id="hls">Soil cover</Term> · <Term id="imerg">erosive rain</Term> · <Term id="fieldIndex">field yields</Term> · <Term id="drySeason">dry years</Term> · <Term id="wetHarvest">wet harvests</Term></dd>
-        <dt>Local data</dt><dd>Yields · prices · rules · your entries</dd>
+        <dt>Local data</dt><dd>Yields · prices · your entries</dd>
+        <dt>EU farm rules</dt><dd><Term id="gaec7">Crop rotation</Term> · <Term id="gaec6">winter cover</Term> · <Term id="gaec5">erosion-sensitive land</Term> · <Term id="payments">payments</Term> · <Link className="link" href="/rules">see how this plan does</Link></dd>
       </dl>
 
       <Panel title={p.name} sub={p.sub}

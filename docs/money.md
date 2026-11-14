@@ -133,9 +133,12 @@ Field parts add up over fields, so the search evaluates a plan by summing precom
 ## 7. Farm series and characteristics — `characteristics(pre, options, parts)`
 
 ```
-F(s)  = Σ margin[s] / farm area + ecoBonus
+F(s)  = Σ margin[s] / farm area + ecoBonus + farm payments − farm costs − cut
 ecoBonus = PAYMENTS_2025.ecoRotation × mean over the plan years of (scheme area / arable area if the scheme is met, else 0)
+cut   = PAYMENT_CUT × (all payments per ha) × (plan years with a broken payment condition) / (plan years)
 ```
+
+**A broken payment condition costs money, it is not a ban.** Breaking GAEC 6 or GAEC 7 cuts all the farm's payments of that year, usually by 3 % when it is not intentional (`PAYMENT_CUT` in `src/pilot/rules.ts`; 15 % or more when intentional). The search never suggests such a plan: a breach built into a plan on purpose is closer to intentional, and on the pilot farm no plan breaks either rule (20 000 random admissible plans and the most profitable plan with the rules ignored all pass, 15 November 2026). The cut therefore reaches only the typical local plan and the custom plan, and only if they break a rule.
 
 | Characteristic | Definition |
 |---|---|
@@ -145,7 +148,8 @@ ecoBonus = PAYMENTS_2025.ecoRotation × mean over the plan years of (scheme area
 | `worstSeasons` | The three worst seasons with their margins |
 | `marginDry`, `marginWetHarvest`, `marginNormal` | Mean over seasons of that type, from `marginYield` (normal prices) |
 | `marginSeries` | F(s) with the season type, for charts |
-| `paymentsEurHa` | Payments per ha and year, eco-scheme included |
+| `paymentsEurHa` | Payments per ha and year, eco-schemes included, after the cut |
+| `paymentParts` | The same split into basic support, the redistributive top-up, coupled support for legumes, the catch-crop eco-scheme, the rotation eco-scheme and the cut; shown on the EU rules screen |
 
 The search (`src/engine/search.ts`) compares plans on `AXES`: `marginMean`, `marginWorstFifth`, days without cover weighted by erosive rain (`bareErosive`, [soil.md](soil.md)) and cereal after cereal.
 

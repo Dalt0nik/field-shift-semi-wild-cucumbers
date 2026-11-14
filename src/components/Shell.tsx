@@ -1,6 +1,6 @@
 'use client';
 // Application frame: brand and farm on top, the screens on the left in the order of the work, the assistant in
-// the corner. The frame names no rule: the rules live on one screen (Checks). The farm is set up first (Map,
+// the corner. The frame names no rule: the EU farm rules live on one screen (EU rules). The farm is set up first (Map,
 // Fields, Crops); Analytics comes after the Planner, because most of it looks at the selected plan.
 // There is no glossary screen: a term is explained where it stands, by <Term> (ui.tsx).
 import Link from 'next/link';
@@ -21,7 +21,7 @@ const NAV: Item[] = [
   { group: 'Plan' },
   { href: '/planner', label: 'Planner', hint: 'Suggested plans, comparison, your custom plan', icon: I('M12 21V10m0 0c0-3 2-6 6-7 0 4-2 7-6 7Zm0 3c0-3-2-5-6-6 0 4 2 6 6 6Z') },
   { href: '/analytics', label: 'Analytics', hint: 'Bare soil and erosive rain, weather risk, risk zones', icon: I('M4 20V4m0 16h16M8 16l4-5 3 3 5-7') },
-  { href: '/rules', label: 'Checks', hint: 'Rule checks of a plan', icon: I('M5 12l4 4L19 6M4 20h16') },
+  { href: '/rules', label: 'EU rules', hint: 'EU farm rules and payments of the chosen plan', icon: I('M5 12l4 4L19 6M4 20h16') },
 ];
 // the next step of the path, always at the right end of the top bar; the last screen has none
 const NEXT: Record<string, { href: string; label: string }> = {
@@ -29,7 +29,7 @@ const NEXT: Record<string, { href: string; label: string }> = {
   '/organization': { href: '/settings', label: 'Next: crops and limits' },
   '/settings': { href: '/planner', label: 'Next: see the plans' },
   '/planner': { href: '/analytics', label: 'Next: the plan’s risks and data' },
-  '/analytics': { href: '/rules', label: 'Next: check the plan against the rules' },
+  '/analytics': { href: '/rules', label: 'Next: check the plan against the EU farm rules' },
 };
 const date = new Date(DECISION_DATE + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 

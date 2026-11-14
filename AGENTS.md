@@ -15,7 +15,7 @@
 ## Focus
 
 - The centre of the application is the NASA satellite data: what they show on the farm and how they change the plan. Keep the NASA source of a number with it, as a small source line in its explanation, not in the text of the screen.
-- The farm rules stay quiet: one Checks screen, plain rule names, no legal text in the frame, and no wording that suggests a rule set is chosen or loaded.
+- The legal rules are called **EU farm rules** on every screen (the crop-guide advice on preceding crops and return intervals is not). They are plain, not hidden: one EU rules screen for the chosen plan, plain rule names, each explained on hover (`glossary.ts`) with the EU standard and the Lithuanian order only in its small source line, and the plan's EU payments part by part. The Planner's source note names them in one line (EU farm rules). No legal text in the frame, and no wording that suggests a rule set is chosen or loaded.
 
 ## The decision day
 

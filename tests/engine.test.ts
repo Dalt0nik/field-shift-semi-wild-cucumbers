@@ -99,6 +99,13 @@ describe('stage 6: characteristics', () => {
 describe('stage 5 and 7: search', () => {
   const r = search(makeContext(setup), { population: 60, generations: 30 });
   it('returns only variants that pass the farm rules', () => { expect(r.variants.length).toBeGreaterThan(3); expect(r.variants.every(v => v.ch.feasible)).toBe(true); });
+  it('splits the payments into parts that add up, with no cut for a plan that passes', () => {
+    for (const v of [r.baseline, ...r.variants]) {
+      const p = v.ch.paymentParts;
+      expect(Math.abs(p.basic + p.topUp + p.legumes + p.catchCrops + p.rotation + p.cut - v.ch.paymentsEurHa)).toBeLessThanOrEqual(2);
+      if (v.ch.feasible) expect(p.cut).toBe(0);
+    }
+  });
   it('no returned variant is beaten on every comparison characteristic', () => {
     const obj = (v: (typeof r.variants)[number]) => AXES.map(a => a.sign * a.get(v.ch));
     for (const a of r.variants) for (const b of r.variants) if (a !== b) expect(obj(b).every((x, i) => x >= obj(a)[i]) && obj(b).some((x, i) => x > obj(a)[i])).toBe(false);

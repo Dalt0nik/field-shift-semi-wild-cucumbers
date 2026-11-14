@@ -53,7 +53,7 @@ export default function Editor() {
       </div>
 
       <div className="facts">
-        <div><span>Farm rules</span><b className={failed.length ? 'bad' : 'ok'}>{failed.length ? 'fails' : 'pass'}</b><small>{failed.length ? failed.join(', ') : 'all checks of both years'}</small></div>
+        <div><span>EU farm rules</span><b className={failed.length ? 'bad' : 'ok'}>{failed.length ? 'fails' : 'pass'}</b><small>{failed.length ? failed.join(', ') : 'all checks of both years'}</small></div>
         <div><span><Term id="margin">Margin</Term> in a usual year</span><b>{ch.marginMean} €/ha</b><small>{d(ch.marginMean, base.marginMean, '€/ha')}</small></div>
         <div><span><Term id="worstFifth">Worst year of five</Term></span><b>{ch.marginWorstFifth} €/ha</b><small>{d(ch.marginWorstFifth, base.marginWorstFifth, '€/ha')}</small></div>
         <div><span><Term id="soilScore">Soil health score</Term></span><b>{ch.soilScore?.total ?? '—'}{ch.soilScore && <Band points={ch.soilScore.total} />}</b><small>{d(ch.soilScore?.total ?? 0, base.soilScore?.total ?? 0, 'points')}</small></div>

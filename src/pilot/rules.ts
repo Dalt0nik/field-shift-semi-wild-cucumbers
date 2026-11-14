@@ -14,6 +14,10 @@ export const PAYMENTS_2025 = {
   act: 'ŽŪM order 3D-596, rates for 2025',
 };
 
+/** Share of all the farm's payments of a year that a broken payment condition costs when it is not intentional
+ *  (RULESET.penalty). The search never suggests such a plan; the cut applies to the typical local plan and the custom plan. */
+export const PAYMENT_CUT = 0.03;
+
 export interface YearState {
   year: number;
   /** area by main crop, ha */
@@ -48,7 +52,7 @@ export function gaec7(s: YearState): RuleResult {
   const routeDivers = s.arableHa > 30 ? shares.length >= 3 && shares[0] <= 0.75 && shares[0] + (shares[1] ?? 0) <= 0.95 : shares.length >= 2 && shares[0] <= 0.75;
   const ok = s.arableHa <= 10 || routeChange || routeCatch || routeDivers;
   const routes = [routeChange && 'crop change', routeCatch && 'catch crops', routeDivers && 'diversification'].filter(Boolean).join(', ');
-  return { id: 'gaec7', title: 'GAEC 7 — crop rotation', year: s.year, ok, kind: 'payment_condition', value: ok ? `met by: ${routes}` : 'not met',
+  return { id: 'gaec7', title: 'GAEC 7 — crop rotation', year: s.year, ok, kind: 'payment_condition', value: ok ? `met by ${routes}` : 'not met',
     detail: `Crop changes on ${pct(change)} of arable land (need 35 %, no crop for a 4th year); catch crops on ${pct(catchShare)} (need 35 %); ${shares.length} crops, largest ${pct(shares[0] ?? 0)}, two largest ${pct((shares[0] ?? 0) + (shares[1] ?? 0))} (need 3 crops, ≤ 75 %, ≤ 95 %).` };
 }
 
@@ -61,7 +65,7 @@ export function gaec6(s: YearState, eligibleHa: number): RuleResult {
   const green = (s.winterGreenHa + s.winterExemptHa) / base, withStubble = (s.winterGreenHa + s.winterExemptHa + s.winterStubbleHa) / base;
   const ok = withStubble >= need;
   const maxPlough = Math.max(0, base * (1 - need));
-  return { id: 'gaec6', title: 'GAEC 6 — winter soil cover', year: s.year, ok, kind: 'payment_condition', value: green >= need ? `${pct(green)} under crops` : `${pct(green)} under crops; holds only if stubble stays`,
+  return { id: 'gaec6', title: 'GAEC 6 — winter soil cover', year: s.year, ok, kind: 'payment_condition', value: green >= need ? `${pct(green)} of the land under crops` : `${pct(green)} of the land under crops; leave stubble unploughed on ${Math.ceil(base * need - s.winterGreenHa - s.winterExemptHa)} ha`,
     detail: `Winter ${s.year - 1}/${String(s.year).slice(2)}: growing crops on ${pct(green)} of arable land; with unploughed stubble ${pct(withStubble)} (need ${pct(need)}). At most ${maxPlough.toFixed(0)} ha may be ploughed before 1 March${green >= need ? '' : `; ${(base * need - s.winterGreenHa - s.winterExemptHa).toFixed(0)} ha of stubble must stay unploughed`}.` };
 }
 
@@ -80,7 +84,7 @@ export function ecoRotation(s: YearState): RuleResult {
   const ok = ha > 0 && shares.length >= 4 && legume >= ECO_LEGUME_MIN && shares[0][1] <= 0.5 && repeated <= 1e-9;
   const miss = [shares.length < 4 && `${shares.length} crops (need 4)`, legume < ECO_LEGUME_MIN && (legume > 0 ? `legumes on ${pct(legume)} (need 10 %)` : 'no legume'), shares[0] && shares[0][1] > 0.5 && `main crop ${pct(shares[0][1])} (max 50 %)`, repeated > 1e-9 && `${repeated.toFixed(0)} ha repeat last year's crop`].filter(Boolean).join('; ');
   const kept = stayHa > 0 ? ` Grass that stays (${stayHa.toFixed(0)} ha) is left out of the scheme area.` : '';
-  return { id: 'eco_rotation', title: 'Eco-scheme "Crop rotation" (Augalų kaita)', year: s.year, ok, kind: 'incentive', value: ok ? `+${PAYMENTS_2025.ecoRotation} EUR/ha on ${ha.toFixed(0)} ha` : 'not eligible',
+  return { id: 'eco_rotation', title: 'Eco-scheme "Crop rotation" (Augalų kaita)', year: s.year, ok, kind: 'incentive', value: ok ? `earned on ${ha.toFixed(0)} ha` : `not earned: ${miss}`,
     detail: (ok ? `${shares.length} crops, legumes on ${pct(legume)}, main crop ${pct(shares[0][1])}, no crop repeated on a field.` : `Not eligible: ${miss}.`) + kept,
     paidShare: s.arableHa > 0 ? ha / s.arableHa : 0 };
 }
@@ -92,7 +96,7 @@ export function gaec5Forbids(cropId: CropId, erosionShare: number): boolean {
 }
 
 /** What the interface shows about the rules: a plain name and a one-line summary per rule. The screens render this
- *  list, so no screen spells out a rule itself and the rules stay a quiet part of the interface. */
+ *  list, so no screen spells out a rule itself; the screens call them the EU farm rules (the EU rules screen and the Planner's source note) and keep them plain. */
 export interface RuleInfo { id: string; code: string; name: string; summary: string; kind: 'prohibition' | 'payment_condition' | 'incentive'; layer?: 'erosion' | 'peat' }
 export const RULESET: { acts: string; penalty: string; rules: RuleInfo[] } = {
   acts: 'EU farm-payment conditions (CAP 2023–2027) as they apply in Lithuania: orders 3D-107 and 3D-92, payment rates of 2025',
