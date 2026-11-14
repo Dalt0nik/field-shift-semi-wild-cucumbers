@@ -1,10 +1,15 @@
-// Plain-language explanations of the terms the challenge asks to explain (R7). Used by the <Term> tooltips, the
-// Glossary drawer and the Assistant. Definitions are simplified on purpose.
+// The vocabulary: plain-language explanations of the terms the challenge asks to explain (R7). There is no glossary
+// screen. A term is explained where it stands: <Term id> (ui.tsx) underlines it and shows `text` under the heading
+// `term` on hover or focus. The Assistant gets the whole list. Definitions are simplified on purpose.
+// A new term: add it here, then wrap its first mention in each panel, card, table or note in <Term>.
+// gaec5, gaec6 and gaec7 are not shown on any screen (the Checks screen explains each rule itself); they are kept
+// for the Assistant.
 import { REPLAY } from '@/pilot/demo';
 import { soilClimate } from '@/pilot/soil';
 
 const E = soilClimate.erosivity.summary[soilClimate.erosivity.base];
-export const GLOSSARY: Record<string, { term: string; text: string }> = {
+// text: plain words for a farmer, no other technical term inside; source: the name of the data, shown small under it
+export const GLOSSARY: Record<string, { term: string; text: string; source?: string }> = {
   ndvi: { term: 'NDVI', text: 'How green the field is, computed from red and near-infrared light. About 0.1–0.2 is bare soil, 0.6–0.9 is dense green cover. The satellite sees it only where there are no clouds.' },
   hls: { term: 'HLS', text: 'Harmonized Landsat and Sentinel-2: NASA’s combined record of two satellite families at 30 m, a clear view every few days in summer. From November to February clouds, snow and low sun leave almost no clear views in Lithuania.' },
   soilProtection: { term: 'Soil protection', text: 'What a crop plan does for the soil, in six measures with no overall score: days without cover weighted by erosive rain, days without living cover, the same on erosion-sensitive land, crop diversity, harvest on wet soil, bare soil in the leaching season, and the humus balance. They cover three of the four soil-health principles (cover, living roots, diversity); tillage cannot be seen from space.' },
@@ -18,12 +23,12 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   et: { term: 'Evapotranspiration (ET)', text: 'Water that leaves the field into the air, from the soil and through plants. ET0 is the demand of the air for a reference grass cover, here estimated from temperature (Hargreaves).' },
   drySeason: { term: 'Dry season', text: 'A season in the lowest fifth of the May–July water balance of 2001–2025 (IMERG rain minus ET0 from POWER temperature). In such seasons spring cereals yielded about 16 % below normal in Lithuania.' },
   wetHarvest: { term: 'Wet harvest', text: 'A season in the highest fifth of rain between 20 July and 31 August (NASA GPM IMERG). Harvest is delayed, grain comes in wetter and must be dried at extra cost, and part of the wheat is sold as feed. The replay takes this off the margin in such seasons.' },
-  fieldIndex: { term: 'Field index', text: 'How much a field usually yields above or below the neighbouring fields of the same crop, measured by NASA HLS: the season peak of its greenness (NDVI) against the fields within 8 km, in every season with a known crop since 2021. It is shrunk by how reliable it is and turned into yield per crop group: rapeseed gains or loses most on a good or weak field, legumes least.' },
+  fieldIndex: { term: 'Yield against neighbours (field index)', text: 'Whether this field usually does better or worse than the fields around it with the same crop. Satellite pictures show how green each field gets in early summer, year after year; a field that is regularly greener usually yields more. The plan uses it to adjust the district yield for this field.', source: 'NASA HLS satellite images, seasons since 2021' },
   imerg: { term: 'GPM IMERG', text: 'NASA’s satellite rain record, one value per cell of about 10 km. It matched monthly rain at Lithuanian stations closely (r = 0.92). One cell covers the whole farm.' },
   power: { term: 'NASA POWER', text: 'NASA’s daily weather record from the MERRA-2 reanalysis, one value per cell of about 50 km. Used here for temperature, frost and heat.' },
   nasadem: { term: 'NASADEM', text: 'NASA’s 30 m elevation model. It gives slope and low spots, but it was too coarse to reproduce the official 12 % slope rule, so the rule uses the paying agency’s layer.' },
   replay: { term: 'Season replay', text: `Each plan is “grown” through every past season ${REPLAY.firstSeason}–${REPLAY.lastSeason}: that season’s yield and price deviations are applied to today’s normal levels, all crops in the same season. It shows the spread, it does not forecast.` },
-  worstFifth: { term: 'Bad seasons', text: 'The mean margin of the worst fifth of the replayed seasons: what the plan earned when the year went wrong.' },
+  worstFifth: { term: 'Bad seasons (worst year of five)', text: 'The mean margin of the worst fifth of the replayed seasons: what the plan earned when the year went wrong.' },
   p10p90: { term: '10–90 % range', text: 'Eight seasons in ten fell inside this range. It is a spread of past seasons, not a guarantee.' },
   nonDominated: { term: 'Not beaten', text: 'A variant is kept when no other variant is at least as good on all four comparison characteristics and better on one. The system does not rank the kept variants: the choice is the agronomist’s.' },
   gaec5: { term: 'GAEC 5', text: 'EU standard on erosion as it applies in Lithuania (GAAB 5): no root or tuber crops on land in the official erosion-sensitive layer (slopes above 12 %). Checked on the official layer of the paying agency.' },
@@ -31,7 +36,7 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   gaec7: { term: 'GAEC 7', text: 'EU standard on crop rotation as it applies in Lithuania (GAAB 7). One of three routes is enough: the crop changes on 35 % of arable land and no crop stands a fourth year; or catch crops on 35 %; or diversification (three crops, largest at most 75 %).' },
   eco: { term: 'Eco-scheme', text: 'A voluntary payment for a practice beyond the rules. “Augalų kaita” (crop rotation) pays when the farm has four crops with a legume, the main crop at most half, and no crop repeated on a field.' },
   catchCrop: { term: 'Catch crop', text: 'A crop sown after the harvest only to cover the soil until the next spring crop. It cuts the days without cover, most of all in the leaching season, adds to the humus balance and earns an eco-scheme payment.' },
-  slot: { term: 'Slot', text: 'A free gap on a field’s timeline between two crops. A field is planned as a timeline of slots, not as “one crop per year”.' },
+  slot: { term: 'Free slot', text: 'A time when the field is free: after one harvest and before the next sowing. The plan fills these gaps with crops.' },
   margin: { term: 'Margin', text: 'Yield × price + payments − variable costs, per hectare and year. The yield is the district yield times the field index (NASA HLS). Costs are illustrative, so compare variants with each other rather than reading the euros as a forecast.' },
   cellValue: { term: 'Cell value', text: 'Weather layers are coarse: one value for a cell of 10–50 km. The inspector shows the value of the cell that covers the point, the same for every field of the farm.' },
 };

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { cropColor } from '@/components/colors';
 import { useScreen, useStore } from '@/components/store';
-import { More, Pill, Select, Sw, Tabs } from '@/components/ui';
+import { More, Pill, Select, Sw, Tabs, Term } from '@/components/ui';
 import { PLAN_YEARS, fields } from '@/pilot/demo';
 import { CROPS } from '@/pilot/regional';
 import { GAEC5_MIN_SHARE, RULESET } from '@/pilot/rules';
@@ -49,7 +49,7 @@ export default function ChecksPage() {
           <p className="lead">{failed.length ? <span className="bad"><b>This plan fails {failed.map(l => l.info.name.toLowerCase()).join(' and ')}.</b></span> : <><b>This plan passes every rule.</b></>}</p>
           {([['Rules', lines.filter(l => l.info.kind !== 'incentive')], ['Extra payment, optional', lines.filter(l => l.info.kind === 'incentive')]] as const).map(([title, ls]) => ls.length > 0 && (
             <div key={title}>
-              <span className="lbl">{title}</span>
+              <span className="lbl">{title === 'Rules' ? title : <><Term id="eco">Extra payment</Term>, optional</>}</span>
               {ls.map(l => (
                 <div key={l.info.id} style={{ borderTop: '1px solid var(--line)', padding: '9px 0', display: 'grid', gap: 4 }}>
                   <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'nowrap' }}><b>{l.info.name}</b><Pill tone={l.ok ? 'ok' : l.info.kind === 'incentive' ? 'warn' : 'bad'}>{l.status}</Pill></div>

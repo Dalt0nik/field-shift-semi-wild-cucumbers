@@ -39,7 +39,7 @@ npm install
 npm run dev        # http://localhost:3000
 npm test           # engine unit tests (vitest)
 npm run build      # production build; needs a Node server because of the assistant route
-npm run shots      # screenshots of every state at 1100, 1280 and 1600 px, and a fit report (needs npm run dev)
+npm run shots      # screenshots of every state at the regular desktop width (1280 px), and a fit report (needs npm run dev)
 npm run check:day -- 2026-11-14   # the same app on another decision day, on port 3111 (see "The decision day")
 ```
 
@@ -65,7 +65,7 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 | `src/pilot/` | Everything bound to the Lithuanian pilot: `regional.ts` (crop reference), `rules.ts` (EU farm-payment conditions with the thresholds that apply in Lithuania, payment rates), `demo.ts` (the farm, the decision day, the plan set-up, the replayed seasons), `economics.ts` (money constants), `soil.ts` (soil climate, humus coefficients, sources of the soil numbers), `satellite.ts` (what NASA HLS saw on the fields, cut at the decision day) |
 | `src/data/` | Inputs of the pilot farm, all built by `pipeline/` |
 | `src/app/` | One folder per screen, `api/assistant/route.ts`, `globals.css` (the design system) |
-| `src/components/` | Frame, store, map, timeline, charts, 30 m grid, glossary, chat, the soil block and its "?" panel (`Soil.tsx`), small building blocks (`ui.tsx`) |
+| `src/components/` | Frame, store, map, timeline, charts, 30 m grid, the vocabulary of explained terms (`glossary.ts`), chat, the soil block and its "?" panel (`Soil.tsx`), small building blocks (`ui.tsx`) |
 | `pipeline/` | Scripts that build `src/data` from NASA and Lithuanian sources: [pipeline/README.md](pipeline/README.md) |
 | `tests/` | Unit tests of the engine, the plan editor, the money, the soil measures, the satellite products and the decision day |
 | `docs/` | The framework diagram (`framework.svg` and its PNG); [money.md](docs/money.md): how the engine computes the money of a plan; [soil.md](docs/soil.md): how it measures soil protection |
@@ -75,15 +75,17 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 
 | Group | Screen | What it does |
 |---|---|---|
-| Farm | Map | Declared fields around the farm, satellite image, the farm's fields |
-| Farm | Fields | What is on each field on the decision day (editable: the crop of the year, and what is already sown once sowing has started), with a satellite hint from before that day; field timelines and free slots |
+| Farm | Map | Declared fields around the farm, the farm's fields, the official rule areas |
+| Farm | Fields | The previous season on each field: its crop (pre-filled from the declarations, editable), whether it is harvested on the decision day and when the field is free for the next crop, and, once sowing has started, what is already sown; a satellite hint from before that day; field timelines with sowing and harvest windows and free slots |
 | NASA data | Satellite | One layer as 30 m pixels and numbers per field; two layers side by side with a pixel inspector |
 | NASA data | Analytics | When fields are bare (HLS), when rain is erosive and when water drains through the soil (IMERG, POWER); which months are risky; risk zones; the method behind each number |
 | Plan | Crops | Crops the farm can grow, catch crops, limits |
 | Plan | Planner | Suggested plans with the soil-protection block and its "?" panel (`?help=soil`), comparison, the agronomist's own plan, "Choose this plan" and the sowing list |
 | Plan | Checks | The farm rules applied to a plan |
 
-Tabs and views are in the URL (`/planner?tab=compare`, `/analytics?tab=zones&view=dry`), so every state can be linked and photographed.
+Tabs and views are in the URL (`/planner?tab=compare`, `/analytics?tab=zones&view=dry`), so every state can be linked and photographed. The button to the next screen of the path is always at the right end of the top bar (`NEXT` in `src/components/Shell.tsx`); Checks, the last screen, has none.
+
+**Terms are explained where they stand.** There is no glossary screen: a term such as NDVI, HLS, erosive rain or humus balance has a dotted underline at its first mention in each panel, card, table or note, and its plain-language explanation appears on hover or keyboard focus (`<Term>` in `src/components/ui.tsx`). The explanations are one list, `src/components/glossary.ts`, which the assistant also receives.
 
 ## What is real and what is not
 

@@ -133,7 +133,7 @@ export const PLAN_DATA: { id: string; label: string; until: string }[] = [
   { id: 'history', label: `Crops of ${DECISION_YEAR}: declared in spring, confirmed by the agronomist`, until: `${DECISION_YEAR}-06-30` },
 ];
 /** Satellite layers of the screens that are not inputs of the plan: last day of each, to label the later ones. */
-export const LAYER_UNTIL: Record<string, string> = { ndvi_peak_2025: '2025-07-15', ndvi_peak_2026: '2026-07-15', ndvi_autumn_2026: '2026-11-10', spring_bare: '2026-04-15', hls_truecolor_autumn2026: '2026-10-25' };
+export const LAYER_UNTIL: Record<string, string> = { ndvi_peak_2025: '2025-07-15', ndvi_peak_2026: '2026-07-15', ndvi_autumn_2026: '2026-11-10', spring_bare: '2026-04-15' };
 export const layerAfterDecision = (id: string) => !!LAYER_UNTIL[id] && afterDecision(LAYER_UNTIL[id]);
 
 export interface SetupOptions { costFactor?: number; strawLeft?: boolean; confirmed?: Record<string, CropId>; erosivity?: string }

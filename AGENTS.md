@@ -14,7 +14,7 @@
 
 ## Focus
 
-- The centre of the application is the NASA satellite data: what they show on the farm and how they change the plan. Name the NASA source where its number is used.
+- The centre of the application is the NASA satellite data: what they show on the farm and how they change the plan. Keep the NASA source of a number with it, as a small source line in its explanation, not in the text of the screen.
 - The farm rules stay quiet: one Checks screen, plain rule names, no legal text in the frame, and no wording that suggests a rule set is chosen or loaded.
 
 ## The decision day
@@ -31,7 +31,10 @@
 ## Interface
 
 - One design system: `src/app/globals.css` and `src/components/ui.tsx`. No native dropdowns.
-- Everything must fit at 1280 px and narrower: run `npm run shots` and look at the pictures before saying it works.
+- Everything must fit at the regular desktop width, 1280 px. Other widths are not checked and not photographed, unless the owner asks.
+- `npm run shots` runs once at the end of a working session, not after each fix: it is slow. A single fix is checked in the running app.
+- Write for a farmer who is wary of technology and dashboards. On screen: plain words, no product names (HLS, IMERG), no indices (NDVI), no codes (soil classes), no results of our tests or accuracy figures; those stay in `docs/`, the "?" panel of the soil numbers and the assistant. An explanation of a term is plain too: no other technical term inside it, the data named only in its small source line (`source` in `glossary.ts`). Apply this to every screen you touch.
+- There is no glossary screen. A term of the vocabulary (`src/components/glossary.ts`) is explained where it stands: wrap its first mention in each panel, card, table or note in `<Term>` (`src/components/ui.tsx`), which underlines it and shows the explanation on hover or focus.
 - Every state has an address (tabs and views are in the URL).
 
 ## Google Earth Engine

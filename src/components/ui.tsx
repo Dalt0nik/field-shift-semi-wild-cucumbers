@@ -1,7 +1,7 @@
 'use client';
-// Small building blocks: panel, tabs, dropdown, glossary term, "check on the farm" line, state kept in the URL.
+// Small building blocks: panel, tabs, dropdown, explained term, "check on the farm" line, state kept in the URL.
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { GLOSSARY } from './glossary';
 
@@ -21,11 +21,33 @@ export function Tabs<T extends string>({ tabs, value, onChange, label }: { tabs:
   return <div className="tabs" role="tablist" aria-label={label}>{tabs.map(t => <button key={t.id} role="tab" aria-selected={value === t.id} className={value === t.id ? 'on' : ''} onClick={() => onChange(t.id)}>{t.label}</button>)}</div>;
 }
 
-/** A term with its plain-language explanation on hover or focus (challenge R7). */
+/** A term with its plain-language explanation (challenge R7): underlined in the text, explained on hover or keyboard
+ * focus. This is the only place the vocabulary of glossary.ts is shown. The explanation is drawn on top of the page
+ * and placed from its measured size, so no panel, table or window edge cuts it off. */
 export function Term({ id, children }: { id: string; children?: ReactNode }) {
   const g = GLOSSARY[id];
+  const [open, setOpen] = useState(false);
+  const el = useRef<HTMLSpanElement>(null), tip = useRef<HTMLSpanElement>(null);
+  const tipId = useId();
+  useLayoutEffect(() => {
+    const t = tip.current;
+    if (!open || !el.current || !t) return;
+    const r = el.current.getBoundingClientRect(), h = t.offsetHeight, w = t.offsetWidth;
+    const up = r.bottom + 6 + h > window.innerHeight - 8 && r.top - 6 - h >= 8;
+    t.style.left = `${Math.max(8, Math.min(r.left, window.innerWidth - w - 8))}px`;
+    t.style.top = `${up ? r.top - 6 - h : r.bottom + 6}px`;
+    t.style.visibility = 'visible';
+    const hide = () => setOpen(false);
+    window.addEventListener('scroll', hide, true); window.addEventListener('resize', hide);
+    return () => { window.removeEventListener('scroll', hide, true); window.removeEventListener('resize', hide); };
+  }, [open]);
   if (!g) return <>{children}</>;
-  return <span className="term" tabIndex={0} data-tip={g.text}>{children ?? g.term}</span>;
+  return (
+    <span ref={el} className="term" tabIndex={0} aria-describedby={open ? tipId : undefined} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}>
+      {children ?? g.term}
+      {open && createPortal(<span ref={tip} id={tipId} role="tooltip" className="tip"><b>{g.term}</b>{g.text}{g.source && <small>Source: {g.source}</small>}</span>, document.body)}
+    </span>
+  );
 }
 
 /** What the agronomist should verify on the ground (challenge R8). One quiet line, not an alert box. */

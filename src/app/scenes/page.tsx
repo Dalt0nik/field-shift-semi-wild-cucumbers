@@ -2,7 +2,6 @@
 // Scenes: a NASA layer turned into numbers per field. All layers share one 30 m grid (challenge R10), so any two
 // can be compared and read at the same pixel.
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { cropColor, rampCss, rampFor } from '@/components/colors';
 import { cellAt, cellField, fieldStats, grid, layerById, layerImage } from '@/components/grid';
@@ -18,6 +17,8 @@ const fmt = (v: number | null | undefined, unit: string) => (v === null || v ===
 const LAYERS = grid.layers.map(l => ({ value: l.id, label: layerAfterDecision(l.id) ? `${l.label} · after the decision day` : l.label }));
 // the layer shown first: the latest greenness layer the plan could know
 const FIRST = grid.layers.map(l => l.id).filter(id => id.startsWith('ndvi') && !layerAfterDecision(id)).pop() ?? grid.layers[0].id;
+// the explained term of a layer's source, as the grid names it
+const sourceTerm = (source: string) => (source.startsWith('NASA HLS') ? 'hls' : source.startsWith('NASADEM') ? 'nasadem' : null);
 const After = ({ id }: { id: string }) => (layerAfterDecision(id) ? <p className="after">Observed {AFTER_LABEL}.</p> : null);
 const Legend = ({ id }: { id: string }) => <div><div className="ramp" style={{ background: rampCss(id) }} /><div className="ramp-t">{rampFor(id).ticks.map(t => <span key={t}>{t}</span>)}</div></div>;
 
@@ -77,10 +78,9 @@ export default function ScenesPage() {
       <aside className="dock">
         <div className="page-head"><h1>Satellite</h1>{tabs}</div>
         <p className="lead">What NASA satellites see on the farm: one layer on the map, and the same layer as a number per field.</p>
-        <div><Link className="btn pri" href="/analytics">Next: bare soil and weather risk →</Link></div>
         <div><span className="lbl">Layer</span><Select block label="Layer" value={layer} onChange={setLayer} options={LAYERS} /></div>
         <Legend id={layer} />
-        <p className="small muted">{L.source}{L.period ? ` · ${L.period}` : ''}</p>
+        <p className="small muted">{L.unit === 'NDVI' && <><Term id="ndvi">NDVI</Term> · </>}{sourceTerm(L.source) ? <Term id={sourceTerm(L.source)!}>{L.source}</Term> : L.source}{L.period ? ` · ${L.period}` : ''}</p>
         <After id={layer} />
         <label className="chk"><input type="checkbox" checked={clip} onChange={e => setClip(e.target.checked)} />Only inside my fields</label>
       </aside>

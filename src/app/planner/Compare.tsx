@@ -90,7 +90,7 @@ export default function Compare() {
               <tbody>{diff.map(d => <tr key={d.fieldId} className={`click${s.field === d.fieldId ? ' sel' : ''}`} onClick={() => s.setField(d.fieldId)}><td><b>{d.fieldId}</b></td><td>{d.b}<div className="muted small">instead of {d.a}</div></td><td>{d.reason}</td></tr>)}</tbody>
             </table></div>)}
         </Panel>
-        <Panel title="The price of soil protection" sub="every plan is a dot">
+        <Panel title={<>The price of <Term id="soilProtection">soil protection</Term></>} sub="every plan is a dot">
           <Scatter dots={s.plans.map(x => ({ id: x.id, x: x.v.ch.bareErosive.p50, y: x.v.ch.marginMean, kind: x.kind === 'front' ? 'variant' : x.kind, label: `${x.name}: ${x.v.ch.marginMean} €/ha, ${x.v.ch.bareErosive.p50} days without cover (weighted by erosive rain)` }))} xLabel="days without cover a year, weighted by erosive rain" yLabel="margin, €/ha" selected={s.planId} onSelect={s.setPlanId} />
           <div className="legend"><span><Sw c="#2f6b3c" />best for one measure</span><span><Sw c="#8fb39a" />other plans</span><span><Sw c="#17231c" />usual practice</span><span><Sw c="#a8497a" />your plans</span></div>
           <p className="note" style={{ marginTop: 6 }}>Left is better for the soil, up earns more. The dots on the upper left edge show what each day of cover costs: the first days are cheap, the last ones are not. One plan’s own spread between years is about {s.plan ? s.plan.v.ch.bareErosive.p75 - s.plan.v.ch.bareErosive.p25 : 35} days, so a difference of a day or two does not matter.</p>

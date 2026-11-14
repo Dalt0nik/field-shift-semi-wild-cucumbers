@@ -40,7 +40,6 @@ interface Store {
   field: string; setField: (id: string) => void;
   yearIdx: number; setYearIdx: (i: number) => void;
   myPlans: MyPlan[]; addMyPlan: (fromId: string) => string | null; updateMyPlan: (id: string, sel: Selection) => void; removeMyPlan: (id: string) => void;
-  glossary: boolean; setGlossary: (b: boolean) => void;
   /** stage 7 output: the plan the agronomist has chosen (null until they choose) */
   chosen: PlanItem | null; choose: (id: string | null) => void;
   /** which screen the user is on and what it shows right now, for the assistant */
@@ -64,7 +63,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [field, setField] = useState('F1');
   const [yearIdx, setYearIdx] = useState(0);
   const [myPlans, setMyPlans] = useState<MyPlan[]>([]);
-  const [glossary, setGlossary] = useState(false);
   const [chosenId, choose] = useState<string | null>(null);
   const [screenKey, setScreenKey] = useState('map');
   const screenRef = useRef<unknown>(null);
@@ -135,6 +133,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const removeMyPlan = useCallback((id: string) => setMyPlans(s => s.filter(p => p.id !== id)), []);
 
   const value: Store = { current, setCurrent, cropSet, toggleCrop, catchCrops, setCatchCrops, excluded, setBan, costFactor, setCostFactor, confirmed, confirmCrop, fields: ctx.fields, strawLeft, setStrawLeft, setup, ctx, ws,
-    found: fresh, busy: !fresh, plans, plan, base, planId: plan?.id ?? '', setPlanId, field, setField, yearIdx, setYearIdx, myPlans, addMyPlan, updateMyPlan, removeMyPlan, glossary, setGlossary, chosen: plans.find(p => p.id === chosenId) ?? null, choose, screenKey, screenState, reportScreen };
+    found: fresh, busy: !fresh, plans, plan, base, planId: plan?.id ?? '', setPlanId, field, setField, yearIdx, setYearIdx, myPlans, addMyPlan, updateMyPlan, removeMyPlan, chosen: plans.find(p => p.id === chosenId) ?? null, choose, screenKey, screenState, reportScreen };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

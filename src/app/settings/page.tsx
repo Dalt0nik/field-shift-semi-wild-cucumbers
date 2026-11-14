@@ -1,6 +1,5 @@
 'use client';
 // Crops: what the farm can grow and what must not be planned. Limits are hard: never traded against money.
-import Link from 'next/link';
 import { useState } from 'react';
 import { cropColor } from '@/components/colors';
 import { useScreen, useStore } from '@/components/store';
@@ -59,9 +58,7 @@ export default function CropsPage() {
               <Select small label="Crop" value={banOptions.some(o => o.value === banCrop) ? banCrop : banOptions[0].value} onChange={setBanCrop} options={banOptions} />
               <button className="btn sm" onClick={() => s.setBan(banField, banCrop, true)}>Add</button>
             </div>
-          </Panel>
-          <div><Link className="btn pri" href="/planner">Next: see the plans →</Link></div>
-        </div>
+          </Panel>        </div>
       </div>
     </div>
   );

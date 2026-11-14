@@ -8,7 +8,7 @@ import type { Neighbour } from '@/components/FarmMap';
 import { useScreen, useStore } from '@/components/store';
 import { More, Sw } from '@/components/ui';
 import neighbours from '@/data/neighbours.json';
-import { AFTER_LABEL, DECISION_YEAR, farm, layerAfterDecision } from '@/pilot/demo';
+import { DECISION_YEAR, farm } from '@/pilot/demo';
 import { cropLabel } from '@/pilot/regional';
 
 const FarmMap = dynamic(() => import('@/components/FarmMap'), { ssr: false });
@@ -18,7 +18,6 @@ export default function MapPage() {
   const fields = s.fields;
   const year = '2025'; // one year for the whole map: the year of the open declarations in src/data/neighbours.json
   const [declared, setDeclared] = useState(true);
-  const [satellite, setSatellite] = useState(false);
   const [ruleLayers, setRuleLayers] = useState(false);
   const [nb, setNb] = useState<Neighbour | null>(null);
   const [card, setCard] = useState(false);
@@ -29,7 +28,7 @@ export default function MapPage() {
   const farmLegend = useMemo(() => [...new Set(fields.map(cropOf).filter(Boolean) as string[])], [year]); // eslint-disable-line react-hooks/exhaustive-deps
   const otherLegend = useMemo(() => [...new Set((neighbours as any).features.features.map((x: any) => x.properties.cropClass).filter(Boolean) as string[])].filter(c => !farmLegend.includes(c)), [farmLegend]);
   const f = fields.find(x => x.id === s.field)!;
-  useScreen('map', { cropYearShown: year, layersOn: { declaredFields: declared, satelliteImage: satellite, ruleLayers }, cardOpenFor: card ? (nb ? `neighbouring declared field ${nb.nmaId}` : `farm field ${f.id}`) : null });
+  useScreen('map', { cropYearShown: year, layersOn: { declaredFields: declared, ruleLayers }, cardOpenFor: card ? (nb ? `neighbouring declared field ${nb.nmaId}` : `farm field ${f.id}`) : null });
 
   return (
     <div className="split" style={{ ['--side' as string]: '310px' }}>
@@ -38,7 +37,6 @@ export default function MapPage() {
         <p className="lead">{fields.length} fields, {farm.totalHa.toFixed(0)} ha, outlined in black and coloured by the crop of 2025. Click a field to see what grew on it.</p>
         <div style={{ display: 'grid', gap: 7 }}>
           <label className="chk"><input type="checkbox" checked={declared} onChange={e => setDeclared(e.target.checked)} />Neighbouring declared fields, 2025</label>
-          <label className="chk"><input type="checkbox" checked={satellite} onChange={e => setSatellite(e.target.checked)} /><span>Satellite image, autumn 2026{layerAfterDecision('hls_truecolor_autumn2026') && <small className="after"> · {AFTER_LABEL}</small>}</span></label>
           <label className="chk"><input type="checkbox" checked={ruleLayers} onChange={e => setRuleLayers(e.target.checked)} />Rule layers</label>
         </div>
         <More label="Crop colours">
@@ -55,10 +53,9 @@ export default function MapPage() {
           </ol>
           <p className="demo">In this demo the farm is preloaded: {fields.length} real neighbouring fields, {farm.totalHa.toFixed(0)} ha. Adding and drawing are switched off because satellite products are computed only for these fields.</p>
         </More>
-        <div><Link className="btn pri" href="/organization">Next: confirm what is on the fields →</Link></div>
       </aside>
       <div className="mapbox">
-        <FarmMap fill={fill} selected={nb ? null : s.field} onSelect={id => { s.setField(id); setCard(true); setAsked(false); }} satellite={satellite} neighbours={declared ? 'class' : 'outline'}
+        <FarmMap fill={fill} selected={nb ? null : s.field} onSelect={id => { s.setField(id); setCard(true); setAsked(false); }} neighbours={declared ? 'class' : 'outline'}
           selectedNeighbour={nb?.nmaId ?? null} onSelectNeighbour={p => { setNb(p); setAsked(false); if (p) setCard(true); }} showErosion={ruleLayers} showPeat={ruleLayers} />
         {card && (nb ? (
           <div className="mapcard">

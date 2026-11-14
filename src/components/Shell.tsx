@@ -1,12 +1,12 @@
 'use client';
 // Application frame: brand and farm on top, the screens on the left in the order of the work, the assistant in
 // the corner. The frame names no rule: the rules live on one screen (Checks). The NASA data come before the plan.
+// There is no glossary screen: a term is explained where it stands, by <Term> (ui.tsx).
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Suspense, type ReactNode } from 'react';
 import { DECISION_DATE, farm, fields } from '@/pilot/demo';
 import Chat from './Chat';
-import { GLOSSARY } from './glossary';
 import { SoilHelp } from './Soil';
 import { useStore } from './store';
 
@@ -24,11 +24,21 @@ const NAV: Item[] = [
   { href: '/planner', label: 'Planner', hint: 'Suggested plans, your own plan, comparison', icon: I('M12 21V10m0 0c0-3 2-6 6-7 0 4-2 7-6 7Zm0 3c0-3-2-5-6-6 0 4 2 6 6 6Z') },
   { href: '/rules', label: 'Checks', hint: 'Rule checks of a plan', icon: I('M5 12l4 4L19 6M4 20h16') },
 ];
+// the next step of the path, always at the right end of the top bar; the last screen has none
+const NEXT: Record<string, { href: string; label: string }> = {
+  '/map': { href: '/organization', label: 'Next: the previous season on the fields' },
+  '/organization': { href: '/scenes', label: 'Next: what the satellites see' },
+  '/scenes': { href: '/analytics', label: 'Next: bare soil and weather risk' },
+  '/analytics': { href: '/settings', label: 'Next: crops and limits' },
+  '/settings': { href: '/planner', label: 'Next: see the plans' },
+  '/planner': { href: '/rules', label: 'Next: check the plan against the rules' },
+};
 const date = new Date(DECISION_DATE + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 export default function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const s = useStore();
+  const next = Object.entries(NEXT).find(([p]) => path.startsWith(p))?.[1];
   return (
     <div className="app">
       <header className="top">
@@ -40,7 +50,7 @@ export default function Shell({ children }: { children: ReactNode }) {
         <span className="sp" />
         {s.chosen && <Link href="/planner" className="meta hide-narrow">Chosen plan: <b>{s.chosen.name}</b></Link>}
         <span className="meta" title="The demo replays the decision of this day. The plan uses only data from before it.">Decision day <b>{date}</b></span>
-        <button className="link" onClick={() => s.setGlossary(!s.glossary)} aria-expanded={s.glossary}>Glossary</button>
+        {next && <Link className="btn pri" href={next.href}>{next.label} →</Link>}
       </header>
       <nav className="nav" aria-label="Screens">
         {NAV.map((n, i) => 'group' in n ? <span key={i} className="grp">{n.group}</span>
@@ -49,15 +59,6 @@ export default function Shell({ children }: { children: ReactNode }) {
       <main className="main"><Suspense fallback={null}>{children}</Suspense></main>
       <Chat />
       <Suspense fallback={null}><SoilHelp /></Suspense>
-      {s.glossary && (
-        <>
-          <div className="scrim" onClick={() => s.setGlossary(false)} />
-          <aside className="drawer" aria-label="Glossary">
-            <div className="row" style={{ justifyContent: 'space-between' }}><h2>Glossary</h2><button className="btn sm" onClick={() => s.setGlossary(false)}>Close</button></div>
-            <dl>{Object.entries(GLOSSARY).map(([k, g]) => <div key={k}><dt>{g.term}</dt><dd>{g.text}</dd></div>)}</dl>
-          </aside>
-        </>
-      )}
     </div>
   );
 }

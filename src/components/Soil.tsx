@@ -9,7 +9,7 @@ import { DECISION_DATE, coverModel, niceDate } from '@/pilot/demo';
 import { CROPS } from '@/pilot/regional';
 import { HUMUS_BYPRODUCT, HUMUS_CATCH_CROP, HUMUS_CROP, SOIL_SOURCES, humusClass, soilClimate, soilParams } from '@/pilot/soil';
 import type { PlanItem } from './store';
-import { pct, useQueryState } from './ui';
+import { Term, pct, useQueryState } from './ui';
 
 export const soilCheck = soilCheckJson as unknown as { decisionDate: string; base: string; plans: number; bestForSoil: { s1e: number; margin: number }; usual: { s1e: number; margin: number }; lowerBound: number; frontier: { s1e: number; margin: number }[];
   variants: { key: string; junToAug: number; decToFeb: number; basePlanRank: number; of: number; rho: number; bestDiffersOnFields: number }[] };
@@ -37,8 +37,8 @@ export function SoilBlock({ c, best, priceLines }: { c: Characteristics; best: {
   return (
     <span className="soil">
       <span className="soil-h">Soil protection <SoilHelpButton /></span>
-      <span className="kpi soil-kpi"><span className={mark(c.bareErosive.p50 === best.e)}>{c.bareErosive.p50}</span><small>days without cover a year, weighted by erosive rain<i className="src">NASA</i></small></span>
-      <span className="stat"><span>Days without living cover</span><b className={mark(c.bareDays.p50 === best.d)}>{c.bareDays.p50}</b></span>
+      <span className="kpi soil-kpi"><span className={mark(c.bareErosive.p50 === best.e)}>{c.bareErosive.p50}</span><small><Term id="soilDays">days without cover a year, weighted by erosive rain</Term><i className="src">NASA</i></small></span>
+      <span className="stat"><span><Term id="bareDays">Days without living cover</Term></span><b className={mark(c.bareDays.p50 === best.d)}>{c.bareDays.p50}</b></span>
       <span className="stat"><span>Crop families a year</span><b>{c.familiesPerYear.join(' · ')}</b></span>
       <span className="stat"><span>Cereal after cereal</span><b className={mark(c.cerealAfterCereal === best.c)}>{pct(c.cerealAfterCereal)}</b></span>
       {priceLines?.map(l => <small key={l} className="price">{l}</small>)}
@@ -50,14 +50,15 @@ export function SoilBlock({ c, best, priceLines }: { c: Characteristics; best: {
 export function SoilTable({ plan, base, top, steepHa, strawLeft, setStrawLeft, cheaper }: { plan: PlanItem; base: PlanItem; top: PlanItem | null; steepHa: number; strawLeft: boolean; setStrawLeft: (b: boolean) => void; cheaper: { s1e: number; margin: number } | null }) {
   const c = plan.v.ch, b = base.v.ch, isBase = plan.id === base.id;
   const onSteep = (v: number) => (steepHa ? Math.round(v / steepHa) : 0);
-  const rows: { name: string; unit: string; get: (x: Characteristics) => string; data: React.ReactNode }[] = [
-    { name: 'Days without cover, weighted by erosive rain', unit: 'a year', get: x => String(x.bareErosive.p50), data: 'NASA HLS × NASA GPM IMERG' },
-    { name: 'Days without living cover', unit: 'a year', get: x => String(x.bareDays.p50), data: 'NASA HLS' },
+  // label: the name with its explained term, where the vocabulary has one
+  const rows: { name: string; label?: React.ReactNode; unit: string; get: (x: Characteristics) => string; data: React.ReactNode }[] = [
+    { name: 'Days without cover, weighted by erosive rain', label: <Term id="soilDays">Days without cover, weighted by erosive rain</Term>, unit: 'a year', get: x => String(x.bareErosive.p50), data: <>NASA <Term id="hls">HLS</Term> × NASA <Term id="imerg">GPM IMERG</Term></> },
+    { name: 'Days without living cover', label: <Term id="bareDays">Days without living cover</Term>, unit: 'a year', get: x => String(x.bareDays.p50), data: 'NASA HLS' },
     { name: 'The same on erosion-sensitive land', unit: 'weighted days a year', get: x => String(onSteep(x.bareOnSlopes)), data: 'NASA HLS × IMERG, official layer' },
     { name: 'Crop diversity', unit: 'families a year · legumes · cereal after cereal', get: x => `${x.familiesPerYear.join(' / ')} · ${pct(x.legumeShare)} · ${pct(x.cerealAfterCereal)}`, data: 'crop plan' },
-    { name: 'Harvest on wet soil', unit: 'ha a year', get: x => (x.wetHarvestHa ? x.wetHarvestHa.toFixed(1) : '0'), data: 'NASA GPM IMERG, NASA POWER' },
-    { name: 'Bare soil in the leaching season', unit: 'days, Sep–Feb', get: x => String(x.bareLeaching), data: 'NASA HLS × IMERG, POWER' },
-    { name: 'Humus balance', unit: 'kg humus-C per ha a year', get: x => `${signed(x.humus)} · ${humusClass(x.humus)}`, data: <label className="chk small" style={{ fontSize: 'inherit' }}><input type="checkbox" checked={strawLeft} onChange={e => setStrawLeft(e.target.checked)} />straw left on the field</label> },
+    { name: 'Harvest on wet soil', label: <Term id="wetSoilHarvest">Harvest on wet soil</Term>, unit: 'ha a year', get: x => (x.wetHarvestHa ? x.wetHarvestHa.toFixed(1) : '0'), data: <>NASA GPM IMERG, NASA <Term id="power">POWER</Term></> },
+    { name: 'Bare soil in the leaching season', label: <>Bare soil in the <Term id="leaching">leaching season</Term></>, unit: 'days, Sep–Feb', get: x => String(x.bareLeaching), data: 'NASA HLS × IMERG, POWER' },
+    { name: 'Humus balance', label: <Term id="humus">Humus balance</Term>, unit: 'kg humus-C per ha a year', get: x => `${signed(x.humus)} · ${humusClass(x.humus)}`, data: <label className="chk small" style={{ fontSize: 'inherit' }}><input type="checkbox" checked={strawLeft} onChange={e => setStrawLeft(e.target.checked)} />straw left on the field</label> },
   ];
   return (
     <div className="soilbox">
@@ -66,7 +67,7 @@ export function SoilTable({ plan, base, top, steepHa, strawLeft, setStrawLeft, c
         <table>
           <thead><tr><th>Measure</th><th className="n">{isBase ? 'Usual practice' : 'This plan'}</th>{!isBase && <th className="n">Usual practice</th>}<th>Built from</th></tr></thead>
           <tbody>{rows.map((r, i) => (
-            <tr key={r.name}><td>{i === 0 ? <b>{r.name}</b> : r.name} <small>{r.unit}</small></td><td className="n">{i === 0 ? <b>{r.get(c)}</b> : r.get(c)}</td>{!isBase && <td className="n muted">{r.get(b)}</td>}<td className="small muted">{r.data}</td></tr>))}</tbody>
+            <tr key={r.name}><td>{i === 0 ? <b>{r.label ?? r.name}</b> : r.label ?? r.name} <small>{r.unit}</small></td><td className="n">{i === 0 ? <b>{r.get(c)}</b> : r.get(c)}</td>{!isBase && <td className="n muted">{r.get(b)}</td>}<td className="small muted">{r.data}</td></tr>))}</tbody>
         </table>
       </div>
       {!isBase && <p className="small" style={{ marginTop: 8 }}><b>The price.</b> Against usual practice: {priceOf(c, b)}.{top && top.id !== plan.id && <> Against the highest-margin plan: {priceOf(c, top.v.ch)}.</>}{cheaper && <> Most of the gain costs less: a plan with {cheaper.s1e} days earns {cheaper.margin} €/ha (see Compare).</>}</p>}
@@ -134,8 +135,8 @@ export function SoilHelp() {
         <p style={{ marginTop: 10 }}>Soil is best protected when it is covered, has living roots, carries a varied rotation and is disturbed little: the four soil-health principles of <Src ids={['nrcs']} />. Every plan is measured on the first three, from NASA satellite data and the crop plan. The fourth, tillage, cannot be seen from space, so it is not scored. There is <b>no overall soil score and no weights</b>: six measures, each in its own unit. “Best for soil” is the plan with the lowest first measure; ties go to the lower second measure on erosion-sensitive land, then to less cereal after cereal.</p>
 
         <Measure id="s1e" name="1 · Days without cover, weighted by erosive rain" what="How long the soil lies without living plant cover in a year, each half-month counted by its share of the year’s erosive rain. The headline of the soil block.">
-          <dt>Calculation</dt><dd>For each of the 24 half-months from July to June: bare fraction × that half-month’s share of the yearly rainfall erosivity × 365. Summed, averaged over the plan years, weighted by field area. Bare fraction = 1 − green cover; green cover is NDVI rescaled between bare soil ({coverModel.ndvi_soil.toFixed(2)}) and full cover ({coverModel.ndvi_full.toFixed(2)}) <Src ids={['fvc']} />.</dd>
-          <dt>Data</dt><dd><b>NASA HLS</b> (Landsat + Sentinel-2, 30 m): cover curves of about 1 700 declared Lithuanian fields in the seasons {coverModel.seasons.join(' and ')}, grouped into {Object.keys(m).length} crop sequences. <b>NASA GPM IMERG</b>, half-hourly rain at the farm, {soilClimate.period}: storms of {E.thresholdMm} mm or more, erosivity = storm energy × highest 30-minute intensity; precipitation that IMERG marks as frozen is left out.</dd>
+          <dt>Calculation</dt><dd>For each of the 24 half-months from July to June: bare fraction × that half-month’s share of the yearly rainfall erosivity × 365. Summed, averaged over the plan years, weighted by field area. Bare fraction = 1 − green cover; green cover is <Term id="ndvi">NDVI</Term> rescaled between bare soil ({coverModel.ndvi_soil.toFixed(2)}) and full cover ({coverModel.ndvi_full.toFixed(2)}) <Src ids={['fvc']} />.</dd>
+          <dt>Data</dt><dd><b>NASA <Term id="hls">HLS</Term></b> (Landsat + Sentinel-2, 30 m): cover curves of about 1 700 declared Lithuanian fields in the seasons {coverModel.seasons.join(' and ')}, grouped into {Object.keys(m).length} crop sequences. <b>NASA <Term id="imerg">GPM IMERG</Term></b>, half-hourly rain at the farm, {soilClimate.period}: storms of {E.thresholdMm} mm or more, erosivity = storm energy × highest 30-minute intensity; precipitation that IMERG marks as frozen is left out.</dd>
           <dd><ErosivityChart /><ErosivityLegend /></dd>
           <dt>What we found</dt><dd>June to August carry <b>{p100(BASE.junToAug)} %</b> of the year’s erosive rain, December to February {p100(BASE.decToFeb)} %. The half-months the satellite cannot see (16 November – 31 January) carry {p100(BASE.blindHalfMonths)} %. By crop sequence the measure runs from {Math.min(...seqDays)} days (grass) to {Math.max(...seqDays)}. Summer rain is {BASE.summerToWinter} times as erosive as winter rain here; the JRC maps give almost 4 times for the EU on average <Src ids={['esdac']} />.</dd>
           <dt>What we checked</dt><dd>With equal shares the measure equals the plain days without cover (a unit test). The best plan found ({soilCheck.bestForSoil.s1e} days) sits on the exact lower bound of {soilCheck.lowerBound}. With the shares computed {soilCheck.variants.length} other ways (daily rain instead of storms, two other exponents, warm-season rain counted double, snow counted as rain, shares smoothed) the plan shown as Best for soil stays first of {soilCheck.plans} plans in {stay} and is never below place {worst}.</dd>
@@ -149,7 +150,7 @@ export function SoilHelp() {
 
         <Measure id="s2" name="3 · The same on erosion-sensitive land" what="The weighted days of measure 1 on the parts of fields inside the official erosion-sensitive layer.">
           <dt>Data</dt><dd>NASA HLS and IMERG as above; the layer of the paying agency (NMA, GAAB 5: slopes above 12 %). Shown on Analytics, Risk zones.</dd>
-          <dt>What we checked</dt><dd>Slope from NASADEM was tried and rejected: it agreed with the official layer on 36 % of the cropland it marked steep <Src ids={['ours']} />.</dd>
+          <dt>What we checked</dt><dd>Slope from <Term id="nasadem">NASADEM</Term> was tried and rejected: it agreed with the official layer on 36 % of the cropland it marked steep <Src ids={['ours']} />.</dd>
         </Measure>
 
         <Measure id="s3" name="4 · Crop diversity" what="Crop families on the farm in each plan year (cereal, oilseed, legume, row crop, grass), the share of legumes, and the share of area where a cereal follows a cereal.">
@@ -158,8 +159,8 @@ export function SoilHelp() {
         </Measure>
 
         <Measure id="s4" name="5 · Harvest on wet soil" what="Hectares a year of crops whose harvest window is typically wet. A warning sign for compaction, not a measurement.">
-          <dt>Calculation</dt><dd>Rain minus evaporative demand summed over the crop’s harvest window, for each year {soilClimate.period}; the window is typically wet when the median is above zero.</dd>
-          <dt>Data</dt><dd><b>NASA GPM IMERG</b> rain and <b>NASA POWER</b> temperature at the farm; harvest windows of the crop reference.</dd>
+          <dt>Calculation</dt><dd>Rain minus <Term id="et">evaporative demand</Term> summed over the crop’s harvest window, for each year {soilClimate.period}; the window is typically wet when the median is above zero.</dd>
+          <dt>Data</dt><dd><b>NASA GPM IMERG</b> rain and <b>NASA <Term id="power">POWER</Term></b> temperature at the farm; harvest windows of the crop reference.</dd>
           <dt>What we found</dt><dd>Typically wet here: {wet.map(([id, h]) => `${CROPS[id]?.name.toLowerCase() ?? id} (wet in ${p100(h.wetYearsShare)} % of years)`).join(', ')}. Cereal, rapeseed and legume windows were wet in {p100(Math.min(...dryWin))}–{p100(Math.max(...dryWin))} % of years, so they are not counted.</dd>
           <dt>Limits</dt><dd>Heavy machines on wet soil compact the subsoil <Src ids={['arvidsson']} />, but nothing here measures compaction, and the proxy is not validated.</dd>
         </Measure>

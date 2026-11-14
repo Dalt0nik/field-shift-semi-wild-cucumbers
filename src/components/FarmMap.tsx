@@ -1,7 +1,7 @@
 'use client';
 // The map of every screen. Basemap: OpenFreeMap "positron" (OpenStreetMap data, no key); if it cannot be loaded
-// the map falls back to a plain background and still works. On top: an optional NASA HLS true-colour image,
-// rasters drawn by the app from the 30 m grid, and vector layers from the pipeline.
+// the map falls back to a plain background and still works. On top: rasters drawn by the app from the 30 m grid,
+// and vector layers from the pipeline.
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef } from 'react';
@@ -17,7 +17,6 @@ export interface FarmMapProps {
   fillOpacity?: number;
   selected?: string | null;
   onSelect?: (id: string) => void;
-  satellite?: boolean;
   raster?: Raster | null;
   showErosion?: boolean;
   showPeat?: boolean;
@@ -51,7 +50,6 @@ export default function FarmMap(props: FarmMapProps) {
     const m = map.current; if (!m || !ready.current) return;
     const p = latest.current;
     const vis = (id: string, on: boolean) => m.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
-    vis('hls', !!p.satellite);
     if (p.raster) {
       const src = m.getSource('raster') as maplibregl.ImageSource | undefined;
       if (src) src.updateImage({ url: p.raster.url, coordinates: corners(p.raster.bounds) });
@@ -98,8 +96,6 @@ export default function FarmMap(props: FarmMapProps) {
       mm.on('load', () => {
         // data layers go under the place names of the basemap, outlines on top
         const firstLabel = mm.getStyle().layers.find(l => l.type === 'symbol')?.id;
-        mm.addSource('hls', { type: 'image', url: '/overlays/hls_truecolor_autumn2026.png', coordinates: corners(ob) });
-        mm.addLayer({ id: 'hls', type: 'raster', source: 'hls', paint: { 'raster-fade-duration': 0 } }, firstLabel);
         mm.addSource('nb', { type: 'geojson', data: (neighbours as any).features });
         mm.addLayer({ id: 'nb-fill', type: 'fill', source: 'nb', paint: { 'fill-color': '#ffffff', 'fill-opacity': 0 } }, firstLabel);
         mm.addLayer({ id: 'nb-line', type: 'line', source: 'nb', paint: { 'line-color': '#9aa79e', 'line-width': 0.7 } }, firstLabel);

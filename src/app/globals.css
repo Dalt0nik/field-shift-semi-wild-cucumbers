@@ -45,6 +45,8 @@ small, .small { font-size: 0.85em; }
 
 /* ---- pages */
 .page { padding: 20px 22px 96px; max-width: 1480px; display: grid; gap: 16px; align-content: start; }
+/* a page that fits in one window: no room kept under the content for the Ask button, so it does not scroll */
+.page.fit { padding-bottom: 16px; }
 .page-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .page-head h1 { font-size: 1.7rem; font-weight: 700; }
 .lead { color: var(--muted); max-width: 84ch; }
@@ -127,13 +129,14 @@ details.more > div { margin-top: 8px; display: grid; gap: 8px; }
 .dd-opt { display: flex; align-items: center; gap: 2px; padding: 6px 10px; border: 0; background: none; text-align: left; border-radius: 3px; font-size: 0.88rem; white-space: nowrap; }
 .dd-opt.act { background: var(--pale); } .dd-opt.cur { font-weight: 700; } .dd-opt.cur::after { content: '✓'; margin-left: auto; padding-left: 14px; }
 
-/* glossary term */
-.term { border-bottom: 1px dotted var(--muted); cursor: help; position: relative; }
-.term:hover::after, .term:focus::after { content: attr(data-tip); position: absolute; left: 0; top: calc(100% + 6px); z-index: 60; width: 290px; white-space: normal; background: var(--sheet); color: var(--ink); border: 1.5px solid var(--ink); padding: 8px 10px; font: 400 0.82rem/1.4 var(--font-body), sans-serif; letter-spacing: 0; text-transform: none; box-shadow: 4px 4px 0 rgba(23, 35, 28, 0.16); text-align: left; }
-th.n .term:hover::after, .tip-left .term:hover::after { left: auto; right: 0; }
+/* explained term: a dotted underline in the text, the explanation on hover or focus (drawn by <Term>, fixed on top of the page) */
+.term { text-decoration: underline dotted var(--muted); text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: help; }
+.term:hover, .term:focus-visible { text-decoration-style: solid; text-decoration-color: var(--field); }
+.tip { position: fixed; left: 0; top: 0; z-index: 210; visibility: hidden; pointer-events: none; display: block; width: min(300px, calc(100vw - 16px)); background: var(--sheet); color: var(--ink); border: 1.5px solid var(--ink); padding: 8px 10px; font: 400 0.82rem/1.4 var(--font-body), sans-serif; box-shadow: 4px 4px 0 rgba(23, 35, 28, 0.16); text-align: left; }
+.tip b { display: block; font-weight: 700; margin-bottom: 2px; } .tip small { display: block; margin-top: 5px; color: var(--muted); font-size: 0.74rem; }
+/* side panel (the soil "?" panel) */
 .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); background: var(--sheet); border-left: 1.5px solid var(--ink); z-index: 90; overflow: auto; padding: 18px 20px 30px; }
 .scrim { position: fixed; inset: 0; z-index: 89; background: rgba(23, 35, 28, 0.35); }
-.drawer dl { margin: 12px 0 0; } .drawer dt { font-weight: 700; margin-top: 12px; } .drawer dd { margin: 2px 0 0; font-size: 0.9rem; }
 
 /* calendar heat tables */
 .heat td { padding: 0; border-bottom: 1px solid #fff; } .heat td.lab { padding: 5px 10px 5px 0; white-space: nowrap; border-bottom: 1px solid var(--line); }
@@ -169,12 +172,20 @@ th.n .term:hover::after, .tip-left .term:hover::after { left: auto; right: 0; }
 .tl-row.is-selected { background: var(--pale); }
 .tl-head { cursor: default; border-bottom: 1.5px solid var(--ink); }
 .tl-name { display: flex; flex-direction: column; font-size: 0.8rem; padding: 2px 0; line-height: 1.15; } .tl-name span { color: var(--muted); }
-.tl-track { position: relative; height: 30px; } .tl-head .tl-track { height: 24px; }
+.tl-track { position: relative; height: 30px; } .tl-head .tl-track { height: 40px; }
 .tl-year { position: absolute; top: 3px; font-family: var(--font-display), sans-serif; font-weight: 700; font-size: 0.9rem; padding-left: 4px; }
 .tl-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
 .tl-occ { position: absolute; top: 4px; height: 22px; overflow: hidden; border: 1px solid rgba(23, 35, 28, 0.55); border-radius: 2px; }
 .tl-occ em { display: block; font-style: normal; font-size: 0.72rem; font-weight: 600; padding: 0 4px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
 .tl-occ.src-history { opacity: 0.62; } .tl-occ.src-plan { border: 2px solid var(--ink); }
+.tl-occ.win { border-color: transparent; }
+.tl-key { width: 34px; background: linear-gradient(90deg, #e9d9a6 0 25%, #c79a1e 25% 75%, #e9d9a6 75%); }
+.tl-month { position: absolute; top: 24px; font-size: 0.6rem; color: var(--muted); padding-left: 2px; }
+/* the state of a field on the decision day (Fields screen) */
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--field); margin-right: 6px; vertical-align: 0; }
+.dot.is-done { background: var(--field); } .dot.is-part { background: linear-gradient(90deg, var(--field) 50%, transparent 50%); }
+.dot.is-grass { background: #8dbb6a; border-color: #8dbb6a; } .dot.is-sown { background: var(--rape); border-color: var(--ink); } .dot.is-unknown { border-style: dashed; border-color: var(--muted); }
+table.mini { width: auto; } table.mini td { padding: 2px 18px 2px 0; border: 0; }
 .tl-slot { position: absolute; top: 4px; height: 22px; border: 1.5px dashed var(--field); background: repeating-linear-gradient(135deg, transparent 0 6px, rgba(47, 107, 60, 0.12) 6px 12px); border-radius: 2px; }
 .tl-catch { position: absolute; top: 20px; height: 7px; background: #73c2a0; border: 1px solid var(--field); }
 .tl-now { position: absolute; top: 0; } .tl-now i { position: absolute; top: 4px; right: 5px; font-style: normal; font-size: 0.72rem; font-weight: 700; color: var(--dry); white-space: nowrap; }

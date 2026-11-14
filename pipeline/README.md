@@ -1,13 +1,13 @@
 # Data pipeline
 
-TypeScript scripts that build `src/data/` and `public/overlays/` from NASA and Lithuanian sources. Run with `npx tsx pipeline/<script>`, in order. Earth Engine needs `GEE_KEY` in `.env` (initialised without `project=`).
+TypeScript scripts that build `src/data/` from NASA and Lithuanian sources. Run with `npx tsx pipeline/<script>`, in order. Earth Engine needs `GEE_KEY` in `.env` (initialised without `project=`).
 
 | Script | Output | Sources | Needs |
 |---|---|---|---|
 | `10_regional_package.ts` | `regional-lt.json` | `inputs/crops.yaml` (LAMMC crop guides) | — |
 | `20_farm.ts` | `farm.json`, `farm-layers.json` | `inputs/farm_98984.geojson`; NMA area-monitoring layers (crops 2025–2026, erosion-sensitive land, peat); Dirv_DR10LT soil map | network |
 | `25_neighbours.ts` | `neighbours.json` | NMA declarations 2025 (Parquet, see below) | local Parquet |
-| `30_farm_products.ts` | `products.json`, `public/overlays/*.png` | NASA HLS L30 + S30, NASADEM (Earth Engine); `inputs/cover-model.json` | `GEE_KEY` |
+| `30_farm_products.ts` | `products.json` | NASA HLS L30 + S30, NASADEM (Earth Engine); `inputs/cover-model.json` | `GEE_KEY` |
 | `35_scene_grid.ts` | `scene-grid.json` | NASA HLS L30 + S30, NASADEM, resampled to one 30 m grid | `GEE_KEY` |
 | `40_weather_economics.ts` | `weather.json`, `economics.json` | NASA POWER daily API (GPM IMERG rain, MERRA-2 temperature); `inputs/yields.csv`, `prices.csv`, `areas.csv` | network |
 | `44_imerg_halfhourly.ts` | `cache/farm_imerg_30min.json` | NASA GPM IMERG V07 half-hourly rain and liquid-phase probability at the farm, 2001–2025 (Earth Engine `NASA/GPM_L3/IMERG_V07`) | `GEE_KEY` |

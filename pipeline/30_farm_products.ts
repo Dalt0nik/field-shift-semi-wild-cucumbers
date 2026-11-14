@@ -1,13 +1,12 @@
 // Demo farm, data products from Earth Engine:
 //  - NASA HLS (L30 + S30) half-month NDVI per field, 2016-2026 -> soil-cover history, bare-soil calendar, autumn-2026 state
 //  - NASADEM terrain per field: elevation, median slope, relative height (cold-air pooling and wet spots)
-//  - map overlays (PNG): HLS true colour of autumn 2026, NASADEM slope, how often a pixel is bare in early spring
 // Output: src/data/products.json, src/data/farm-hls.json (the half-month series themselves: the app cuts them at the
-//         decision day of the demo, src/pilot/satellite.ts), public/overlays/*.png
+//         decision day of the demo, src/pilot/satellite.ts)
 // Usage: npx tsx pipeline/30_farm_products.ts
 import fs from 'node:fs';
 import path from 'node:path';
-import { CACHE, INPUTS, OUT, ROOT, ee, evaluate, initEE, pool, retry } from './lib/ee.ts';
+import { CACHE, INPUTS, OUT, ee, evaluate, initEE, pool, retry } from './lib/ee.ts';
 
 const farm = JSON.parse(fs.readFileSync(path.join(OUT, 'farm.json'), 'utf8'));
 const cover = JSON.parse(fs.readFileSync(path.join(INPUTS, 'cover-model.json'), 'utf8'));
@@ -81,27 +80,9 @@ for (const f of fields) {
   console.log(id, 'slope', products[id].terrain.slopePct, 'relH', products[id].terrain.relHeight500m, 'autumn26', autumn2026.minNdviAugOct, '->', autumn2026.lateNdvi, autumn2026.winterCropSuggested, '| last seasons', seasons.slice(-3).map(x => x.total).join(','));
 }
 
-// ---- map overlays
-const ovDir = path.join(ROOT, 'public', 'overlays');
-fs.mkdirSync(ovDir, { recursive: true });
+// the farm's box with a margin: the maps may not be panned far beyond it (src/components/FarmMap.tsx)
 const [w, s0, e, n] = farm.bbox; const pad = 0.006;
 const box = [w - pad * 1.6, s0 - pad, e + pad * 1.6, n + pad];
-const rect = ee.Geometry.Rectangle(box);
-const mask = (img: any) => img.updateMask(good(img));
-const hls26 = L.merge(S).filterBounds(rect).filterDate('2026-08-20', '2026-10-25').map(mask).median();
-const springBare = ee.ImageCollection(Array.from({ length: 10 }, (_, i) => 2017 + i).map(y =>
-  L.merge(S).filterBounds(rect).filterDate(`${y}-03-16`, `${y}-04-16`).map(prep).select('ndvi').median().lt(SOIL + 0.3 * (FULL - SOIL)).rename('bare'))).mean();
-const overlays: [string, any, any][] = [
-  ['hls_truecolor_autumn2026', hls26.select(['red', 'green', 'blue']), { min: 0.01, max: 0.16, gamma: 1.3 }],
-  ['nasadem_slope', slope, { min: 0, max: 15, palette: ['#f7fbff', '#c6dbef', '#6baed6', '#fdae6b', '#e6550d', '#7f2704'] }],
-  ['hls_spring_bare_frequency', springBare, { min: 0, max: 1, palette: ['#1a7d3a', '#a6d96a', '#ffffbf', '#fdae61', '#a6611a'] }],
-];
-for (const [name, img, vis] of overlays) {
-  const url: string = await new Promise((res, rej) => img.visualize(vis).getThumbURL({ region: rect, dimensions: 1400, format: 'png', crs: 'EPSG:4326' }, (u: string, err: any) => (err ? rej(new Error(String(err))) : res(u))));
-  const buf = Buffer.from(await (await fetch(url)).arrayBuffer());
-  fs.writeFileSync(path.join(ovDir, `${name}.png`), buf);
-  console.log('overlay', name, buf.length);
-}
 fs.writeFileSync(path.join(OUT, 'products.json'), JSON.stringify({ generated: new Date().toISOString().slice(0, 10), fvc: { ndviSoil: SOIL, ndviFull: FULL }, overlayBounds: box, fields: products,
   sources: ['NASA HLS L30 + S30 v002 (Earth Engine NASA/HLS/HLSL30/v002, NASA/HLS/HLSS30/v002)', 'NASADEM (Earth Engine NASA/NASADEM_HGT/001)'] }));
 console.log('done');

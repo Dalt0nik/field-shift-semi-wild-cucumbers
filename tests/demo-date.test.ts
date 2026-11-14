@@ -101,7 +101,5 @@ describe('stage 2 on the decision day', () => {
   });
   it('layers observed after the decision day are flagged, earlier ones are not', () => {
     expect(layerAfterDecision('ndvi_peak_2025')).toBe(false);
-    expect(layerAfterDecision('ndvi_autumn_2026')).toBe(DECISION_DATE < '2026-11-10');
-    expect(layerAfterDecision('hls_truecolor_autumn2026')).toBe(DECISION_DATE < '2026-10-25');
-  });
+    expect(layerAfterDecision('ndvi_autumn_2026')).toBe(DECISION_DATE < '2026-11-10');  });
 });

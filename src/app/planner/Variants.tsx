@@ -60,7 +60,7 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
   return (
     <>
       <p className="lead">{sown.length === 0
-        ? <>On {niceDate(DECISION_DATE)} nothing is sown for {PLAN_YEARS[0]} yet, so {open.length} of {fields.length} fields are open for both harvests{s.ws.fields.some(fc => fc.options.some(o => o.catchFirst)) ? ', and a catch crop can still go in this autumn' : ''}.</>
+        ? <>On {niceDate(DECISION_DATE)} nothing is sown for {PLAN_YEARS[0]} yet, so {open.length} of {fields.length} fields are open for both harvests{s.ws.fields.some(fc => fc.options.some(o => o.catchFirst)) ? <>, and a <Term id="catchCrop">catch crop</Term> can still go in this autumn</> : ''}.</>
         : <>{sown.length} of {fields.length} fields are already sown for {PLAN_YEARS[0]}, so the plans differ only on {open.map(x => x.id).join(', ')} in {PLAN_YEARS[0]} and on every field in {PLAN_YEARS[1]}.</>} Each card is the best plan found for one measure; usual practice is the reference. There is no overall score: pick a card, then press “Choose this plan”.</p>
       <div className="row"><span className="muted small">Maps show</span><YearTabs /><span className="muted small">Only fields sown differently from usual practice are coloured; the best value of each measure is underlined.</span></div>
       <div className="cards">
@@ -73,7 +73,7 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
             <MiniMap fill={fill} />
             <small>{c.kind === 'baseline' ? 'the reference' : `differs on ${changed.length} fields`}</small>
             <span className="kpi"><span className={mark(c.v.ch.marginMean === top.m)}>{c.v.ch.marginMean}</span><small>€/ha, usual year</small></span>
-            <span className="stat"><span>Worst year of five</span><b className={mark(c.v.ch.marginWorstFifth === top.w)}>{c.v.ch.marginWorstFifth} €/ha</b></span>
+            <span className="stat"><span><Term id="worstFifth">Worst year of five</Term></span><b className={mark(c.v.ch.marginWorstFifth === top.w)}>{c.v.ch.marginWorstFifth} €/ha</b></span>
             <SoilBlock c={c.v.ch} best={top} priceLines={soilBest && c.kind !== 'baseline' ? [`Against usual practice: ${priceOf(c.v.ch, base.v.ch)}`, ...(topMargin && topMargin.id !== c.id ? [`Against the highest margin: ${priceOf(c.v.ch, topMargin.v.ch)}`] : [])] : undefined} />
             {!c.v.ch.feasible && <Pill tone="bad">fails a farm rule</Pill>}
           </div>); })}
@@ -82,7 +82,7 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
 
       <Panel title={p.name} sub={p.sub}
         right={<>{s.chosen?.id === p.id ? <><Pill tone="ok">your chosen plan</Pill><button className="link small" onClick={() => s.choose(null)}>undo</button></> : <button className="btn pri" onClick={() => s.choose(p.id)}>Choose this plan</button>}<button className="btn" onClick={onEdit}>Change it field by field</button><Link className="btn" href="/rules">Check the rules</Link></>}>
-        {s.chosen?.id === p.id && <p className="done"><span><b>Plan chosen.</b> This is your sowing list.</span><Link className="btn pri" href="/rules">Next: check it against the rules →</Link></p>}
+        {s.chosen?.id === p.id && <p className="done"><span><b>Plan chosen.</b> This is your sowing list.</span></p>}
         <div className="scroll-x">
           <table>
             <thead><tr><th>Sowing list</th><th className="n">ha</th>{PLAN_YEARS.map(y => <th key={y}>Harvest {y}</th>)}</tr></thead>
@@ -97,17 +97,17 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
         <SoilTable plan={p} base={base} top={topMargin} steepHa={steepHa} strawLeft={s.strawLeft} setStrawLeft={s.setStrawLeft} cheaper={cheaper} />
         <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
           <More label="Evidence, benefits, gaps and risks">
-            <p style={{ maxWidth: '95ch' }}><b>NASA data used.</b> HLS satellite images for soil cover and the field index; GPM IMERG rain for erosive rain, the leaching season and wet harvests; POWER temperature to tell dry years apart.</p>
+            <p style={{ maxWidth: '95ch' }}><b>NASA data used.</b> <Term id="hls">HLS</Term> satellite images for soil cover and the <Term id="fieldIndex">field index</Term>; <Term id="imerg">GPM IMERG</Term> rain for <Term id="erosivity">erosive rain</Term>, the <Term id="leaching">leaching season</Term> and <Term id="wetHarvest">wet harvests</Term>; <Term id="power">POWER</Term> temperature to tell <Term id="drySeason">dry years</Term> apart.</p>
             {(['evidence', 'benefits', 'gaps', 'risks'] as const).map(k => <p key={k} style={{ maxWidth: '95ch' }}><b>{k[0].toUpperCase() + k.slice(1)}.</b> {five[k]}</p>)}
           </More>
           <More label="How it would have done in each past season">
             <SeasonBars series={ch.marginSeries} compare={isBase ? undefined : base.v.ch.marginSeries} />
             <div className="legend"><span><Sw c="#d08a2e" /><Term id="drySeason">dry season</Term></span><span><Sw c="#2b6f8e" /><Term id="wetHarvest">wet harvest</Term></span><span><Sw c="#7d8b80" />ordinary season</span>{!isBase && <span>▬ usual practice</span>}</div>
-            <p className="note">Margin in €/ha if that season came again. Dry and wet seasons are told apart with NASA GPM IMERG rain and NASA POWER temperature.{!isBase && ` This plan earns more than usual practice in ${wins} of ${ch.marginSeries.length} seasons.`} Eight seasons in ten fall between {ch.marginP10} and {ch.marginP90} €/ha.</p>
+            <p className="note">Margin in €/ha <Term id="replay">if that season came again</Term>. Dry and wet seasons are told apart with NASA <Term id="imerg">GPM IMERG</Term> rain and NASA <Term id="power">POWER</Term> temperature.{!isBase && ` This plan earns more than usual practice in ${wins} of ${ch.marginSeries.length} seasons.`} <Term id="p10p90">Eight seasons in ten</Term> fall between {ch.marginP10} and {ch.marginP90} €/ha.</p>
           </More>
           <More label="On the field timelines, and what it closes later">
             <div className="scroll-x"><Timeline rows={planRows(fields, s.setup, p.v.options)} from={PLAN_YEARS[0] - 2} to={PLAN_YEARS[PLAN_YEARS.length - 1]} decision={DECISION_DATE} selected={s.field} onSelect={s.setField} /></div>
-            <div className="legend"><span><i className="sw" style={{ background: '#c79a1e', opacity: 0.62 }} />past</span><span><i className="sw" style={{ background: '#c79a1e', borderWidth: 2, borderColor: '#17231c' }} />planned</span><span><i className="sw" style={{ background: '#73c2a0', height: 5 }} />catch crop over winter</span></div>
+            <div className="legend"><span><i className="sw" style={{ background: '#c79a1e', opacity: 0.62 }} />past</span><span><i className="sw" style={{ background: '#c79a1e', borderWidth: 2, borderColor: '#17231c' }} />planned</span><span><i className="sw" style={{ background: '#73c2a0', height: 5 }} /><Term id="catchCrop">catch crop</Term>&nbsp;over winter</span></div>
             <p className="small"><b>{f.id} in {cons.year}</b> (click a field to change): still possible {cons.open.length ? cons.open.map(x => CROPS[x].name.toLowerCase()).join(', ') : 'nothing in the crop set'}.{cons.closed.length > 0 && <> Closed by this choice: {cons.closed.slice(0, 3).map(x => `${CROPS[x.crop].name.toLowerCase()} (${x.reasons[0]})`).join('; ')}.</>}</p>
             {opt.warnings.length > 0 && <Check>{opt.warnings.join('; ')}.</Check>}
           </More>

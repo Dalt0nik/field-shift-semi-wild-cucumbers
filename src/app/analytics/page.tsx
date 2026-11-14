@@ -2,7 +2,6 @@
 // Analytics: what the plan characteristics are built from. Seasons (when fields are bare, which months are
 // risky), risk zones with a "what if" on season frequency, and the evidence behind each characteristic.
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Intervals, NdviProfile, WaterBalance } from '@/components/Charts';
 import { cropColor, rampCss, rampFor } from '@/components/colors';
@@ -60,15 +59,15 @@ function Seasons({ part }: { part: 'bare' | 'weather' }) {
       {part === 'bare' && <div className="cols">
         <Panel title="When does bare soil erode?" sub={<>NASA <Term id="imerg">GPM IMERG</Term>, {soilClimate.period}</>} right={<SoilHelpButton />}>
           <ErosivityChart /><ErosivityLegend />
-          <p className="note" style={{ marginTop: 8 }}>Bars: the share of the year’s <Term id="erosivity">erosive rain</Term> in each half-month, July to June. June to August carry {Math.round(soilClimate.erosivity.summary[soilClimate.erosivity.base].junToAug * 100)} %, December to February {Math.round(soilClimate.erosivity.summary[soilClimate.erosivity.base].decToFeb * 100)} %. Lines: how bare the soil is under four crop sequences (NASA HLS, 1 700 declared fields). The plan measure multiplies the two: the numbers in the legend are days without cover a year, weighted by erosive rain.</p>
+          <p className="note" style={{ marginTop: 8 }}>Bars: the share of the year’s <Term id="erosivity">erosive rain</Term> in each half-month, July to June. June to August carry {Math.round(soilClimate.erosivity.summary[soilClimate.erosivity.base].junToAug * 100)} %, December to February {Math.round(soilClimate.erosivity.summary[soilClimate.erosivity.base].decToFeb * 100)} %. Lines: how bare the soil is under four crop sequences (NASA <Term id="hls">HLS</Term>, 1 700 declared fields). The plan measure multiplies the two: the numbers in the legend are <Term id="soilDays">days without cover a year, weighted by erosive rain</Term>.</p>
         </Panel>
         <Panel title="When does bare soil lose nitrate?" sub={<>NASA GPM IMERG and <Term id="power">POWER</Term>, {soilClimate.period}</>}>
           <ErosivityChart leaching /><ErosivityLegend leaching />
-          <p className="note" style={{ marginTop: 8 }}>Bars: the share of the <Term id="leaching">leaching season</Term>’s water surplus (rain above evaporative demand, September to February: {soilClimate.leaching.seasonSurplusMm} mm in a median season). The numbers in the legend are days of bare soil in that season. A green autumn, a catch crop or an early-sown winter crop, is what lowers it.</p>
+          <p className="note" style={{ marginTop: 8 }}>Bars: the share of the <Term id="leaching">leaching season</Term>’s water surplus (rain above <Term id="et">evaporative demand</Term>, September to February: {soilClimate.leaching.seasonSurplusMm} mm in a median season). The numbers in the legend are days of bare soil in that season. A green autumn, a <Term id="catchCrop">catch crop</Term> or an early-sown winter crop, is what lowers it.</p>
         </Panel>
       </div>}
 
-      {part === 'weather' && <Panel title="Which months are risky here?" sub={`share of the years ${hazards.period} with the event · NASA GPM IMERG rain, NASA POWER temperature`}>
+      {part === 'weather' && <Panel title="Which months are risky here?" sub={<>share of the years {hazards.period} with the event · NASA <Term id="imerg">GPM IMERG</Term> rain, NASA <Term id="power">POWER</Term> temperature</>}>
         <div className="scroll-x">
           <table className="heat">
             <thead><tr><th>Hazard</th>{M.map((m, i) => <th key={i} className="c">{m}</th>)}</tr></thead>
@@ -85,7 +84,7 @@ function Seasons({ part }: { part: 'bare' | 'weather' }) {
           </table>
         </div>
         <p className="note" style={{ marginTop: 10 }}>Numbers are per cent of years. Below them, the sowing (sow) and harvest (harv) months of the crops of “{s.plan?.name ?? 'the selected plan'}” : a risky month under one of them is a vulnerable season. Frost of −2 °C came in April in {hz('frost', 3)} % of years, when spring crops emerge; heavy rain came in July in {hz('heavyRain', 6)} % of years, at cereal harvest.</p>
-        <div style={{ marginTop: 6 }}><Check>weather comes from one grid cell (10–50 km), the same for every field; thresholds are working values.</Check></div>
+        <div style={{ marginTop: 6 }}><Check>weather comes from <Term id="cellValue">one grid cell</Term> (10–50 km), the same for every field; thresholds are working values.</Check></div>
       </Panel>}
     </>
   );
@@ -153,7 +152,7 @@ function Zones({ head }: { head: React.ReactNode }) {
               <tr key={f.id} className={`click${s.field === f.id ? ' sel' : ''}`} onClick={() => s.setField(f.id)}><td><b>{f.id}</b></td><td className="n">{t.relHeight500m > 0 ? '+' : ''}{t.relHeight500m} m</td><td className="n">{t.slopePct} %</td></tr>); })}</tbody>
           </table>
           <p className="small">Frost of −2 °C came in April in <b>{Math.round(frost[3] * 100)} %</b> of years and in May in <b>{Math.round(frost[4] * 100)} %</b>.</p>
-          <Check>the weather cell is about 50 km wide and cannot tell a hollow from a hilltop. Low spots are a place to look, not a frost map.</Check>
+          <Check>the <Term id="cellValue">weather cell</Term> is about 50 km wide and cannot tell a hollow from a hilltop. Low spots are a place to look, not a frost map.</Check>
         </>}
         {zone === 'dry' && <>
           <p className="lead"><Term id="drySeason">Dry seasons</Term>: the lowest fifth of the May–July <Term id="waterBalance">water balance</Term> ({weather.dryYears.join(', ')}).</p>
@@ -164,7 +163,7 @@ function Zones({ head }: { head: React.ReactNode }) {
             <div className="ramp-t"><span>as in the past</span><span>2×</span><span>3× as often</span></div>
           </div>
           <table>
-            <thead><tr><th>Plan, margin in €/ha</th><th className="n">As in the past</th><th className="n">{k === 1 ? 'Move the slider' : `Dry years ${k}× as often`}</th></tr></thead>
+            <thead><tr><th>Plan, <Term id="margin">margin</Term> in €/ha</th><th className="n">As in the past</th><th className="n">{k === 1 ? 'Move the slider' : `Dry years ${k}× as often`}</th></tr></thead>
             <tbody>{shown.map(p => { const w = weighted(p.v.ch.marginSeries); return (
               <tr key={p.id} className={`click${p.id === s.planId ? ' sel' : ''}`} onClick={() => s.setPlanId(p.id)}><td>{p.name}</td><td className="n">{p.v.ch.marginMean}</td><td className="n">{k === 1 ? '—' : <><b>{w}</b><span className="bad"> {w - p.v.ch.marginMean}</span></>}</td></tr>); })}</tbody>
           </table>
@@ -201,7 +200,7 @@ function Evidence() {
               <tr><td><b>Margin in <Term id="drySeason">dry seasons</Term></b></td><td>NASA <Term id="imerg">GPM IMERG</Term> rain, NASA <Term id="power">POWER</Term> temperature</td><td>In dry seasons spring cereals yielded 16 % below normal.</td></tr>
               <tr><td><b><Term id="soilDays">Soil without cover</Term></b>, weighted by erosive rain</td><td>NASA <Term id="hls">HLS</Term>, 30 m, 1 700 declared fields, by half-month; NASA <Term id="imerg">GPM IMERG</Term> half-hourly rain {soilClimate.period}</td><td>With equal weights it equals the plain days (unit test). The Best-for-soil plan stays first of {soilCheck.plans} under {stay} of {soilCheck.variants.length} other ways to compute the weights.</td></tr>
               <tr><td><b><Term id="bareDays">Days without living cover</Term></b></td><td>NASA <Term id="hls">HLS</Term>, 30 m, 1 700 declared fields</td><td>Cover curves follow the declared crops: {Math.min(...seq.slice(0, 5).map(k => coverModel.model[k]?.total[1] ?? 999))} to {Math.max(...seq.map(k => coverModel.model[k]?.total[1] ?? 0))} bare days by crop sequence.</td></tr>
-              <tr><td><b>The same on erosion-sensitive land</b></td><td>Official layer with the HLS cover model and the IMERG weights</td><td>NASADEM slope alone was rejected: 36 % agreement with the official layer.</td></tr>
+              <tr><td><b>The same on erosion-sensitive land</b></td><td>Official layer with the HLS cover model and the IMERG weights</td><td><Term id="nasadem">NASADEM</Term> slope alone was rejected: 36 % agreement with the official layer.</td></tr>
               <tr><td><b>Bare soil in the <Term id="leaching">leaching season</Term></b>; <Term id="wetSoilHarvest">harvest on wet soil</Term></td><td>NASA HLS cover; NASA GPM IMERG rain and NASA <Term id="power">POWER</Term> temperature</td><td>Not validated: they show exposure, not leached nitrogen or compaction.</td></tr>
               <tr><td><b><Term id="humus">Humus balance</Term></b></td><td>Coefficients of the VDLUFA method, yields as in the margin</td><td>An accounting indicator: it compares plans and does not predict measured soil carbon.</td></tr>
               <tr><td><b>Cereal after cereal</b>, legumes, crop families</td><td>Crop guides (LAMMC), field history</td><td>Yield effects are from literature, not local trials.</td></tr>
@@ -211,13 +210,13 @@ function Evidence() {
         </div>
       </Panel>
       <div className="cols">
-        <Panel title={`Greenness through the year · ${f.id}`} right={<><Select small label="Field" value={s.field} onChange={s.setField} options={fields.map(x => ({ value: x.id, label: x.id }))} /><Select small label="Year" value={year} onChange={setYear} options={[DECISION_YEAR - 2, DECISION_YEAR - 1, DECISION_YEAR].map(y => ({ value: String(y), label: String(y) }))} /></>}>
+        <Panel title={<><Term id="ndvi">Greenness</Term> through the year · {f.id}</>} right={<><Select small label="Field" value={s.field} onChange={s.setField} options={fields.map(x => ({ value: x.id, label: x.id }))} /><Select small label="Year" value={year} onChange={setYear} options={[DECISION_YEAR - 2, DECISION_YEAR - 1, DECISION_YEAR].map(y => ({ value: String(y), label: String(y) }))} /></>}>
           <NdviProfile ndvi={ndvi} year={+year} />
           <div className="legend"><span><Sw c="#17231c" />{year}: {cropLabel(f.history[+year]?.crop ?? f.history[+year]?.cropClass)}</span><span><Sw c="#c6dcb4" />range of the other years</span>{+year === DECISION_YEAR && <span>seen up to {niceDate(DECISION_DATE)}</span>}</div>
         </Panel>
-        <Panel title="Yield ranges the replay uses" sub="t/ha · low season · normal · high season">
+        <Panel title={<>Yield ranges the <Term id="replay">replay</Term> uses</>} sub="t/ha · low season · normal · high season">
           <Intervals rows={yields} unit="t/ha" />
-          <div style={{ marginTop: 8 }}><Check>these are district averages; each field’s yield is this times its field index (Fields screen).</Check></div>
+          <div style={{ marginTop: 8 }}><Check>these are district averages; each field’s yield is this times its <Term id="fieldIndex">field index</Term> (Fields screen).</Check></div>
         </Panel>
       </div>
       <Panel>
@@ -227,13 +226,13 @@ function Evidence() {
               <li><b>Satellite soil moisture</b> (SMAP) and three other drought indicators: no link to district yields.</li>
               <li><b>“Green in autumn = winter crop”</b>: right for three fields in four, so it only pre-fills the entry.</li>
               <li><b>Crop residue from the satellite</b>: could not separate stubble from ploughed soil.</li>
-              <li><b>NASA elevation model for the slope rule</b>: disagrees with the official layer.</li>
+              <li><b><Term id="nasadem">NASA elevation model</Term> for the slope rule</b>: disagrees with the official layer.</li>
               <li><b>A field-level yield model</b>: no field yields exist to check it against.</li>
             </ul>
           </More>
           <More label="Days without cover by crop sequence">
             <div className="scroll-x"><table>
-              <thead><tr><th>After a crop harvested</th><th>Next crop sown</th><th className="n">Fields</th><th className="n">Days without living cover</th><th className="n">Weighted by erosive rain</th><th className="n">In the leaching season</th></tr></thead>
+              <thead><tr><th>After a crop harvested</th><th>Next crop sown</th><th className="n">Fields</th><th className="n"><Term id="bareDays">Days without living cover</Term></th><th className="n"><Term id="soilDays">Weighted by erosive rain</Term></th><th className="n">In the <Term id="leaching">leaching season</Term></th></tr></thead>
               <tbody>{seq.map(key => { const m = coverModel.model[key]; const [p, n, c] = key.split('>'); return m && (
                 <tr key={key}><td>{({ mid: 'July–August', late: 'September–October', grass: 'grass' } as any)[p]}</td><td>{({ august: 'August (winter rapeseed)', september: 'September (winter cereals)', spring_early: 'April', spring_late: 'May (maize, beet)', grass: 'stays grass' } as any)[n]}{c === 'green_autumn' ? ', after a catch crop' : c === 'open_autumn' ? ', open autumn' : ''}</td><td className="n">{m.n}</td><td className="n">{m.total[1]} <span className="muted">({m.total[0]}–{m.total[2]})</span></td><td className="n"><b>{Math.round(coverDays(m.half.mean, soil).s1e)}</b></td><td className="n">{Math.round(coverDays(m.half.mean, soil).s5)}</td></tr>); })}</tbody>
             </table></div>
@@ -247,7 +246,7 @@ function Evidence() {
 export default function AnalyticsPage() {
   const [tab, setTab] = useQueryState<Tab>('tab', 'bare');
   const s = useStore();
-  const head = <><div className="page-head"><h1>Analytics</h1><Tabs label="Analytics views" tabs={[{ id: 'bare', label: 'Bare soil' }, { id: 'weather', label: 'Weather risk' }, { id: 'zones', label: 'Risk zones' }, { id: 'method', label: 'Method' }]} value={tab} onChange={setTab} /></div><div><Link className="btn pri" href="/settings">Next: crops and limits →</Link></div></>;
+  const head = <><div className="page-head"><h1>Analytics</h1><Tabs label="Analytics views" tabs={[{ id: 'bare', label: 'Bare soil' }, { id: 'weather', label: 'Weather risk' }, { id: 'zones', label: 'Risk zones' }, { id: 'method', label: 'Method' }]} value={tab} onChange={setTab} /></div></>;
   useScreen(tab === 'zones' ? null : `analytics/${tab}`, tab === 'bare' ? { selectedField: s.field, bareDaysLastSeason: Object.fromEntries(fields.map(f => [f.id, seasonCover(f.id).at(-1)?.total ?? null])), erosiveRainShareByMonthJanToDec: soilClimate.erosivity.byMonth, leachingSeasonSurplusMm: soilClimate.leaching.seasonSurplusMm }
     : tab === 'weather' ? { hazardsByMonthShareOfYears: Object.fromEntries(hazards.hazards.map((h: any) => [h.label, h.byMonth])), cropCalendarOfPlan: s.plan?.name } : { selectedField: s.field });
   if (tab === 'zones') return <Zones head={head} />;

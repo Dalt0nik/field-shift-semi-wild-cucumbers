@@ -1,6 +1,6 @@
-// Screenshots of every state of the app at several window widths, plus a fit report: elements that stick out of
+// Screenshots of every state of the app at the regular desktop width (1280 px), plus a fit report: elements that stick out of
 // the window or of their panel, bars that overflow, pages that scroll sideways.
-// Usage: npm run dev (in another terminal), then  node scripts/shots.mjs [width ...]     default widths 1100 1280 1600
+// Usage: npm run dev (in another terminal), then  node scripts/shots.mjs [width ...]     default width 1280; other widths only when asked for
 //        BASE=http://localhost:3111 OUT=screenshots-check node scripts/shots.mjs 1280     another server, another folder
 // Output: screenshots/<width>/NN-name.png and screenshots/fit-report.md. Uses the installed Chrome or Edge.
 import fs from 'node:fs';
@@ -10,7 +10,7 @@ import puppeteer from 'puppeteer-core';
 const BASE = process.env.BASE ?? 'http://localhost:3000';
 const OUT = path.resolve(process.env.OUT ?? 'screenshots');
 const widths = process.argv.slice(2).map(Number).filter(Boolean);
-const WIDTHS = widths.length ? widths : [1100, 1280, 1600];
+const WIDTHS = widths.length ? widths : [1280];
 const BROWSERS = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/google-chrome', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
 const exe = process.env.CHROME ?? BROWSERS.find(p => fs.existsSync(p));
 if (!exe) throw new Error('No Chrome or Edge found; set CHROME to the browser executable');
@@ -24,7 +24,7 @@ const mapReady = page => page.waitForSelector('.map-label', { timeout: 20000 }).
 const STATES = [
   { name: 'map', url: '/map', map: true },
   { name: 'map-field-card', url: '/map', map: true, act: p => click(p, '.map-label', 'F3') },
-  { name: 'map-layers-and-help', url: '/map', map: true, act: async p => { for (const t of ['Satellite image', 'Rule layers']) await click(p, 'label.chk', t); await click(p, 'details.more summary', 'How do I add'); } },
+  { name: 'map-layers-and-help', url: '/map', map: true, act: async p => { await click(p, 'label.chk', 'Rule layers'); await click(p, 'details.more summary', 'How do I add'); } },
   { name: 'fields-now', url: '/organization', map: true },
   { name: 'fields-now-dropdown-open', url: '/organization', map: true, act: async p => { await click(p, 'tbody tr:nth-child(2) .dd'); } },
   { name: 'fields-timelines', url: '/organization?tab=timelines' },
@@ -49,7 +49,7 @@ const STATES = [
   { name: 'analytics-zones-dry', url: '/analytics?tab=zones&view=dry', map: true, plans: true, act: p => p.evaluate(() => { const r = document.querySelector('#dryk'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(r, '2'); r.dispatchEvent(new Event('input', { bubbles: true })); }) },
   { name: 'analytics-method', url: '/analytics?tab=method' },
   { name: 'assistant-open', url: '/planner', plans: true, viewport: true, act: p => click(p, '.chat-fab') },
-  { name: 'glossary-open', url: '/planner', plans: true, viewport: true, act: p => click(p, '.top .link', 'Glossary') },
+  { name: 'term-explained', url: '/analytics', viewport: true, act: async p => { await (await p.$('th.n .term'))?.hover(); } },
 ];
 
 // what does not fit: measured in the page, so it does not depend on anyone looking at the picture
@@ -59,7 +59,7 @@ const fit = () => {
   if (document.documentElement.scrollWidth > vw + 1) out.add(`window scrolls sideways by ${document.documentElement.scrollWidth - vw}px`);
   const top = document.querySelector('.top'); if (top && top.scrollWidth > top.clientWidth + 1) out.add(`top bar content is ${top.scrollWidth - top.clientWidth}px wider than the bar`);
   const main = document.querySelector('.main'); if (main && main.scrollWidth > main.clientWidth + 1) out.add(`main area scrolls sideways by ${main.scrollWidth - main.clientWidth}px`);
-  for (const el of document.querySelectorAll('.main *, .top *, .chat-win *, .drawer *')) {
+  for (const el of document.querySelectorAll('.main *, .top *, .chat-win *, .drawer *, .tip')) {
     if (el.closest('.scroll-x, .map, .tabs, svg, .tl, .dd-pop')) continue;
     const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
     if (r.right > vw + 1) out.add(`${desc(el)} sticks out of the window by ${Math.round(r.right - vw)}px`);
