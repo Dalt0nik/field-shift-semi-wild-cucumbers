@@ -54,3 +54,12 @@ export function redistributivePerHa(ha: number): number {
   for (const b of REDISTRIBUTIVE_2025) { eur += Math.max(0, Math.min(ha, b.upToHa) - from) * b.eurHa; from = b.upToHa; }
   return ha > 0 ? eur / ha : 0;
 }
+
+/** Winter oilseed rape sown late: seed yield by sowing day as a share of the yield of a sowing on 20 August. Field trial
+ *  of Aleksandras Stulginskis University (Akademija, Kaunas district), harvests 2009 and 2010, varieties 'Sunday' and
+ *  'Kronos', mean of both years and varieties (Pupalienė, Velička, Butkevičienė 2013, Rural Development, pp. 214-217,
+ *  figure 1): 20 August 1.00, 30 August 0.98, 10 September 0.72. Primary. The LAMMC crop guide (IKOK, žieminiai rapsai,
+ *  2024, section 5) agrees: sowing 10 days after 20-25 August costs 1.0-2.0 t/ha. */
+export const LATE_SOWING: Record<CropId, [string, number][]> = {
+  winter_rapeseed: [['08-20', 1], ['08-30', 0.98], ['09-10', 0.72]],
+};

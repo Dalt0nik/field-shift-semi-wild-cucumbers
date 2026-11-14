@@ -69,7 +69,7 @@ export interface FieldOption {
 
 export interface Variant { id: string; label?: string; options: FieldOption[]; origin: string }
 
-export interface RuleResult { id: string; title: string; year: number; ok: boolean; value: string; detail: string; kind: 'prohibition' | 'payment_condition' | 'incentive' }
+export interface RuleResult { id: string; title: string; year: number; ok: boolean; value: string; detail: string; kind: 'prohibition' | 'payment_condition' | 'incentive'; /** incentive: share of the arable land the payment is made on (1 when absent) */ paidShare?: number }
 
 export interface Range { p25: number; p50: number; p75: number }
 

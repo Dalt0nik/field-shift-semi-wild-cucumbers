@@ -33,6 +33,8 @@ export interface YearState {
   winterStubbleHa: number;
   /** ha after beet or potatoes, exempt from the winter-cover requirement */
   winterExemptHa: number;
+  /** ha by crop where a perennial crop stays on the field from the year before (counted in area and repeatedHa) */
+  stay?: Map<CropId, number>;
 }
 
 const pct = (v: number) => `${(v * 100).toFixed(0)} %`;
@@ -63,14 +65,24 @@ export function gaec6(s: YearState, eligibleHa: number): RuleResult {
     detail: `Winter ${s.year - 1}/${String(s.year).slice(2)}: growing crops on ${pct(green)} of arable land; with unploughed stubble ${pct(withStubble)} (need ${pct(need)}). At most ${maxPlough.toFixed(0)} ha may be ploughed before 1 March${green >= need ? '' : `; ${(base * need - s.winterGreenHa - s.winterExemptHa).toFixed(0)} ha of stubble must stay unploughed`}.` };
 }
 
-/** Eco-scheme "Augalų kaita" (3D-92, p. 42-43): >= 4 crops, one a legume, main crop <= 50 %, no crop twice in a row on a field. */
+/** Legumes on at least this share of the area under the eco-scheme "Augalų kaita" (3D-92, p. 43.4, as amended by 3D-145 of 2026). */
+export const ECO_LEGUME_MIN = 0.1;
+
+/** Eco-scheme "Augalų kaita" (3D-92, p. 42-43) on the area the farmer declares under it: >= 4 crops, legumes on >= 10 %
+ *  of it, main crop <= 50 %, no crop twice in a row on a field. The farmer chooses that area, so fields where a perennial
+ *  crop stays (grass kept for years) are left out of it, and the payment is made on the rest. */
 export function ecoRotation(s: YearState): RuleResult {
-  const shares = [...s.area.entries()].map(([c, a]) => [c, a / s.arableHa] as const).sort((a, b) => b[1] - a[1]);
-  const hasLegume = shares.some(([c]) => crop(c).legume);
-  const ok = shares.length >= 4 && hasLegume && shares[0][1] <= 0.5 && s.repeatedHa === 0;
-  const miss = [shares.length < 4 && `${shares.length} crops (need 4)`, !hasLegume && 'no legume', shares[0] && shares[0][1] > 0.5 && `main crop ${pct(shares[0][1])} (max 50 %)`, s.repeatedHa > 0 && `${s.repeatedHa.toFixed(0)} ha repeat last year's crop`].filter(Boolean).join('; ');
-  return { id: 'eco_rotation', title: 'Eco-scheme "Crop rotation" (Augalų kaita)', year: s.year, ok, kind: 'incentive', value: ok ? `+${PAYMENTS_2025.ecoRotation} EUR/ha` : 'not eligible',
-    detail: ok ? `${shares.length} crops with a legume, main crop ${pct(shares[0][1])}, no crop repeated on a field.` : `Not eligible: ${miss}.` };
+  const stay = s.stay ?? new Map<CropId, number>();
+  const stayHa = [...stay.values()].reduce((t, v) => t + v, 0);
+  const ha = s.arableHa - stayHa, repeated = s.repeatedHa - stayHa;
+  const shares = [...s.area.entries()].map(([c, a]) => [c, (a - (stay.get(c) ?? 0)) / ha] as const).filter(([, v]) => v > 1e-9).sort((a, b) => b[1] - a[1]);
+  const legume = shares.filter(([c]) => crop(c).legume).reduce((t, [, v]) => t + v, 0);
+  const ok = ha > 0 && shares.length >= 4 && legume >= ECO_LEGUME_MIN && shares[0][1] <= 0.5 && repeated <= 1e-9;
+  const miss = [shares.length < 4 && `${shares.length} crops (need 4)`, legume < ECO_LEGUME_MIN && (legume > 0 ? `legumes on ${pct(legume)} (need 10 %)` : 'no legume'), shares[0] && shares[0][1] > 0.5 && `main crop ${pct(shares[0][1])} (max 50 %)`, repeated > 1e-9 && `${repeated.toFixed(0)} ha repeat last year's crop`].filter(Boolean).join('; ');
+  const kept = stayHa > 0 ? ` Grass that stays (${stayHa.toFixed(0)} ha) is left out of the scheme area.` : '';
+  return { id: 'eco_rotation', title: 'Eco-scheme "Crop rotation" (Augalų kaita)', year: s.year, ok, kind: 'incentive', value: ok ? `+${PAYMENTS_2025.ecoRotation} EUR/ha on ${ha.toFixed(0)} ha` : 'not eligible',
+    detail: (ok ? `${shares.length} crops, legumes on ${pct(legume)}, main crop ${pct(shares[0][1])}, no crop repeated on a field.` : `Not eligible: ${miss}.`) + kept,
+    paidShare: s.arableHa > 0 ? ha / s.arableHa : 0 };
 }
 
 /** GAEC 5 (3D-107, p. 8): no root or tuber crops on erosion-sensitive areas (official layer of slopes > 12 %). */
@@ -89,7 +101,7 @@ export const RULESET: { acts: string; penalty: string; rules: RuleInfo[] } = {
     { id: 'gaec5', code: 'GAEC 5', name: 'Erosion-sensitive land', summary: 'No root or tuber crops on fields that touch the official erosion-sensitive layer.', kind: 'prohibition', layer: 'erosion' },
     { id: 'gaec6', code: 'GAEC 6', name: 'Winter soil cover', summary: 'Crops, stubble or residues on 65 % of arable land from 15 November to 1 March (50 % up to 50 ha).', kind: 'payment_condition' },
     { id: 'gaec7', code: 'GAEC 7', name: 'Crop rotation', summary: 'One of: crop change on 35 % of arable land, catch crops on 35 %, or three crops with the largest at most 75 %.', kind: 'payment_condition' },
-    { id: 'eco_rotation', code: 'eco-scheme', name: 'Rotation payment', summary: `Four crops with a legume, main crop at most half, no crop repeated on a field: +${PAYMENTS_2025.ecoRotation} €/ha.`, kind: 'incentive' },
+    { id: 'eco_rotation', code: 'eco-scheme', name: 'Rotation payment', summary: `Four crops, legumes on a tenth of the area, main crop at most half, no crop repeated on a field: +${PAYMENTS_2025.ecoRotation} €/ha.`, kind: 'incentive' },
     { id: 'gaec2', code: 'GAEC 2', name: 'Peat and wetland', summary: 'Peat soils are shown for information; their tillage limits are not encoded in the demo.', kind: 'payment_condition', layer: 'peat' },
   ],
 };

@@ -1,6 +1,6 @@
 // Money steps on the pilot: field index (NASA HLS) and wet-harvest loss (NASA IMERG).
 import { describe, expect, it } from 'vitest';
-import { characteristics, fieldFactor, optionPart, prepare, wetHarvestLoss, type Context } from '@/engine/characteristics';
+import { characteristics, fieldFactor, optionPart, prepare, sowingFactor, wetHarvestLoss, type Context } from '@/engine/characteristics';
 import { fieldIndex, fields, makeContext, makeSetup } from '@/pilot/demo';
 import { FARM_COSTS_EUR_HA, WET_HARVEST, redistributivePerHa } from '@/pilot/economics';
 import type { FieldOption } from '@/engine/types';
@@ -53,6 +53,20 @@ describe('wet harvest', () => {
   });
 });
 
+describe('late sowing', () => {
+  it('costs winter rapeseed after winter wheat about 5 % (field trial curve), nothing after winter barley or grass', () => {
+    expect(sowingFactor(ctx, 'winter_wheat', 'winter_rapeseed')).toBeCloseTo(0.95, 2);
+    expect(sowingFactor(ctx, 'winter_barley', 'winter_rapeseed')).toBe(1);
+    expect(sowingFactor(ctx, 'perennial_grasses', 'winter_rapeseed')).toBe(1);
+    expect(sowingFactor(ctx, 'winter_wheat', 'winter_wheat')).toBe(1);
+  });
+  it('leaves a crop that is already in the ground as it is', () => {
+    const pre = prepare(ctx), f1 = fields.find(f => f.id === 'F1')!;
+    const part = (fixed: boolean) => optionPart(pre, f1, { fieldId: 'F1', crops: ['winter_rapeseed', 'winter_wheat'], catchAfter: [false], fixed: [fixed, false], warnings: [] } as any).margin;
+    expect(part(true)).not.toEqual(part(false));
+  });
+});
+
 describe('money of a field and of the farm', () => {
   it('reproduces the worked example: F2, faba bean then winter wheat, season 2006', () => {
     const pre = prepare(ctx);
@@ -62,17 +76,17 @@ describe('money of a field and of the farm', () => {
   });
   it('gives the earlier numbers with both steps off, and the wet-harvest numbers with the field index off (gross margin)', () => {
     const off = habitMoney({ ...ctx, moneySteps: { fieldIndex: false, wetHarvest: false, farmLevel: false } });
-    expect([off.marginMean, off.marginWorstFifth, off.marginWetHarvest]).toEqual([821, 342, 743]);
+    expect([off.marginMean, off.marginWorstFifth, off.marginWetHarvest]).toEqual([801, 330, 726]);
     const wh = habitMoney({ ...ctx, moneySteps: { fieldIndex: false, farmLevel: false } });
-    expect([wh.marginMean, wh.marginWorstFifth, wh.marginWetHarvest]).toEqual([799, 326, 632]);
+    expect([wh.marginMean, wh.marginWorstFifth, wh.marginWetHarvest]).toEqual([779, 314, 615]);
     const both = habitMoney({ ...ctx, moneySteps: { farmLevel: false } });
-    expect([both.marginMean, both.marginWorstFifth, both.marginWetHarvest]).toEqual([838, 350, 666]);
+    expect([both.marginMean, both.marginWorstFifth, both.marginWetHarvest]).toEqual([817, 338, 649]);
   });
   it('takes the farm costs (Lithuanian FADN 2024) and the redistributive payment off every season alike', () => {
     const gross = habitMoney({ ...ctx, moneySteps: { farmLevel: false } }), net = habitMoney(ctx);
     expect(FARM_COSTS_EUR_HA).toBe(491);
     expect(redistributivePerHa(fields.reduce((t, f) => t + f.areaHa, 0))).toBeCloseTo(45.97, 2);
-    expect([net.marginMean, net.marginWorstFifth, net.marginWetHarvest]).toEqual([393, -95, 221]);
+    expect([net.marginMean, net.marginWorstFifth, net.marginWetHarvest]).toEqual([372, -107, 204]);
     gross.marginSeries.forEach((s, i) => expect(Math.abs(net.marginSeries[i].margin - (s.margin - 491 + 45.97))).toBeLessThanOrEqual(1));
   });
 });
