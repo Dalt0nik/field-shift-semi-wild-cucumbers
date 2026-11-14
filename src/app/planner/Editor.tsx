@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react';
 import { cropColor } from '@/components/colors';
 import MiniMap from '@/components/MiniMap';
+import { Band } from '@/components/Soil';
 import { useScreen, useStore } from '@/components/store';
 import { More, Panel, Pill, Select, Sw, Term } from '@/components/ui';
 import { DECISION_YEAR, PLAN_YEARS } from '@/pilot/demo';
@@ -25,7 +26,7 @@ export default function Editor({ onCompare }: { onCompare: () => void }) {
   const [from, setFrom] = useState('usual');
   const f = fields.find(x => x.id === s.field)!;
   const choices = p && sel ? PLAN_YEARS.map((_, i) => yearChoices(s.ws, f.id, sel, i)) : [];
-  useScreen('planner/mine', p ? { plan: p.name, selectedField: f.id, choicesForSelectedField: choices.map(c => ({ year: c.year, locked: c.locked ? c.lockReason : false, chosen: CROPS[c.chosen].name, options: c.items.map(i => ({ crop: CROPS[i.crop].name, status: i.status === 'ok' ? 'fits' : i.status === 'warn' ? 'allowed with a warning' : 'not possible', reasons: i.notes })) })), liveCheck: { margin: p.v.ch.marginMean, badSeasons: p.v.ch.marginWorstFifth, daysWithoutCoverWeightedByErosiveRain: p.v.ch.bareErosive.p50, daysWithoutLivingCover: p.v.ch.bareDays.p50, bareInLeachingSeason: p.v.ch.bareLeaching, humusBalance: p.v.ch.humus, rulesFailed: p.v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => r.title + ' ' + r.year) } } : { state: 'no own plan yet; the screen offers to start from the typical local plan or a suggested variant' });
+  useScreen('planner/mine', p ? { plan: p.name, selectedField: f.id, choicesForSelectedField: choices.map(c => ({ year: c.year, locked: c.locked ? c.lockReason : false, chosen: CROPS[c.chosen].name, options: c.items.map(i => ({ crop: CROPS[i.crop].name, status: i.status === 'ok' ? 'fits' : i.status === 'warn' ? 'allowed with a warning' : 'not possible', reasons: i.notes })) })), liveCheck: { soilHealthScore: p.v.ch.soilScore, margin: p.v.ch.marginMean, badSeasons: p.v.ch.marginWorstFifth, daysWithoutCoverWeightedByErosiveRain: p.v.ch.bareErosive.p50, daysWithoutLivingCover: p.v.ch.bareDays.p50, bareInLeachingSeason: p.v.ch.bareLeaching, humusBalance: p.v.ch.humus, rulesFailed: p.v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => r.title + ' ' + r.year) } } : { state: 'no own plan yet; the screen offers to start from the typical local plan or a suggested variant' });
 
   if (s.busy) return <Panel><p className="muted">Searching for plan variants…</p></Panel>;
   if (!p || !sel) return (
@@ -55,7 +56,7 @@ export default function Editor({ onCompare }: { onCompare: () => void }) {
         <div><span>Farm rules</span><b className={failed.length ? 'bad' : 'ok'}>{failed.length ? 'fails' : 'pass'}</b><small>{failed.length ? failed.join(', ') : 'all checks of both years'}</small></div>
         <div><span><Term id="margin">Margin</Term> in a usual year</span><b>{ch.marginMean} €/ha</b><small>{d(ch.marginMean, base.marginMean, '€/ha')}</small></div>
         <div><span><Term id="worstFifth">Worst year of five</Term></span><b>{ch.marginWorstFifth} €/ha</b><small>{d(ch.marginWorstFifth, base.marginWorstFifth, '€/ha')}</small></div>
-        <div><span><Term id="soilDays">Days of bare soil under heavy rain</Term></span><b>{ch.bareErosive.p50} days</b><small>{d(ch.bareErosive.p50, base.bareErosive.p50, 'days')}</small></div>
+        <div><span><Term id="soilScore">Soil health score</Term></span><b>{ch.soilScore?.total ?? '—'}{ch.soilScore && <Band points={ch.soilScore.total} />}</b><small>{d(ch.soilScore?.total ?? 0, base.soilScore?.total ?? 0, 'points')}</small></div>
         <div><span><Term id="humus">Humus balance</Term></span><b>{ch.humus > 0 ? '+' : ''}{ch.humus} kg C/ha</b><small>{d(ch.humus, base.humus, 'kg')}</small></div>
         <div style={{ alignContent: 'center', gap: 6 }}>{s.chosen?.id === p.id ? <b className="ok">Your chosen plan</b> : <button className="btn pri" onClick={() => s.choose(p.id)}>Choose this plan</button>}<button className="link small" onClick={onCompare}>compare with other plans</button></div>
       </div>

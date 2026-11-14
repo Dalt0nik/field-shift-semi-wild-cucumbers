@@ -231,12 +231,20 @@ table.mini { width: auto; } table.mini td { padding: 2px 18px 2px 0; border: 0; 
   .cols.wide-narrow, .cols.narrow-wide { grid-template-columns: 1fr; }
 }
 
-/* soil protection: the block on the plan cards, the table of the selected plan, the "?" panel */
+/* soil health: the score on the plan cards, the table of the selected plan, the panel of the score */
 .card[role=button] { cursor: pointer; }
 .soil { display: grid; gap: 4px; border-top: 1.5px solid var(--ink); padding-top: 7px; margin-top: 2px; }
 .soil-h { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-family: var(--font-display), sans-serif; font-weight: 700; font-size: 0.9rem; }
 .soil-kpi { font-size: 1.35rem; } .soil-kpi small { color: var(--ink); }
 .soil .stat b { white-space: nowrap; }
+.soil-kpi { display: flex; align-items: baseline; gap: 6px; } .soil-kpi .of { font-family: var(--font-body), sans-serif; font-size: 0.82rem; font-weight: 400; color: var(--muted); }
+/* the band of a soil health score: low, medium, high (cut points 40 and 60) */
+.band { font-style: normal; font-family: var(--font-body), sans-serif; font-size: 0.68rem; font-weight: 700; line-height: 1.5; padding: 0 7px; border-radius: 999px; border: 1px solid currentColor; margin-left: 6px; white-space: nowrap; vertical-align: 2px; background: var(--sheet); }
+.band.is-low { color: var(--dry); } .band.is-medium { color: #8a6a00; background: var(--pale); } .band.is-high { color: var(--field); }
+tr.score-row td { background: #f1f6ee; } tr.score-row:first-child td { border-top: 1.5px solid var(--ink); }
+.bands { display: grid; gap: 4px; margin-top: 8px; } .bands .band { margin: 0 6px 0 0; }
+.sources { display: flex; flex-wrap: wrap; gap: 4px 14px; } .sources a { color: var(--field); text-decoration: underline; text-underline-offset: 2px; }
+.drawer .measure table { font-size: 0.9rem; } .drawer .measure ul { margin: 0; padding-left: 1.2em; font-size: 0.92rem; display: grid; gap: 3px; }
 /* the Best-for-soil card: the soil angle of the project, a clearly green card with the EU flag */
 .card.soil-best { background: #d7ead0; border-color: var(--field); }
 .card.soil-best:hover { border-color: var(--field); }
@@ -258,9 +266,4 @@ table.mini { width: auto; } table.mini td { padding: 2px 18px 2px 0; border: 0; 
 .drawer.wide { width: min(600px, 100vw); }
 .drawer .measure { border-top: 1.5px solid var(--ink); margin-top: 16px; padding-top: 12px; display: grid; gap: 6px; }
 .drawer .measure h3 { font-size: 1.05rem; } .drawer .measure > p { font-size: 0.92rem; }
-.drawer dl.how { margin: 2px 0 0; grid-template-columns: 96px minmax(0, 1fr); gap: 6px 12px; } .drawer dl.how dt { margin: 0; font-weight: 600; } .drawer dl.how dd { margin: 0; font-size: 0.87rem; }
-.drawer dl.how dd:not(dt + dd) { grid-column: 2; }
-.srcs { display: inline; } .srcs a, .srcs > span { color: var(--field); text-decoration: underline; text-underline-offset: 2px; white-space: normal; }
-.st { font-style: normal; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid currentColor; border-radius: 3px; padding: 0 3px; margin: 0 4px 0 4px; vertical-align: 1px; display: inline-block; text-decoration: none; }
-.st.primary { color: var(--field); } .st.abstract { color: var(--soil); } .st.calculation { color: var(--muted); }
 .after { font-size: 0.78rem; color: var(--soil); font-weight: 600; }

@@ -4,7 +4,7 @@ Crop-rotation decision support built on NASA Earth observation data, for the NAS
 
 The application shows what NASA satellites see on the farm (soil cover from HLS, rain from GPM IMERG, temperature from NASA POWER, relief from NASADEM), turns it into numbers per field, and uses those numbers to compare crop plans for the next two harvests. It does not choose for the agronomist: it shows the plans, what differs between them and why.
 
-Its angle is **soil protection, measured and not assumed**: every plan is measured on how long it leaves the soil without living cover, counted by how erosive the rain is at that time of year (NASA HLS × NASA GPM IMERG), and on five more soil measures. One plan is "Best for soil", with its price in days and €/ha. How it is computed: [docs/soil.md](docs/soil.md).
+Its angle is **soil health, measured and not assumed**: every plan gets a soil health score from 0 to 100, the average of three parts that count the same: soil cover (how long the plan leaves the soil bare, counted by how erosive the rain is at that time of year; NASA HLS × NASA GPM IMERG), crop variety and organic matter. One plan is "Best for soil", with its price in points and €/ha. How it is computed: [docs/soil.md](docs/soil.md).
 
 ## How it works
 
@@ -19,7 +19,7 @@ The application follows the agronomist's path in seven stages. Stages 1–5 answ
 | 3 | Slot search | Builds the timeline of each field and finds the free gaps up to the plan horizon | Fields, `src/engine/plan.ts` |
 | 4 | Candidates | Admits a crop to a slot if its sowing window fits, its harvest ends before the next crop, and no field rule forbids it | Crops, `src/engine/plan.ts` |
 | 5 | Plan variants | Searches for combinations across all fields that pass the farm rules | `src/engine/search.ts` |
-| 6 | Variant characteristics | Measures every variant the same way: money over past seasons with each field's index from HLS and the wet-harvest loss from IMERG ([docs/money.md](docs/money.md)); soil protection in six measures from HLS cover and IMERG rain ([docs/soil.md](docs/soil.md)); dry seasons from IMERG and POWER; rotation | Fields, Analytics, `src/engine/characteristics.ts` |
+| 6 | Variant characteristics | Measures every variant the same way: money over past seasons with each field's index from HLS and the wet-harvest loss from IMERG ([docs/money.md](docs/money.md)); the soil health score and the measures behind it, from HLS cover and IMERG rain ([docs/soil.md](docs/soil.md)); dry seasons from IMERG and POWER; rotation | Fields, Analytics, `src/engine/characteristics.ts` |
 | 7 | Variants for the agronomist | Shows usual practice (a typical farm of the area, drawn from the field declarations: [docs/usual-practice.md](docs/usual-practice.md)) and the best variant for each measure (highest margin, best in a bad year, best for soil, balanced) and lets the agronomist compare, edit and choose | Planner, Checks |
 
 Principles behind it:
@@ -68,7 +68,7 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 | `src/components/` | Frame, store, map, timeline, charts, 30 m grid, the vocabulary of explained terms (`glossary.ts`), chat, the soil block and its "?" panel (`Soil.tsx`), small building blocks (`ui.tsx`) |
 | `pipeline/` | Scripts that build `src/data` from NASA and Lithuanian sources: [pipeline/README.md](pipeline/README.md) |
 | `tests/` | Unit tests of the engine, the plan editor, the money, the soil measures, the satellite products and the decision day |
-| `docs/` | The framework diagram (`framework.svg` and its PNG); [money.md](docs/money.md): how the engine computes the money of a plan; [soil.md](docs/soil.md): how it measures soil protection; [usual-practice.md](docs/usual-practice.md): how usual practice is drawn from what farms around the pilot sow |
+| `docs/` | The framework diagram (`framework.svg` and its PNG); [money.md](docs/money.md): how the engine computes the money of a plan; [soil.md](docs/soil.md): the soil measures and the soil health score; [usual-practice.md](docs/usual-practice.md): how usual practice is drawn from what farms around the pilot sow |
 | `scripts/shots.mjs`, `scripts/check-day.mjs` | Screenshots of every state and the fit report (`screenshots/`, not committed); the app on another decision day |
 
 ## Screens
@@ -78,7 +78,7 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 | Farm | Map | Declared fields around the farm, the farm's fields, the official rule areas |
 | Farm | Fields | The previous season on each field: its crop (pre-filled from the paying agency’s crop monitoring, editable), whether it is harvested on the decision day and when the field is free for the next crop, and, once sowing has started, what is already sown; a satellite hint from before that day; field timelines with sowing and harvest windows and free slots |
 | Farm | Crops | Crops the farm can grow, catch crops, limits |
-| Plan | Planner | Suggested plans with the soil-protection block and its "?" panel (`?help=soil`), comparison, the agronomist's own plan, "Choose this plan" and the sowing list |
+| Plan | Planner | Suggested plans with the soil health score and the panel that explains it (`?help=soil`), comparison, the agronomist's own plan, "Choose this plan" and the sowing list |
 | Plan | Analytics | The selected plan's risks and the data behind every number: when fields are bare (HLS), when rain is erosive and when water drains through the soil (IMERG, POWER); which months are risky; risk zones; the method behind each number. It comes after the Planner because most of its views look at the selected plan |
 | Plan | Checks | The farm rules applied to a plan |
 

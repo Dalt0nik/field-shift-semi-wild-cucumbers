@@ -25,8 +25,9 @@
 
 ## Soil numbers
 
-- Every soil number has a definition, data and a source with its status in `src/pilot/soil.ts` and in the "?" panel (`src/components/Soil.tsx`); the specification is [docs/soil.md](docs/soil.md). A number from a publication appears in the app only after the publication was read in the original.
-- No composite soil score, no weights between the measures, no tonnes per hectare. Do not write "erosion rate" for the app's own measure, "compliant with the Soil Monitoring Law", "sustainability score" or "first in the world".
+- Every soil number has a definition, data and a source with its status in `src/pilot/soil.ts`; the panel of the score (`src/components/Soil.tsx`) explains it in plain words and links its sources; the specification is [docs/soil.md](docs/soil.md). A number from a publication appears in the app only after the publication was read in the original.
+- One soil health score per plan, 0–100, bigger is better (`src/engine/soil-score.ts`, [docs/soil.md](docs/soil.md) section 6): three aspects with equal weights, each scaled from the weakest tenth of local farms to the best plan found. The weights stay equal and stated: no source sets them. Its parts and the measures behind them stay visible next to it. It compares plans; never present it as a measurement of the soil.
+- No tonnes per hectare. Do not write "erosion rate" for the app's own measure, "compliant with the Soil Monitoring Law", "sustainability score" or "first in the world". Do not quote "2 t/ha" as an EU erosion limit: the adopted directive leaves that value to Member States.
 
 ## Interface
 

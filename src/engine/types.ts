@@ -73,7 +73,13 @@ export interface RuleResult { id: string; title: string; year: number; ok: boole
 
 export interface Range { p25: number; p50: number; p75: number }
 
+/** The soil health score of a plan and its three aspects, whole points 0-100 (src/engine/soil-score.ts). */
+export interface SoilScore { total: number; cover: number; variety: number; organic: number }
+
 export interface Characteristics {
+  /** the soil health score; set where the scale of the set-up is known (by the search, and by the store for the
+   *  agronomist's own plans) */
+  soilScore?: SoilScore;
   /** EUR/ha per year, over replayed seasons */
   marginMean: number;
   marginP10: number;

@@ -1,6 +1,6 @@
 'use client';
-// Planner, second tab: any plans side by side on the same characteristics. There is no weighted score: the best
-// value of each row is marked and the columns can be ordered by any one characteristic.
+// Planner, second tab: any plans side by side on the same characteristics. The plans are not ranked: the best value
+// of each row is marked and the columns can be ordered by any one characteristic.
 import { useMemo, useState } from 'react';
 import { Scatter } from '@/components/Charts';
 import { SoilHelpButton } from '@/components/Soil';
@@ -16,6 +16,7 @@ const ROWS: RowDef[] = [
   { key: 'mean', label: <><Term id="margin">Margin</Term> in a usual year</>, text: 'Margin in a usual year', unit: '€/ha', get: c => c.marginMean, better: 1 },
   { key: 'worst', label: <>Margin in the <Term id="worstFifth">worst year of five</Term></>, text: 'Margin in the worst year of five', unit: '€/ha', get: c => c.marginWorstFifth, better: 1 },
   { key: 'dry', label: <>Margin in a <Term id="drySeason">dry year</Term></>, text: 'Margin in a dry year', unit: '€/ha · NASA IMERG, POWER', get: c => c.marginDry, better: 1 },
+  { key: 'score', label: <Term id="soilScore">Soil health score</Term>, text: 'Soil health score', unit: 'points of 100', get: c => c.soilScore?.total ?? null, better: 1 },
   { key: 'soil', label: <Term id="soilDays">Days of bare soil under heavy rain</Term>, text: 'Days of bare soil under heavy rain', unit: 'a year · NASA HLS × IMERG', get: c => c.bareErosive.p50, better: -1 },
   { key: 'bare', label: <Term id="bareDays">Days without green cover</Term>, text: 'Days without green cover', unit: 'a year · NASA HLS', get: c => c.bareDays.p50, better: -1 },
   { key: 'leach', label: <>Bare soil in the <Term id="leaching">leaching season</Term></>, text: 'Bare soil in the leaching season', unit: 'days · NASA HLS × IMERG', get: c => c.bareLeaching, better: -1 },
@@ -51,7 +52,7 @@ export default function Compare() {
 
   return (
     <>
-      <p className="lead">The same measures for every plan, money first, then soil protection <SoilHelpButton />. There is no overall score on purpose: the best value in each row is underlined, and a click on a row orders the plans by it.</p>
+      <p className="lead">The same measures for every plan, money first, then soil health <SoilHelpButton />. The plans are not ranked: the best value in each row is underlined, and a click on a row orders the plans by it.</p>
       <Panel>
         <div className="scroll-x">
           <table>
@@ -90,10 +91,10 @@ export default function Compare() {
               <tbody>{diff.map(d => <tr key={d.fieldId} className={`click${s.field === d.fieldId ? ' sel' : ''}`} onClick={() => s.setField(d.fieldId)}><td><b>{d.fieldId}</b></td><td>{d.b}<div className="muted small">instead of {d.a}</div></td><td>{d.reason}</td></tr>)}</tbody>
             </table></div>)}
         </Panel>
-        <Panel title={<>The price of <Term id="soilProtection">soil protection</Term></>} sub="every plan is a dot">
-          <Scatter dots={s.plans.map(x => ({ id: x.id, x: x.v.ch.bareErosive.p50, y: x.v.ch.marginMean, kind: x.kind === 'front' ? 'variant' : x.kind, label: `${x.name}: ${x.v.ch.marginMean} €/ha, ${x.v.ch.bareErosive.p50} days of bare soil under heavy rain` }))} xLabel="days of bare soil under heavy rain, a year" yLabel="margin, €/ha" selected={s.planId} onSelect={s.setPlanId} />
+        <Panel title={<>The price of <Term id="soilScore">soil health</Term></>} sub="every plan is a dot">
+          <Scatter dots={s.plans.map(x => ({ id: x.id, x: x.v.ch.soilScore?.total ?? 0, y: x.v.ch.marginMean, kind: x.kind === 'front' ? 'variant' : x.kind, label: `${x.name}: ${x.v.ch.marginMean} €/ha, soil health score ${x.v.ch.soilScore?.total ?? '—'}` }))} xLabel="soil health score" yLabel="margin, €/ha" selected={s.planId} onSelect={s.setPlanId} />
           <div className="legend"><span><Sw c="#2f6b3c" />best for one measure</span><span><Sw c="#8fb39a" />other plans</span><span><Sw c="#17231c" />the typical local plan</span><span><Sw c="#a8497a" />your plans</span></div>
-          <p className="note" style={{ marginTop: 6 }}>Left is better for the soil, up earns more. The dots on the upper left edge show what each day of cover costs: the first days are cheap, the last ones are not. One plan’s own spread between years is about {s.plan ? s.plan.v.ch.bareErosive.p75 - s.plan.v.ch.bareErosive.p25 : 35} days, so a difference of a day or two does not matter.</p>
+          <p className="note" style={{ marginTop: 6 }}>Right is better for the soil, up earns more. The dots on the upper right edge show what soil health costs: the first points are cheap, the last ones are not. A few points of difference mean nothing.</p>
         </Panel>
       </div>
     </>

@@ -5,8 +5,8 @@ How the engine measures what a crop plan does for the soil, how one plan becomes
 ## 1. Idea
 
 - **Measured, not assumed.** The farm rules count what is declared. NASA HLS measures what covers the soil, NASA GPM IMERG measures when rain is erosive. Every plan is measured before sowing.
-- **Three of the four soil-health principles** (cover, living roots, diversity; USDA NRCS). The fourth, disturbance by tillage, cannot be seen from space or from a crop plan, and the app says so.
-- **No overall score and no weights.** Six measures, each in its own unit. The search uses one of them as an axis.
+- **A European frame.** The EU Soil Monitoring Law (Directive (EU) 2025/2360) assesses soil health by aspect of soil degradation. A crop plan changes two that we measure: erosion (its Annex II asks erosion estimates to consider rainfall erosivity, vegetation cover, crop type and cover crops) and loss of organic carbon. FAO's Conservation Agriculture principles add soil cover and species diversification. Disturbance by tillage cannot be seen from space or from a crop plan, and the app says so.
+- **One soil health score, with its parts visible** (section 6). Since 15 Nov 2026 the cards show one number, 0–100, bigger is better, in place of four separate soil numbers. It is the equal-weight average of three aspects. The six measures of section 2 stay in the table of the selected plan and in Compare.
 - **None of them is an erosion rate, a leached amount or measured carbon.** They compare plans on the part that the crop plan decides.
 
 ## 2. The measures
@@ -79,11 +79,35 @@ From the advisory worksheet of LfL Bayern (Stand 11/2014), which prints the coef
 
 Classes for conventional farming: below −200 very low, to −76 low, −75 to +100 balanced, to +300 high, above very high. The straw switch (`strawLeft`) is in the soil table of the Planner.
 
-## 6. Best for soil — `bestForSoil(variants)`
+## 6. Soil health score and Best for soil — `src/engine/soil-score.ts`
 
-Among the non-dominated plans that pass the farm rules: the lowest S1e; ties (on the rounded day) go to the lower S2, then to less cereal after cereal, then to the higher margin. The card shows the price against usual practice and against the highest-margin plan, in days and €/ha.
+Decided by the owner on 14–15 Nov 2026; the research behind it is `research/characteristics/soil-protection/soil-score.md` and the brief `proposals/soil-health-score.md` of the team repository.
 
-Cards of the Planner: Usual practice · Highest margin · Best in a bad year · Best for soil · Balanced. Cereal after cereal stays a search axis (`AXES`) and is shown in the soil block.
+| Step | Rule | Why |
+|---|---|---|
+| Aspects | **Cover**: S1e, days of bare soil under heavy rain. **Variety**: cereal after cereal and crop groups per year (S3), half each. **Organic matter**: S6, humus balance | One measure per aspect, so that bare soil is not counted three times (S1, S2 and S5 repeat S1e; S4 is an unvalidated proxy and 0 ha on the pilot) |
+| Scale of each measure | 0 = the weakest tenth of the local farms (`SOIL_ZERO_SHARE`; the statistical farms behind the typical local plan, [usual-practice.md](usual-practice.md)); 100 = the best value among the plans found, the typical plan included. Linear in between, cut at 0 and 100 (`soilScale`) | Cornell's soil health test scores each indicator against a reference set of soils; here the reference set is what farms around actually sow. The typical plan gets a real score, not 0 |
+| Weights | Equal for the three aspects (`SOIL_WEIGHTS`) | No source sets weights between soil measures (JRC, *Tools for Composite Indicators Building*, 2005: "No agreed methodology exists to weight individual indicators"; equal weights are the default "when there are no statistical or empirical grounds for choosing a different scheme"). Cornell's overall score is "the unweighted average of all individual indicator scores" |
+| Score | Whole points; the total is the rounded mean of the unrounded aspects (`soilScore`) | |
+| Bands | Below 40 low, 40 to 60 medium, from 60 high (`soilBand`) | The cut points of the Cornell report (its five colours folded into three). On this scale "high" means close to the best plan found, "low" means like the weakest local farms |
+| Best for soil | The highest score; plans within 3 points of the top (`SOIL_TIE_POINTS`) count as equal and the highest margin among them wins (`bestForSoil`) | A point or two is less than the measures can tell apart: one plan's own bare-soil days spread by about 35 between years |
+
+- The score is attached to the characteristics by the search (`ch.soilScore`) and, for the agronomist's own plans, by the store with the scale of the search (`SearchResult.soilScale`).
+- **Robustness.** `tests/soil.test.ts` checks that with any aspect counted double or half the Best-for-soil plan stays within 5 points of the top.
+- **Limits.** The weights are a stated judgement. The scale is relative to this farm, this decision day and this crop set: it compares plans and is not a measurement of the soil. Humus is an accounting, cover is measured. Tillage is not in it. The search does not push for humus directly: its soil axis is still S1e (`AXES`), so the best score is the best among the plans the search keeps.
+- **Before the score** Best for soil was the plan with the fewest S1e days (`fewestBareSoil`); the check of the rain weighting (`pipeline/92_soil_sensitivity.ts`, `src/data/soil-check.json`) still follows that plan.
+
+Reference values, 1 August 2026 (`npx tsx pipeline/90_engine_check.ts` prints the plans; the scale: cover 160 → 139 days, cereal after cereal 51 % → 0, crop groups 3 → 4, humus −66 → +70 kg C/ha):
+
+| Plan | Score | Cover | Variety | Organic matter | Margin, €/ha |
+|---|---|---|---|---|---|
+| Typical local plan | 26 (low) | 19 | 39 | 21 | 307 |
+| Highest margin · Best in a bad year | 82 (high) | 57 | 100 | 88 | 430 |
+| Balanced | 93 (high) | 86 | 100 | 93 | 419 |
+| Best for soil | 97 (high) | 90 | 100 | 100 | 392 |
+| Fewest bare-soil days (Best for soil before the score) | 94 (high) | 100 | 95 | 86 | 327 |
+
+Cards of the Planner: Typical local plan · Highest margin · Best in a bad year · Best for soil · Balanced (cards of the same plan are merged). Cereal after cereal stays a search axis (`AXES`).
 
 ## 7. Catch crop before the first plan year
 
@@ -98,20 +122,21 @@ Decision day 1 August 2026, default crop set (`pipeline/90_engine_check.ts`, `pi
 | Usual practice (typical statistical farm, [usual-practice.md](usual-practice.md)) | 307 | 156 | 185 | 101 | −38 | 36 % |
 | Highest margin | 430 | 148 | 171 | 88 | +54 | 0 % |
 | Best in a bad year (the same plan) | 430 | 148 | 171 | 88 | +54 | 0 % |
-| Best for soil | 327 | 139 | 161 | 76 | +51 | 5 % |
+| Best for soil (highest soil health score, section 6) | 392 | 141 | 164 | 81 | +70 | 0 % |
+| Fewest bare-soil days (Best for soil before the score) | 327 | 139 | 161 | 76 | +51 | 5 % |
 | Balanced | 419 | 142 | 166 | 85 | +61 | 0 % |
 
-- Usual practice was the hand-written wheat and rapeseed habit until 14 November 2026: 984 €/ha, S1e 151, S1 171, S5 91, S6 −29, 23 %. It is now the typical farm drawn from the declarations around the pilot. Against it, Best for soil keeps 17 fewer erosion-weighted days at +20 €/ha. Margins are farm net income ([money.md](money.md), section 7a).
+- Usual practice was the hand-written wheat and rapeseed habit until 14 November 2026: 984 €/ha, S1e 151, S1 171, S5 91, S6 −29, 23 %. It is now the typical farm drawn from the declarations around the pilot. Against it, Best for soil has 15 fewer erosion-weighted days and 71 more points of the soil health score at +85 €/ha; the plan with the fewest bare-soil days has 17 fewer days at +20 €/ha. Margins are farm net income ([money.md](money.md), section 7a).
 - Exact lower bound of S1e (the best option of every field, rules ignored): 138.5. The search finds 139.
-- Price of soil protection along the non-dominated set (highest margin at each S1e): 148 → 430, 146 → 429, 145 → 428, 144 → 421, 142 → 419, 141 → 392, 140 → 369, 139 → 329 (the Best-for-soil card at 139 days: 327, the tie broken on erosion-sensitive land).
+- Price of soil protection along the non-dominated set (highest margin at each S1e): 148 → 430, 146 → 429, 145 → 428, 144 → 421, 142 → 419, 141 → 392, 140 → 369, 139 → 329 (the plan with the fewest bare-soil days by the old tie rule, on erosion-sensitive land: 327). The Best-for-soil card is the plan at 141 days and 392 €/ha.
 - Erosivity at the farm: June–August 54 % of the year, December–February 13 %, the half-months without clear satellite views (16 Nov – 31 Jan) 8 %; 264 storms, the 15 largest carry 31 %.
 - By sequence, S1e: cereal then winter cereal 164, cereal then winter rapeseed 145, cereal then spring crop 184 (174 after a green autumn), grass 105.
-- Sensitivity: with the six other sets of shares the plan shown as Best for soil stays first of 16 plans in four, second in one (`stormsSmoothed`) and third in one (`dailyWarm2`).
+- Sensitivity: with the six other sets of shares the plan with the fewest bare-soil days stays first of 16 plans in four, second in one (`stormsSmoothed`) and third in one (`dailyWarm2`).
 - S4 is 0 ha for every plan of the default crop set: only sugar beet and grain maize have typically wet windows.
 
 ## 9. Sources
 
-Listed with their status in `SOIL_SOURCES` (`src/pilot/soil.ts`) and shown in the "?" panel. Status: primary = read in the original; abstract = only the abstract or the publisher's summary was read, so no number is quoted from it; calculation = ours. Read in the original: Directive (EU) 2025/2360; the USDA NRCS guide chapter on the RUSLE cover-management factor; the ESDAC page on monthly erosivity; Thapa, Mirsky & Tully 2018; the LfL worksheet.
+Listed with their status in `SOIL_SOURCES` (`src/pilot/soil.ts`). The panel of the score shows a short list of them as links (the EU Soil Monitoring Law, FAO Conservation Agriculture, NASA HLS, NASA GPM IMERG, RUSLE, the humus balance method, the JRC guide on composite indicators, the Cornell soil health test); the adopted wording of the directive and the JRC and Cornell texts were read for the score on 14 Nov 2026 (research file `soil-score.md` of the team repository). Status: primary = read in the original; abstract = only the abstract or the publisher's summary was read, so no number is quoted from it; calculation = ours. Read in the original: Directive (EU) 2025/2360; the USDA NRCS guide chapter on the RUSLE cover-management factor; the ESDAC page on monthly erosivity; Thapa, Mirsky & Tully 2018; the LfL worksheet.
 
 ## 10. Updating
 

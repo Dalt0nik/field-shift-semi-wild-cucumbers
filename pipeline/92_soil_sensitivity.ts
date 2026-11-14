@@ -1,9 +1,11 @@
 // How much does the soil headline (S1e, erosion-weighted days without cover) depend on how the erosivity shares are
 // computed? For every set of shares in src/data/soil-climate.json the search is run again and compared with the base:
-// does the Best-for-soil plan stay the same, where does the base plan rank, and is the order of the plans kept.
+// does the plan with the fewest such days stay the same, where does the base plan rank, and is the order of the plans
+// kept. (That plan was "Best for soil" until the soil health score; the score's own check, against other weights of its
+// three aspects, is in tests/soil.test.ts.)
 // Also prints the price of soil protection along the non-dominated set (highest margin at each S1e value).
-// With no argument it also writes src/data/soil-check.json: the numbers the "?" panel of the soil block quotes
-// under "what we checked". tests/soil.test.ts fails when that file no longer matches the demo set-up.
+// With no argument it also writes src/data/soil-check.json: the numbers the Method tab of Analytics and the assistant
+// quote. tests/soil.test.ts fails when that file no longer matches the demo set-up.
 // Usage: npx tsx pipeline/92_soil_sensitivity.ts [decision day]
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,6 +14,7 @@ import { workspace } from '../src/engine/editor.ts';
 import { characteristics, optionPart, prepare } from '../src/engine/characteristics.ts';
 import { optionKey } from '../src/engine/plan.ts';
 import { search } from '../src/engine/search.ts';
+import { fewestBareSoil } from '../src/engine/soil-score.ts';
 import { DECISION_DATE, fields, makeContext, makeSetup } from '../src/pilot/demo.ts';
 import { soilClimate } from '../src/pilot/soil.ts';
 import { spearman } from './lib/stats.ts';
@@ -20,15 +23,15 @@ const date = process.argv[2] ?? DECISION_DATE;
 const setup = makeSetup({ decisionDate: date });
 const ctxOf = (erosivity?: string) => makeContext(setup, { erosivity });
 const base = search(ctxOf());
-const soilBest = (r: typeof base) => r.variants.find(v => v.tags.includes('best: soil'))!;
+const soilBest = (r: typeof base) => fewestBareSoil(r.variants);
 const sig = (v: { options: any[] }) => v.options.map(optionKey).join(' / ');
 const b0 = soilBest(base);
-console.log(`decision day ${date}; base shares "${soilClimate.erosivity.base}"; non-dominated ${base.variants.length}; best for soil S1e ${b0.ch.bareErosive.p50}, margin ${b0.ch.marginMean}; usual practice S1e ${base.baseline.ch.bareErosive.p50}, margin ${base.baseline.ch.marginMean}`);
+console.log(`decision day ${date}; base shares "${soilClimate.erosivity.base}"; non-dominated ${base.variants.length}; fewest bare-soil days: S1e ${b0.ch.bareErosive.p50}, margin ${b0.ch.marginMean}; usual practice S1e ${base.baseline.ch.bareErosive.p50}, margin ${base.baseline.ch.marginMean}`);
 
 const ws = workspace(ctxOf());
 const bound = ws.fields.reduce((t, fc) => t + Math.min(...fc.parts.map(p => p.bareErosive[1])), 0) / ws.totalHa;
 const check: any = { decisionDate: date, cropSet: setup.cropSet, base: soilClimate.erosivity.base, plans: base.variants.length + 1,
-  bestForSoil: { s1e: b0.ch.bareErosive.p50, margin: b0.ch.marginMean }, usual: { s1e: base.baseline.ch.bareErosive.p50, margin: base.baseline.ch.marginMean },
+  fewestBareSoil: { s1e: b0.ch.bareErosive.p50, margin: b0.ch.marginMean }, usual: { s1e: base.baseline.ch.bareErosive.p50, margin: base.baseline.ch.marginMean },
   lowerBound: +bound.toFixed(1), frontier: [] as any[], variants: [] as any[] };
 console.log('\nprice of soil protection (non-dominated plans, the highest margin at each S1e):');
 const byS = new Map<number, typeof b0>();

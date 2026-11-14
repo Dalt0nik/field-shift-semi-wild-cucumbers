@@ -15,7 +15,7 @@
  ],
  "base": "storms",
  "plans": 16,
- "bestForSoil": {
+ "fewestBareSoil": {
   "s1e": 139,
   "margin": 327
  },

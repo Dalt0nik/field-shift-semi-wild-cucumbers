@@ -1,77 +1,87 @@
 'use client';
-// Soil protection in the interface: the block on every plan card, the table of all six measures for the selected
-// plan, the chart that shows how the headline is calculated, and the "?" panel that explains every number with its
-// source. No overall score and no weights: six measures, each in its own unit.
+// Soil in the interface: the soil health score on every plan card, the table of the score and the measures behind it
+// for the selected plan, the charts of bare soil against erosive rain (Analytics), and the panel that explains in
+// plain words how the score is counted, with its sources.
 import { coverDays } from '@/engine/characteristics';
+import { SOIL_TIE_POINTS, soilBand, type SoilBand } from '@/engine/soil-score';
 import type { Characteristics } from '@/engine/types';
 import soilCheckJson from '@/data/soil-check.json';
-import { DECISION_DATE, PLAN_YEARS, coverModel, niceDate } from '@/pilot/demo';
-import { CROPS } from '@/pilot/regional';
-import { HUMUS_BYPRODUCT, HUMUS_CATCH_CROP, HUMUS_CROP, SOIL_SOURCES, humusClass, soilClimate, soilParams } from '@/pilot/soil';
-import type { PlanItem } from './store';
+import { PLAN_YEARS, coverModel } from '@/pilot/demo';
+import { SOIL_SOURCES, humusClass, soilClimate, soilParams } from '@/pilot/soil';
+import { farmerTransitions } from '@/pilot/farmers';
+import { useStore, type PlanItem } from './store';
 import { Term, pct, useQueryState } from './ui';
 
-export const soilCheck = soilCheckJson as unknown as { decisionDate: string; base: string; plans: number; bestForSoil: { s1e: number; margin: number }; usual: { s1e: number; margin: number }; lowerBound: number; frontier: { s1e: number; margin: number }[];
+export const soilCheck = soilCheckJson as unknown as { decisionDate: string; base: string; plans: number; fewestBareSoil: { s1e: number; margin: number }; usual: { s1e: number; margin: number }; lowerBound: number; frontier: { s1e: number; margin: number }[];
   variants: { key: string; junToAug: number; decToFeb: number; basePlanRank: number; of: number; rho: number; bestDiffersOnFields: number }[] };
 
 const signed = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(v)}`;
-const E = soilClimate.erosivity, BASE = E.summary[E.base], P0 = soilParams();
-const p100 = (v: number) => Math.round(v * 100);
+const E = soilClimate.erosivity, P0 = soilParams();
 
 /** The "?" control: opens the panel that explains the soil numbers. The open state is in the URL (?help=soil). */
 export function SoilHelpButton({ text, quiet }: { text?: string; quiet?: boolean }) {
   const [, setHelp] = useQueryState<string>('help', '');
   // quiet: the text itself opens the panel, underlined like an explained term (the heading of every plan card)
   return text
-    ? <button type="button" className={quiet ? 'quiet-link' : 'link small'} title={quiet ? 'How the soil numbers are calculated' : undefined} onClick={e => { e.stopPropagation(); setHelp('soil'); }}>{text}</button>
-    : <button type="button" className="help" aria-label="How the soil numbers are calculated" title="How the soil numbers are calculated" onClick={e => { e.stopPropagation(); setHelp('soil'); }}>?</button>;
+    ? <button type="button" className={quiet ? 'quiet-link' : 'link small'} title={quiet ? 'How the score is counted' : undefined} onClick={e => { e.stopPropagation(); setHelp('soil'); }}>{text}</button>
+    : <button type="button" className="help" aria-label="How the soil health score is counted" title="How the soil health score is counted" onClick={e => { e.stopPropagation(); setHelp('soil'); }}>?</button>;
 }
 
-/** Price of a plan's soil protection against another plan: days and euros, nothing weighted. */
+const BAND_LABEL: Record<SoilBand, string> = { low: 'Low', medium: 'Medium', high: 'High' };
+/** The band of a score as a small coloured tag: low (like the weakest farms nearby), medium, high (close to the best plan found). */
+export const Band = ({ points }: { points: number }) => { const b = soilBand(points); return <i className={`band is-${b}`}>{BAND_LABEL[b]}</i>; };
+
+/** Price of a plan's soil health against another plan: points of the score and euros. */
 export function priceOf(p: Characteristics, other: Characteristics): string {
-  return `${signed(p.bareErosive.p50 - other.bareErosive.p50)} days, ${signed(p.marginMean - other.marginMean)} €/ha a year`;
+  return `${signed((p.soilScore?.total ?? 0) - (other.soilScore?.total ?? 0))} points, ${signed(p.marginMean - other.marginMean)} €/ha a year`;
 }
 
-/** Soil block of a plan card: the headline (S1e), the plain days (S1) and the rotation (S3). */
-export function SoilBlock({ c, best }: { c: Characteristics; best: { e: number; d: number; c: number } }) {
-  const mark = (on: boolean) => (on ? 'bestv' : undefined);
+/** Soil block of a plan card: the soil health score with its band, and the points of its three parts. */
+export function SoilBlock({ c, best }: { c: Characteristics; best: number }) {
+  const s = c.soilScore;
+  if (!s) return null;
   return (
     <span className="soil">
-      <span className="soil-h"><SoilHelpButton text="Soil protection" quiet /></span>
-      <span className="kpi soil-kpi"><span className={mark(c.bareErosive.p50 === best.e)}>{c.bareErosive.p50}</span><small><Term id="soilDays">days of bare soil under heavy rain</Term> <i className="src">NASA</i></small></span>
-      <span className="stat"><span><Term id="bareDays">Days without green cover</Term></span><b className={mark(c.bareDays.p50 === best.d)}>{c.bareDays.p50}</b></span>
-      <span className="stat"><span><Term id="cropFamilies">Crop groups</Term>, {PLAN_YEARS.join(' · ')}</span><b>{c.familiesPerYear.join(' · ')}</b></span>
-      <span className="stat"><span><Term id="cerealAfterCereal">Cereal after cereal</Term></span><b className={mark(c.cerealAfterCereal === best.c)}>{pct(c.cerealAfterCereal)}</b></span>
+      <span className="soil-h"><SoilHelpButton text="Soil health score" quiet /></span>
+      <span className="kpi soil-kpi"><span className={s.total === best ? 'bestv' : undefined}>{s.total}</span><span className="of">/ 100</span><Band points={s.total} /></span>
+      <span className="stat"><span><Term id="soilCover">Soil cover</Term> <i className="src">NASA</i></span><b>{s.cover}</b></span>
+      <span className="stat"><span><Term id="cropVariety">Crop variety</Term></span><b>{s.variety}</b></span>
+      <span className="stat"><span><Term id="organicMatter">Organic matter</Term></span><b>{s.organic}</b></span>
     </span>
   );
 }
 
-/** All six soil measures of the selected plan next to the typical local plan. */
-export function SoilTable({ plan, base, top, steepHa, strawLeft, setStrawLeft, cheaper }: { plan: PlanItem; base: PlanItem; top: PlanItem | null; steepHa: number; strawLeft: boolean; setStrawLeft: (b: boolean) => void; cheaper: { s1e: number; margin: number } | null }) {
+/** The soil health score of the selected plan with its three parts, and the measures behind them, next to the typical local plan. */
+export function SoilTable({ plan, base, top, steepHa, strawLeft, setStrawLeft }: { plan: PlanItem; base: PlanItem; top: PlanItem | null; steepHa: number; strawLeft: boolean; setStrawLeft: (b: boolean) => void }) {
   const c = plan.v.ch, b = base.v.ch, isBase = plan.id === base.id;
   const onSteep = (v: number) => (steepHa ? Math.round(v / steepHa) : 0);
-  // label: the name with its explained term, where the vocabulary has one
-  const rows: { name: string; label?: React.ReactNode; unit: string; get: (x: Characteristics) => string; data: React.ReactNode }[] = [
+  const pts = (get: (s: NonNullable<Characteristics['soilScore']>) => number) => (x: Characteristics) => (x.soilScore ? String(get(x.soilScore)) : '—');
+  // label: the name with its explained term, where the vocabulary has one; head: a row of the score itself
+  const rows: { name: string; label?: React.ReactNode; unit: string; get: (x: Characteristics) => string; data: React.ReactNode; head?: boolean }[] = [
+    { name: 'Soil health score', label: <Term id="soilScore">Soil health score</Term>, unit: 'points of 100', get: pts(s => s.total), data: 'the average of the three parts below', head: true },
+    { name: 'Soil cover', label: <Term id="soilCover">Soil cover</Term>, unit: 'points', get: pts(s => s.cover), data: 'from the days of bare soil under heavy rain', head: true },
+    { name: 'Crop variety', label: <Term id="cropVariety">Crop variety</Term>, unit: 'points', get: pts(s => s.variety), data: 'from cereal after cereal and the crop groups', head: true },
+    { name: 'Organic matter', label: <Term id="organicMatter">Organic matter</Term>, unit: 'points', get: pts(s => s.organic), data: 'from the humus balance', head: true },
     { name: 'Days of bare soil under heavy rain', label: <Term id="soilDays">Days of bare soil under heavy rain</Term>, unit: 'a year', get: x => String(x.bareErosive.p50), data: <>NASA <Term id="hls">HLS</Term> × NASA <Term id="imerg">GPM IMERG</Term></> },
-    { name: 'Days without green cover', label: <Term id="bareDays">Days without green cover</Term>, unit: 'a year', get: x => String(x.bareDays.p50), data: 'NASA HLS' },
-    { name: 'The same on erosion-sensitive land', unit: 'weighted days a year', get: x => String(onSteep(x.bareOnSlopes)), data: 'NASA HLS × IMERG, official layer' },
     { name: 'Crop diversity', unit: `crop groups ${PLAN_YEARS.join(' / ')} · legumes · cereal after cereal`, get: x => `${x.familiesPerYear.join(' / ')} · ${pct(x.legumeShare)} · ${pct(x.cerealAfterCereal)}`, data: 'crop plan' },
-    { name: 'Harvest on wet soil', label: <Term id="wetSoilHarvest">Harvest on wet soil</Term>, unit: 'ha a year', get: x => (x.wetHarvestHa ? x.wetHarvestHa.toFixed(1) : '0'), data: <>NASA GPM IMERG, NASA <Term id="power">POWER</Term></> },
-    { name: 'Bare soil in the leaching season', label: <>Bare soil in the <Term id="leaching">leaching season</Term></>, unit: 'days, Sep–Feb', get: x => String(x.bareLeaching), data: 'NASA HLS × IMERG, POWER' },
     { name: 'Humus balance', label: <Term id="humus">Humus balance</Term>, unit: 'kg humus-C per ha a year', get: x => `${signed(x.humus)} · ${humusClass(x.humus)}`, data: <label className="chk small" style={{ fontSize: 'inherit' }}><input type="checkbox" checked={strawLeft} onChange={e => setStrawLeft(e.target.checked)} />straw left on the field</label> },
+    { name: 'Days without green cover', label: <Term id="bareDays">Days without green cover</Term>, unit: 'a year', get: x => String(x.bareDays.p50), data: 'NASA HLS' },
+    { name: 'Bare soil on erosion-sensitive land', unit: 'weighted days a year', get: x => String(onSteep(x.bareOnSlopes)), data: 'NASA HLS × IMERG, official layer' },
+    { name: 'Bare soil in the leaching season', label: <>Bare soil in the <Term id="leaching">leaching season</Term></>, unit: 'days, Sep–Feb', get: x => String(x.bareLeaching), data: 'NASA HLS × IMERG, POWER' },
+    { name: 'Harvest on wet soil', label: <Term id="wetSoilHarvest">Harvest on wet soil</Term>, unit: 'ha a year', get: x => (x.wetHarvestHa ? x.wetHarvestHa.toFixed(1) : '0'), data: <>NASA GPM IMERG, NASA <Term id="power">POWER</Term></> },
   ];
   return (
     <div className="soilbox">
-      <div className="row" style={{ justifyContent: 'space-between' }}><h3>Soil protection of this plan</h3><SoilHelpButton text="How these numbers are calculated, and their sources" /></div>
+      <div className="row" style={{ justifyContent: 'space-between' }}><h3>Soil health of this plan{c.soilScore && <Band points={c.soilScore.total} />}</h3><SoilHelpButton text="How the score is counted, and its sources" /></div>
       <div className="scroll-x">
         <table>
           <thead><tr><th>Measure</th><th className="n">{isBase ? 'Typical local plan' : 'This plan'}</th>{!isBase && <th className="n">Typical local plan</th>}<th>Built from</th></tr></thead>
           <tbody>{rows.map((r, i) => (
-            <tr key={r.name}><td>{i === 0 ? <b>{r.label ?? r.name}</b> : r.label ?? r.name} <small>{r.unit}</small></td><td className="n">{i === 0 ? <b>{r.get(c)}</b> : r.get(c)}</td>{!isBase && <td className="n muted">{r.get(b)}</td>}<td className="small muted">{r.data}</td></tr>))}</tbody>
+            <tr key={r.name} className={r.head ? 'score-row' : undefined}><td>{i === 0 ? <b>{r.label ?? r.name}</b> : r.label ?? r.name} <small>{r.unit}</small></td><td className="n">{r.head ? <b>{r.get(c)}</b> : r.get(c)}</td>{!isBase && <td className="n muted">{r.get(b)}</td>}<td className="small muted">{r.data}</td></tr>))}</tbody>
         </table>
       </div>
-      {!isBase && <p className="small" style={{ marginTop: 8 }}><b>The price.</b> Against the typical local plan: {priceOf(c, b)}.{top && top.id !== plan.id && <> Against the highest-margin plan: {priceOf(c, top.v.ch)}.</>}{cheaper && <> Most of the gain costs less: a plan with {cheaper.s1e} days earns {cheaper.margin} €/ha (see Compare).</>}</p>}
-      <p className="note" style={{ marginTop: 6 }}>Six measures, no overall score. Typical values of two satellite seasons, not a forecast: one plan’s own spread between years is about {c.bareErosive.p75 - c.bareErosive.p25} days. Stubble counts as bare; tillage is not visible from space.</p>
+      {!isBase && <p className="small" style={{ marginTop: 8 }}><b>The price.</b> Against the typical local plan: {priceOf(c, b)}.{top && top.id !== plan.id && <> Against the highest-margin plan: {priceOf(c, top.v.ch)}.</>}</p>}
+      <p className="note" style={{ marginTop: 6 }}>The score compares the plans of this farm: 0 is like the weakest farms nearby, 100 is the best plan found. A few points of difference mean nothing. The last four rows are not in the score. Stubble counts as bare; tillage is not visible from space.</p>
     </div>
   );
 }
@@ -113,75 +123,71 @@ export function ErosivityLegend({ leaching = false }: { leaching?: boolean }) {
   );
 }
 
-const Src = ({ ids }: { ids: string[] }) => <span className="srcs">{ids.map(id => { const s = SOIL_SOURCES[id]; return s.url ? <a key={id} href={s.url} target="_blank" rel="noreferrer" title={`${s.label}${s.note ? ` (${s.note})` : ''}`}>{id === 'ours' ? 'our tests' : s.label.split(',')[0].split(' (')[0]}<i className={`st ${s.status}`}>{s.status}</i></a> : <span key={id} title={s.label}>our tests<i className="st calculation">calculation</i></span>; })}</span>;
-function Measure({ id, name, what, children }: { id: string; name: string; what: string; children: React.ReactNode }) {
-  return <section className="measure" id={`soil-${id}`}><h3>{name}</h3><p>{what}</p><dl className="kv how">{children}</dl></section>;
-}
+/** The sources of the score, in the order of the panel. */
+const SCORE_SOURCES = ['law', 'fao', 'hls', 'imerg', 'rusle', 'lfl', 'jrcci', 'cornell'];
 
-/** The "?" panel. Every number is read from the data files, so it stays right when they are rebuilt. */
+/** The panel behind "Soil health score": how the score is counted, in plain words, with the numbers of the plan on
+ *  screen. The open state is in the URL (?help=soil). Every source is in src/pilot/soil.ts with its status. */
 export function SoilHelp() {
   const [help, setHelp] = useQueryState<string>('help', '');
+  const s = useStore();
   if (help !== 'soil') return null;
-  const m = coverModel.model, seqDays = Object.entries<any>(m).filter(([k]) => !k.includes('autumn')).map(([, v]) => Math.round(coverDays(v.half.mean, P0).s1e));
-  const wet = Object.entries(soilClimate.harvest.crops).filter(([, h]) => h.typicallyWet), dryWin = Object.entries(soilClimate.harvest.crops).filter(([, h]) => !h.typicallyWet).map(([, h]) => h.wetYearsShare);
-  const stay = soilCheck.variants.filter(v => v.basePlanRank === 1).length, worst = Math.max(...soilCheck.variants.map(v => v.basePlanRank));
-  const wheat = CROPS.winter_wheat ? Math.round(57.3 * HUMUS_BYPRODUCT.winter_wheat.ratio * HUMUS_BYPRODUCT.winter_wheat.perDt) : 0;
-  const st = E.storms;
+  const p = s.plan, c = p?.v.ch, sc = c?.soilScore;
   return (
     <>
       <div className="scrim" onClick={() => setHelp('')} />
-      <aside className="drawer wide" aria-label="How the soil numbers are calculated">
-        <div className="row" style={{ justifyContent: 'space-between' }}><h2>Soil protection: how the numbers are calculated</h2><button className="btn sm" onClick={() => setHelp('')}>Close</button></div>
-        <p style={{ marginTop: 10 }}>Soil is best protected when it is covered, has living roots, carries a varied rotation and is disturbed little: the four soil-health principles of <Src ids={['nrcs']} />. Every plan is measured on the first three, from NASA satellite data and the crop plan. The fourth, tillage, cannot be seen from space, so it is not scored. There is <b>no overall soil score and no weights</b>: six measures, each in its own unit. “Best for soil” is the plan with the lowest first measure; ties go to the lower second measure on erosion-sensitive land, then to less cereal after cereal.</p>
+      <aside className="drawer wide" aria-label="How the soil health score is counted">
+        <div className="row" style={{ justifyContent: 'space-between' }}><h2>Soil health score</h2><button className="btn sm" onClick={() => setHelp('')}>Close</button></div>
+        <p style={{ marginTop: 10 }}>The score says how well a crop plan looks after the soil over the two plan years. It runs from 0 to 100, and <b>bigger is better</b>. It compares the plans for this farm. It is not a test of the soil itself.</p>
+        <p className="small bands"><span><Band points={20} /> below 40: like the weakest farms nearby</span><span><Band points={50} /> 40 to 60: in between</span><span><Band points={80} /> 60 and more: close to the best plan found</span></p>
 
-        <Measure id="s1e" name="1 · Days of bare soil under heavy rain" what="How long the soil lies without living plant cover in a year, each half-month counted by its share of the year’s erosive rain. The headline of the soil block.">
-          <dt>Calculation</dt><dd>For each of the 24 half-months from July to June: bare fraction × that half-month’s share of the yearly rainfall erosivity × 365. Summed, averaged over the plan years, weighted by field area. Bare fraction = 1 − green cover; green cover is <Term id="ndvi">NDVI</Term> rescaled between bare soil ({coverModel.ndvi_soil.toFixed(2)}) and full cover ({coverModel.ndvi_full.toFixed(2)}) <Src ids={['fvc']} />.</dd>
-          <dt>Data</dt><dd><b>NASA <Term id="hls">HLS</Term></b> (Landsat + Sentinel-2, 30 m): cover curves of about 1 700 declared Lithuanian fields in the seasons {coverModel.seasons.join(' and ')}, grouped into {Object.keys(m).length} crop sequences. <b>NASA <Term id="imerg">GPM IMERG</Term></b>, half-hourly rain at the farm, {soilClimate.period}: storms of {E.thresholdMm} mm or more, erosivity = storm energy × highest 30-minute intensity; precipitation that IMERG marks as frozen is left out.</dd>
-          <dd><ErosivityChart /><ErosivityLegend /></dd>
-          <dt>What we found</dt><dd>June to August carry <b>{p100(BASE.junToAug)} %</b> of the year’s erosive rain, December to February {p100(BASE.decToFeb)} %. The half-months the satellite cannot see (16 November – 31 January) carry {p100(BASE.blindHalfMonths)} %. By crop sequence the measure runs from {Math.min(...seqDays)} days (grass) to {Math.max(...seqDays)}. Summer rain is {BASE.summerToWinter} times as erosive as winter rain here; the JRC maps give almost 4 times for the EU on average <Src ids={['esdac']} />.</dd>
-          <dt>What we checked</dt><dd>With equal shares the measure equals the plain days without cover (a unit test). The best plan found ({soilCheck.bestForSoil.s1e} days) sits on the exact lower bound of {soilCheck.lowerBound}. With the shares computed {soilCheck.variants.length} other ways (daily rain instead of storms, two other exponents, warm-season rain counted double, snow counted as rain, shares smoothed) the plan shown as Best for soil stays first of {soilCheck.plans} plans in {stay} and is never below place {worst}.</dd>
-          <dt>Limits</dt><dd>It is not an erosion rate in tonnes: it compares plans on the part of erosion that the crop plan decides. Stubble and residues are invisible to the satellite and count as bare. Winter keeps the last autumn state. IMERG underestimates intense rain <Src ids={['fenta']} />, so only shares are used; they rest on {st?.storms ?? '—'} storms, and the 15 largest carry {st ? p100(st.top15Share) : '—'} %. Snowmelt erosion is not represented.</dd>
-          <dt>Why this way</dt><dd>Erosion models weight crop cover by the timing of erosive rain, in 15-day steps <Src ids={['rusle']} />; the JRC computed a cover factor per parcel the same way from Sentinel-2 <Src ids={['jrc']} />. The EU Soil Monitoring Law makes the soil erosion rate a descriptor and asks that its estimates consider vegetation cover and crop type <Src ids={['law']} />. Monitoring asks whether a field was bare; this asks how bare it will be under each plan, before sowing.</dd>
-        </Measure>
+        {p && c && sc && (
+          <section className="measure">
+            <h3>The plan on screen: {p.name}</h3>
+            <table>
+              <thead><tr><th>Part</th><th>What was counted</th><th className="n">Points</th></tr></thead>
+              <tbody>
+                <tr><td>Soil cover</td><td>{c.bareErosive.p50} days of bare soil under heavy rain a year</td><td className="n"><b>{sc.cover}</b></td></tr>
+                <tr><td>Crop variety</td><td>cereal after cereal on {pct(c.cerealAfterCereal)} of the farm; {c.familiesPerYear.join(' and ')} crop groups</td><td className="n"><b>{sc.variety}</b></td></tr>
+                <tr><td>Organic matter</td><td>humus balance {signed(c.humus)} kg per hectare a year</td><td className="n"><b>{sc.organic}</b></td></tr>
+                <tr className="score-row"><td><b>Soil health score</b></td><td>the average of the three</td><td className="n"><b>{sc.total}</b><Band points={sc.total} /></td></tr>
+              </tbody>
+            </table>
+          </section>)}
 
-        <Measure id="s1" name="2 · Days without green cover" what="The same without the rain weighting: every half-month counts the same.">
-          <dt>Data</dt><dd>NASA HLS cover curves, as above <Src ids={['ours']} />. HLS sees green plants only, so “living cover” and “living roots” are one number here.</dd>
-        </Measure>
-
-        <Measure id="s2" name="3 · The same on erosion-sensitive land" what="The weighted days of measure 1 on the parts of fields inside the official erosion-sensitive layer.">
-          <dt>Data</dt><dd>NASA HLS and IMERG as above; the layer of the paying agency (NMA, GAAB 5: slopes above 12 %). Shown on Analytics, Risk zones.</dd>
-          <dt>What we checked</dt><dd>Slope from <Term id="nasadem">NASADEM</Term> was tried and rejected: it agreed with the official layer on 36 % of the cropland it marked steep <Src ids={['ours']} />.</dd>
-        </Measure>
-
-        <Measure id="s3" name="4 · Crop diversity" what="Crop families on the farm in each plan year (cereal, oilseed, legume, row crop, grass), the share of legumes, and the share of area where a cereal follows a cereal.">
-          <dt>Data</dt><dd>The crop plan and the regional crop reference.</dd>
-          <dt>Evidence</dt><dd>A meta-analysis of crop rotations found more soil carbon, nitrogen and microbial biomass when crops were added to a rotation <Src ids={['mcdaniel']} />. A cereal after a cereal lowers the yield of the second one; the margin already counts that.</dd>
-        </Measure>
-
-        <Measure id="s4" name="5 · Harvest on wet soil" what="Hectares a year of crops whose harvest window is typically wet. A warning sign for compaction, not a measurement.">
-          <dt>Calculation</dt><dd>Rain minus <Term id="et">evaporative demand</Term> summed over the crop’s harvest window, for each year {soilClimate.period}; the window is typically wet when the median is above zero.</dd>
-          <dt>Data</dt><dd><b>NASA GPM IMERG</b> rain and <b>NASA <Term id="power">POWER</Term></b> temperature at the farm; harvest windows of the crop reference.</dd>
-          <dt>What we found</dt><dd>Typically wet here: {wet.map(([id, h]) => `${CROPS[id]?.name.toLowerCase() ?? id} (wet in ${p100(h.wetYearsShare)} % of years)`).join(', ')}. Cereal, rapeseed and legume windows were wet in {p100(Math.min(...dryWin))}–{p100(Math.max(...dryWin))} % of years, so they are not counted.</dd>
-          <dt>Limits</dt><dd>Heavy machines on wet soil compact the subsoil <Src ids={['arvidsson']} />, but nothing here measures compaction, and the proxy is not validated.</dd>
-        </Measure>
-
-        <Measure id="s5" name="6 · Bare soil in the leaching season" what="Days without living cover from September to February, counted more heavily when water drains through the soil.">
-          <dt>Calculation</dt><dd>Bare fraction × that half-month’s share of the season’s water surplus × {soilClimate.leaching.days} days. Water surplus = rain above evaporative demand, median of {soilClimate.period}: {soilClimate.leaching.seasonSurplusMm} mm a season, almost all from October on.</dd>
-          <dt>Data</dt><dd>NASA HLS cover curves; NASA GPM IMERG rain and NASA POWER temperature.</dd>
-          <dt>Evidence</dt><dd>Bare draining soil loses nitrate. In a global meta-analysis (238 observations from 28 studies) non-legume cover crops cut nitrate leaching by 56 % on average <Src ids={['thapa']} />.</dd>
-          <dt>Limits</dt><dd>It shows exposure, not kilograms of nitrogen: how much nitrogen each crop leaves behind is not counted.</dd>
-        </Measure>
-
-        <Measure id="s6" name="7 · Humus balance" what="An accounting of the organic matter each crop takes from the soil or gives to it. It compares plans; it does not predict measured soil carbon.">
-          <dt>Calculation</dt><dd>Per field and year: the crop’s coefficient + the straw left on the field + a catch crop, in kg humus-C per hectare. Cereals and rapeseed {HUMUS_CROP.winter_wheat}, grain legumes +{HUMUS_CROP.faba_bean}, sugar beet {HUMUS_CROP.sugar_beet}, grass +{HUMUS_CROP.perennial_grasses}; straw {HUMUS_BYPRODUCT.winter_wheat.perDt} kg per 100 kg (winter wheat at 5.7 t/ha: +{wheat}); a catch crop +{HUMUS_CATCH_CROP}. Between −75 and +100 the worksheet calls a balance “balanced”.</dd>
-          <dt>Data</dt><dd>Coefficients of the German VDLUFA method as printed in the advisory worksheet of LfL Bayern (values for conventional farming) <Src ids={['lfl']} />; yields as in the margin. Straw is assumed left on the field; the switch is in the soil table of the plan.</dd>
-          <dt>Limits</dt><dd>Grass and catch crops are counted at 75 % and 70 % of the worksheet value, because their growth is not known. On 14 Swiss long-term sites humus balances did not predict the measured carbon trend <Src ids={['rainford']} />.</dd>
-        </Measure>
-
-        <section className="measure"><h3>Not measured</h3><p>Tillage, fertiliser balance, pH, measured soil carbon and contamination need farm records or soil samples. A residue index from HLS could not tell stubble from ploughed soil in our test <Src ids={['ours']} />. Erosion in tonnes per hectare needs slope at field scale, which NASADEM does not give.</p></section>
-        <section className="measure"><h3>Sources and how far each was checked</h3>
-          <p className="small muted">primary = read in the original · abstract = only the abstract or the publisher’s summary was read, so no number is quoted from it · calculation = ours. The set-up behind “what we checked”: decision day {niceDate(soilCheck.decisionDate)}{soilCheck.decisionDate !== DECISION_DATE ? ' (computed for another day than the one shown now)' : ''}.</p>
-          <ul className="plain">{Object.values(SOIL_SOURCES).map(s => <li key={s.id}>{s.url ? <a className="link" style={{ fontWeight: 400 }} href={s.url} target="_blank" rel="noreferrer">{s.label}</a> : s.label} <i className={`st ${s.status}`}>{s.status}</i>{s.note ? <span className="muted"> — {s.note}</span> : null}</li>)}</ul>
+        <section className="measure">
+          <h3>1 · Soil cover</h3>
+          <p>Rain washes bare soil away, and heavy summer storms do most of the damage. We count the days in a year when a field has no green plants on it. A bare day in July, when storms are strongest here, counts several times more than a bare day in January. Fewer such days give more points.</p>
+          <p className="src-line">Seen from space: how green each field is (NASA HLS satellite images) and when heavy rain falls here (NASA GPM IMERG).</p>
+        </section>
+        <section className="measure">
+          <h3>2 · Crop variety</h3>
+          <p>Growing the same kind of crop again and again builds up diseases, pests and weeds. Two things are counted, half of the points each: how much of the farm has a cereal right after another cereal (less is better), and how many crop groups the farm grows each year: cereals, oilseeds, legumes, root crops, grass (more is better).</p>
+          <p className="src-line">Read from the crop plan itself.</p>
+        </section>
+        <section className="measure">
+          <h3>3 · Organic matter</h3>
+          <p>Roots, straw and other residues feed the soil. Cereals and rapeseed take more than they give. Legumes, grass, catch crops and straw left on the field give more than they take. The humus balance adds this up for the whole plan. A higher balance gives more points.</p>
+          <p className="src-line">Published values per crop from the German humus balance method (VDLUFA).</p>
+        </section>
+        <section className="measure">
+          <h3>From three parts to one score</h3>
+          <p>Each part gets 0 to 100 points. <b>0</b> is the weakest tenth of farms around here, worked out from what farms within {farmerTransitions.radiusKm} km sow. <b>100</b> is the best plan found for this farm. The score is the plain average of the three parts: each counts the same. No rulebook says which part matters more for the soil, so none gets extra weight.</p>
+          <p><b>Best for soil</b> is the plan with the highest score. When several plans are within {SOIL_TIE_POINTS} points of the top, the one that earns the most is shown: a few points are too small a difference to matter.</p>
+        </section>
+        <section className="measure">
+          <h3>What the score cannot tell</h3>
+          <ul className="plain">
+            <li>It does not measure your soil. No samples were taken: it scores the plan.</li>
+            <li>Ploughing, fertiliser and lime are not in it. They cannot be seen from a crop plan or from space.</li>
+            <li>Stubble and straw on the field count as bare soil, because the satellite sees only green plants.</li>
+            <li>The numbers are typical for the last two seasons, not a forecast for one year.</li>
+          </ul>
+          <p className="small">The table under each plan also shows days without green cover, bare soil on erosion-sensitive land and in the leaching season, and harvest on wet soil. They are not in the score: they repeat soil cover or are rough warning signs.</p>
+        </section>
+        <section className="measure">
+          <h3>Sources</h3>
+          <p className="small sources">{SCORE_SOURCES.map(id => SOIL_SOURCES[id]).map(x => <a key={x.id} href={x.url} target="_blank" rel="noreferrer" title={x.label}>{x.short ?? x.label} ↗</a>)}</p>
         </section>
       </aside>
     </>

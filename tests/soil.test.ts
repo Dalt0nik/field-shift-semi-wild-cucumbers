@@ -1,10 +1,11 @@
-// Soil protection: the six measures (S1e, S1, S2, S3, S4, S5, S6), the Best-for-soil rule, and the grounding rules of
-// its implementation brief (docs/soil.md gives the definitions).
+// Soil: the measures (S1e, S1, S2, S3, S4, S5, S6), the soil health score built from three of them, the Best-for-soil
+// rule, and the grounding rules of the implementation brief (docs/soil.md gives the definitions).
 import { describe, expect, it } from 'vitest';
 import { HALF_MONTHS, characteristics, coverDays, humusOf, optionPart, prepare, type SoilParams } from '@/engine/characteristics';
 import { workspace } from '@/engine/editor';
 import { catchBefore, fieldOptions } from '@/engine/plan';
-import { AXES, bestForSoil, search } from '@/engine/search';
+import { AXES, search } from '@/engine/search';
+import { SOIL_TIE_POINTS, bestForSoil, fewestBareSoil, soilBand, soilScore } from '@/engine/soil-score';
 import type { Characteristics, FieldOption } from '@/engine/types';
 import { DECISION_DATE, coverModel, fields, makeContext, makeSetup } from '@/pilot/demo';
 import soilCheck from '@/data/soil-check.json';
@@ -100,35 +101,80 @@ describe('S2 and S3', () => {
   });
 });
 
+describe('soil health score', () => {
+  const r = search(ctx);
+  const all = [r.baseline, ...r.variants];
+  it('every plan has whole points between 0 and 100, in total and for each aspect', () => {
+    for (const v of all) for (const p of Object.values(v.ch.soilScore!)) { expect(Number.isInteger(p)).toBe(true); expect(p).toBeGreaterThanOrEqual(0); expect(p).toBeLessThanOrEqual(100); }
+  });
+  it('the total is the mean of the three aspects, each counted the same', () => {
+    for (const v of all) { const s = v.ch.soilScore!; expect(Math.abs(s.total - (s.cover + s.variety + s.organic) / 3)).toBeLessThanOrEqual(1); expect(soilScore(v.ch, r.soilScale)).toEqual(s); }
+  });
+  it('0 is the weakest tenth of the local farms and 100 the best plan found', () => {
+    expect(r.soilScale.cover[0]).toBe(r.farmers.axes.bareErosive.p90);
+    expect(r.soilScale.cerealAfterCereal[0]).toBeCloseTo(r.farmers.axes.cerealAfterCereal.p90 / 100, 6);
+    expect(r.soilScale.cover[1]).toBe(Math.min(...all.map(v => v.ch.bareErosive.p50)));
+    expect(r.soilScale.humus[1]).toBe(Math.max(...all.map(v => v.ch.humus)));
+    expect(Math.max(...all.map(v => v.ch.soilScore!.cover))).toBe(100);
+    expect(Math.max(...all.map(v => v.ch.soilScore!.organic))).toBe(100);
+  });
+  it('the typical local plan is not at 0, because some local farms do worse, and every plan found scores higher', () => {
+    expect(r.baseline.ch.soilScore!.total).toBeGreaterThan(0);
+    expect(r.baseline.ch.soilScore!.total).toBeLessThan(Math.min(...r.variants.map(v => v.ch.soilScore!.total)));
+  });
+  it('a plan outside the scale is cut at 0 and at 100', () => {
+    const c = (s1e: number, cac: number, fam: number, humus: number) => ({ bareErosive: { p50: s1e }, cerealAfterCereal: cac, familiesPerYear: [fam, fam], humus }) as unknown as Characteristics;
+    const scale = { cover: [160, 140], cerealAfterCereal: [0.5, 0], cropGroups: [3, 4], humus: [-60, 60] } as typeof r.soilScale;
+    expect(soilScore(c(170, 0.9, 2, -300), scale)).toEqual({ total: 0, cover: 0, variety: 0, organic: 0 });
+    expect(soilScore(c(120, 0, 5, 400), scale)).toEqual({ total: 100, cover: 100, variety: 100, organic: 100 });
+    expect(soilScore(c(150, 0.25, 3.5, 0), scale)).toEqual({ total: 50, cover: 50, variety: 50, organic: 50 });
+  });
+  it('the bands follow the cut points of the Cornell report: below 40 low, 40 to 60 medium, from 60 high', () => {
+    expect([0, 39, 40, 59, 60, 100].map(soilBand)).toEqual(['low', 'low', 'medium', 'medium', 'high', 'high']);
+  });
+});
+
 describe('Best for soil', () => {
   const r = search(ctx);
   const best = r.variants.find(v => v.tags.includes('best: soil'))!;
-  it('is the plan with the lowest S1e among the plans that pass the farm rules', () => {
+  const top = Math.max(...r.variants.map(v => v.ch.soilScore!.total));
+  it('is within a few points of the highest soil health score and has the highest margin among such plans', () => {
     expect(best).toBeTruthy(); expect(best.ch.feasible).toBe(true);
-    expect(best.ch.bareErosive.p50).toBe(Math.min(...r.variants.map(v => v.ch.bareErosive.p50)));
+    expect(best.ch.soilScore!.total).toBeGreaterThanOrEqual(top - SOIL_TIE_POINTS);
+    for (const v of r.variants) if (v.ch.soilScore!.total >= top - SOIL_TIE_POINTS) expect(v.ch.marginMean).toBeLessThanOrEqual(best.ch.marginMean);
   });
-  it('breaks ties by S2, then by cereal after cereal', () => {
-    const c = (s1e: number, s2: number, cac: number, m = 0) => ({ id: `${s1e}-${s2}-${cac}`, ch: { bareErosive: { p50: s1e }, bareOnSlopes: s2, cerealAfterCereal: cac, marginMean: m } as unknown as Characteristics });
-    expect(bestForSoil([c(140, 5, 0), c(139, 9, 0.1), c(139, 8, 0.2), c(139, 8, 0.1)]).id).toBe('139-8-0.1');
+  it('near-ties go to the higher margin, a clear lead does not', () => {
+    const c = (total: number, m: number) => ({ id: total + '-' + m, ch: { soilScore: { total }, marginMean: m, bareErosive: { p50: 0 } } as unknown as Characteristics });
+    expect(bestForSoil([c(98, 300), c(96, 380), c(95, 400), c(90, 430)]).id).toBe('95-400');
+    expect(bestForSoil([c(98, 300), c(94, 430)]).id).toBe('98-300');
   });
-  it('reaches the exact bound: no plan can have fewer erosion-weighted days than the best option of every field', () => {
+  it('does not rest on the weights: with any aspect counted double or half it stays within 5 points of the top', () => {
+    for (const w of [[2, 1, 1], [1, 2, 1], [1, 1, 2], [0.5, 1, 1], [1, 0.5, 1], [1, 1, 0.5], [2, 2, 1], [1, 2, 2], [2, 1, 2]]) {
+      const s = (ch: Characteristics) => soilScore(ch, r.soilScale, { cover: w[0], variety: w[1], organic: w[2] }).total;
+      expect(Math.max(...r.variants.map(v => s(v.ch))) - s(best.ch), 'weights ' + w.join(':')).toBeLessThanOrEqual(5);
+    }
+  });
+  it('the search reaches the exact bound on bare soil: no plan can have fewer erosion-weighted days than the best option of every field', () => {
     const ws = workspace(ctx);
     const bound = sum(ws.fields.map(fc => Math.min(...fc.parts.map(p => p.bareErosive[1])))) / ws.totalHa;
-    expect(best.ch.bareErosive.p50).toBeGreaterThanOrEqual(Math.floor(bound));
-    expect(best.ch.bareErosive.p50 - bound).toBeLessThan(1.5);
+    const fewest = fewestBareSoil(r.variants).ch.bareErosive.p50;
+    expect(fewest).toBeGreaterThanOrEqual(Math.floor(bound));
+    expect(fewest - bound).toBeLessThan(1.5);
   });
-  it('differs from usual practice and from the highest-margin plan, and protects the soil better than both', () => {
-    const top = r.variants.find(v => v.tags.includes('best: margin, usual season'))!;
-    expect(best.id).not.toBe(top.id);
+  it('differs from the typical local plan and from the highest-margin plan, and scores higher than both', () => {
+    const topMargin = r.variants.find(v => v.tags.includes('best: margin, usual season'))!;
+    expect(best.id).not.toBe(topMargin.id);
+    expect(best.ch.soilScore!.total).toBeGreaterThan(r.baseline.ch.soilScore!.total);
+    expect(best.ch.soilScore!.total).toBeGreaterThan(topMargin.ch.soilScore!.total);
     expect(best.ch.bareErosive.p50).toBeLessThan(r.baseline.ch.bareErosive.p50);
-    expect(best.ch.bareErosive.p50).toBeLessThan(top.ch.bareErosive.p50);
-    expect(best.ch.bareLeaching).toBeLessThan(r.baseline.ch.bareLeaching);
+    expect(best.ch.humus).toBeGreaterThan(r.baseline.ch.humus);
   });
-  it('the stored check that the "?" panel quotes (src/data/soil-check.json) belongs to this set-up: rerun pipeline/92_soil_sensitivity.ts otherwise', () => {
+  it('the stored check of the rain weighting (src/data/soil-check.json) belongs to this set-up: rerun pipeline/92_soil_sensitivity.ts otherwise', () => {
+    const fewest = fewestBareSoil(r.variants);
     expect(soilCheck.decisionDate).toBe(DECISION_DATE);
     expect(soilCheck.base).toBe(soilClimate.erosivity.base);
     expect(soilCheck.cropSet).toEqual(ctx.setup.cropSet);
-    expect(soilCheck.bestForSoil).toEqual({ s1e: best.ch.bareErosive.p50, margin: best.ch.marginMean });
+    expect(soilCheck.fewestBareSoil).toEqual({ s1e: fewest.ch.bareErosive.p50, margin: fewest.ch.marginMean });
     expect(soilCheck.usual).toEqual({ s1e: r.baseline.ch.bareErosive.p50, margin: r.baseline.ch.marginMean });
     expect(soilCheck.plans).toBe(r.variants.length + 1);
     expect(soilCheck.variants.map(v => v.key).sort()).toEqual(Object.keys(soilClimate.erosivity.shares).filter(k => k !== soilClimate.erosivity.base).sort());

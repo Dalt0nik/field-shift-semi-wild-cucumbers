@@ -9,7 +9,7 @@ import type { EvaluatedVariant } from './types';
 const TAG_WHY: Record<string, string> = {
   'best: margin, usual season': 'It has the highest margin in a usual season among the admissible variants that were found.',
   'best: margin, bad seasons': 'It keeps the highest margin in the worst fifth of past seasons.',
-  'best: soil': 'It leaves the soil without living cover for the fewest days, counted more heavily in the months when rain is most erosive.',
+  'best: soil': 'It has the highest soil health score among the plans found: soil cover, crop variety and organic matter, each counted the same. Plans within a few points of the top count as equal, and of those it earns the most.',
   'best: cereal after cereal': 'It has the smallest area where a cereal follows a cereal.',
   balanced: 'It is not the best on any one measure, but it is never the worst: its weakest measure is better than the weakest measure of any other plan.',
   'current practice': 'A typical farm of the area: on every field that is still open, crops drawn by how often farms nearby sow them after the same crop in the field declarations, without catch crops. It is shown for comparison, as the challenge asks.',
@@ -27,9 +27,9 @@ export function fiveAnswers(v: EvaluatedVariant, base: EvaluatedVariant, ws: Wor
     : `${v.tags.map(t => TAG_WHY[t]).filter(Boolean).join(' ') || (v.origin === 'agronomist' ? 'This is your own plan; the system only checks and measures it.' : 'One of the variants that no other variant beats on all four comparison characteristics at once.')} It differs from the typical local plan on ${diff.length} of ${v.options.length} fields${moves.length ? ` (${moves.join('; ')}${diff.length > 3 ? '; …' : ''})` : ''}.`;
   const estCrops = [...new Set(v.options.flatMap(o => o.crops))].filter(c => CROPS[c].sowing.status !== 'primary' || CROPS[c].harvest.status !== 'primary').map(c => CROPS[c].name);
   const d = (a: number, b: number) => Math.round(a - b);
-  const benefits = v.id === base.id ? `Familiar crops and machinery. Margin ${v.ch.marginMean} €/ha in a usual season, ${v.ch.bareErosive.p50} erosion-weighted days without cover a year.`
+  const benefits = v.id === base.id ? `Familiar crops and machinery. Margin ${v.ch.marginMean} €/ha in a usual season, soil health score ${v.ch.soilScore?.total ?? '—'} of 100.`
     : [`Usual-season margin ${signed(d(v.ch.marginMean, base.ch.marginMean), '€/ha')} against the typical local plan`, `worst-fifth margin ${signed(d(v.ch.marginWorstFifth, base.ch.marginWorstFifth), '€/ha')}`,
-      `soil without cover ${signed(d(v.ch.bareErosive.p50, base.ch.bareErosive.p50), 'erosion-weighted days a year')}`, `bare soil in the leaching season ${signed(d(v.ch.bareLeaching, base.ch.bareLeaching), 'days')}`,
+      ...(v.ch.soilScore && base.ch.soilScore ? [`soil health score ${v.ch.soilScore.total} of 100 (${signed(v.ch.soilScore.total - base.ch.soilScore.total, 'points')})`] : []), `days of bare soil under heavy rain ${signed(d(v.ch.bareErosive.p50, base.ch.bareErosive.p50), 'a year')}`, `bare soil in the leaching season ${signed(d(v.ch.bareLeaching, base.ch.bareLeaching), 'days')}`,
       `humus balance ${signed(d(v.ch.humus, base.ch.humus), 'kg humus-C per ha')}`, `cereal after cereal ${Math.round(v.ch.cerealAfterCereal * 100)} % of area (the typical local plan ${Math.round(base.ch.cerealAfterCereal * 100)} %)`,
       `payments ${v.ch.paymentsEurHa} €/ha`].join('; ') + '.';
   const dry = v.ch.marginDry !== null && v.ch.marginNormal !== null ? `In dry seasons the margin at normal prices was ${v.ch.marginDry} €/ha against ${v.ch.marginNormal} in ordinary ones (${v.ch.marginDryN} seasons).` : '';

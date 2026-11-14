@@ -1,7 +1,7 @@
 'use client';
 // Planner, first tab: the typical local plan next to the best plan for each characteristic (challenge R2, R3), and the
-// selected plan as a sowing list with its reasons. Every card carries the soil-protection block. No ranking and no
-// weights: the agronomist chooses.
+// selected plan as a sowing list with its reasons. Every card carries the soil health score. The plans are not ranked:
+// the agronomist chooses.
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { SeasonBars } from '@/components/Charts';
@@ -36,7 +36,7 @@ function EuLaw() {
         <span className="eu-pop" role="dialog" aria-label="EU Soil Monitoring Law">
           <span className="eu-box">
             <b>EU Soil Monitoring Law (2025)</b>
-            Every EU country must monitor the health of its soils, erosion included, and its erosion estimate must take into account plant cover and the crops grown. Countries put it into their own law by December 2028. Of all the plans found, this one protects the soil best, judged first on how well it keeps the soil covered.
+            Every EU country must monitor the health of its soils, erosion included, and its erosion estimate must take into account plant cover and the crops grown. Countries put it into their own law by December 2028. Of all the plans found, this one has the highest soil health score.
             <a href="https://eur-lex.europa.eu/eli/dir/2025/2360/oj/eng" target="_blank" rel="noreferrer">Read the directive (EUR-Lex) ↗</a>
           </span>
         </span>)}
@@ -57,21 +57,13 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
   const f = fields.find(x => x.id === s.field)!;
   const opt = p?.v.options.find(o => o.fieldId === f.id);
   const cons = p && opt ? consequences(s.ctx, f, opt) : null;
-  const soilOf = (c: PlanItem) => ({ daysWithoutCoverWeightedByErosiveRain: c.v.ch.bareErosive.p50, daysWithoutLivingCover: c.v.ch.bareDays.p50, bareInLeachingSeason: c.v.ch.bareLeaching, humusBalanceKgCPerHa: c.v.ch.humus, cropFamiliesPerYear: c.v.ch.familiesPerYear, cerealAfterCereal: c.v.ch.cerealAfterCereal, harvestOnWetSoilHa: c.v.ch.wetHarvestHa });
+  const soilOf = (c: PlanItem) => ({ soilHealthScore: c.v.ch.soilScore, daysWithoutCoverWeightedByErosiveRain: c.v.ch.bareErosive.p50, daysWithoutLivingCover: c.v.ch.bareDays.p50, bareInLeachingSeason: c.v.ch.bareLeaching, humusBalanceKgCPerHa: c.v.ch.humus, cropFamiliesPerYear: c.v.ch.familiesPerYear, cerealAfterCereal: c.v.ch.cerealAfterCereal, harvestOnWetSoilHa: c.v.ch.wetHarvestHa });
   useScreen('planner/variants', p && base ? { cardsShown: cards.map(c => ({ name: c.name, marginUsualYear: c.v.ch.marginMean, marginWorstYearOfFive: c.v.ch.marginWorstFifth, soil: soilOf(c), differsFromUsualPracticeOn: changedFields(c, base) })), selected: p.name, chosen: s.chosen?.name ?? 'none yet',
     sowingListOfSelected: p.v.options.map(o => ({ field: o.fieldId, crops: o.crops.map((c, i) => `${PLAN_YEARS[i]} ${catchBefore(o, i) ? 'catch crop, then ' : ''}${CROPS[c].name}${o.fixed[i] ? ' (fixed)' : ''}`) })), why: five?.why, marginBySeason: p.v.ch.marginSeries } : { state: 'searching for plans' });
-  // for the Best-for-soil plan: the plan that keeps at least half of its gain over the typical local plan at the highest margin
-  const cheaper = useMemo(() => {
-    if (!p || !base || !p.v.tags.includes('best: soil') || !s.found) return null;
-    const gain = base.v.ch.bareErosive.p50 - p.v.ch.bareErosive.p50; if (gain < 2) return null;
-    const target = base.v.ch.bareErosive.p50 - Math.ceil(gain / 2);
-    const cand = s.found.variants.filter(v => v.ch.bareErosive.p50 <= target).sort((a, b) => b.ch.marginMean - a.ch.marginMean)[0];
-    return cand && cand.id !== p.id && cand.ch.marginMean > p.v.ch.marginMean + 10 ? { s1e: cand.ch.bareErosive.p50, margin: cand.ch.marginMean } : null;
-  }, [p, base, s.found]);
   if (!p || !base || !five || !opt || !cons) return <Panel><p className="muted">Searching for plans that pass the farm rules…</p></Panel>;
 
   // the best value of each measure among the cards is marked, as in the comparison table
-  const top = { m: Math.max(...cards.map(c => c.v.ch.marginMean)), w: Math.max(...cards.map(c => c.v.ch.marginWorstFifth)), e: Math.min(...cards.map(c => c.v.ch.bareErosive.p50)), d: Math.min(...cards.map(c => c.v.ch.bareDays.p50)), c: Math.min(...cards.map(c => c.v.ch.cerealAfterCereal)) };
+  const top = { m: Math.max(...cards.map(c => c.v.ch.marginMean)), w: Math.max(...cards.map(c => c.v.ch.marginWorstFifth)), s: Math.max(...cards.map(c => c.v.ch.soilScore?.total ?? 0)) };
   const mark = (on: boolean) => (on ? 'bestv' : undefined);
   const ch = p.v.ch, isBase = p.id === base.id;
   const topMargin = s.plans.find(x => x.v.tags.includes('best: margin, usual season')) ?? null;
@@ -85,7 +77,7 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
 
   return (
     <>
-      <p className="lead">Each card is the best plan for one measure. Pick one, then press “Choose this plan”.{sown.length > 0 && <> {sown.length} of {fields.length} fields are already sown for {PLAN_YEARS[0]}.</>}</p>
+      <p className="lead">Each card is the best plan for one goal. Pick one, then press “Choose this plan”.{sown.length > 0 && <> {sown.length} of {fields.length} fields are already sown for {PLAN_YEARS[0]}.</>}</p>
       <div className="row"><YearTabs /><span className="muted small">Only fields sown differently from the typical local plan are coloured; the best value of each measure is underlined.</span></div>
       <div className="cards">
         {cards.map(c => { const changed = changedFields(c, base); const fill = Object.fromEntries(c.v.options.map((o, i) => [o.fieldId, c.kind === 'baseline' || o.crops[s.yearIdx] !== base.v.options[i].crops[s.yearIdx] || catchBefore(o, s.yearIdx) !== catchBefore(base.v.options[i], s.yearIdx) ? cropColor(o.crops[s.yearIdx]) : '#ffffff']));
@@ -98,7 +90,7 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
             <small>{c.kind === 'baseline' ? c.sub : `differs on ${changed.length} fields`}</small>
             <span className="kpi"><span className={mark(c.v.ch.marginMean === top.m)}>{c.v.ch.marginMean}</span><small>€/ha, usual year</small></span>
             <span className="stat"><span><Term id="worstFifth">Worst year of five</Term></span><b className={mark(c.v.ch.marginWorstFifth === top.w)}>{c.v.ch.marginWorstFifth} €/ha</b></span>
-            <SoilBlock c={c.v.ch} best={top} />
+            <SoilBlock c={c.v.ch} best={top.s} />
             {!c.v.ch.feasible && <Pill tone="bad">fails a farm rule</Pill>}
           </div>); })}
       </div>
@@ -118,7 +110,7 @@ export default function Variants({ onEdit }: { onEdit: () => void }) {
         </div>
         {!isBase && <p className="note" style={{ marginTop: 6 }}>Bold: sown differently from the typical local plan.</p>}
         <p style={{ margin: '12px 0 10px', maxWidth: '95ch' }}><b>Why this plan.</b> {five.why.replace(/ \([^)]*\)\.$/, '.')}</p>
-        <SoilTable plan={p} base={base} top={topMargin} steepHa={steepHa} strawLeft={s.strawLeft} setStrawLeft={s.setStrawLeft} cheaper={cheaper} />
+        <SoilTable plan={p} base={base} top={topMargin} steepHa={steepHa} strawLeft={s.strawLeft} setStrawLeft={s.setStrawLeft} />
         <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
           <More label="Evidence, benefits, gaps and risks">
             <p style={{ maxWidth: '95ch' }}><b>NASA data used.</b> <Term id="hls">HLS</Term> satellite images for soil cover and the <Term id="fieldIndex">field index</Term>; <Term id="imerg">GPM IMERG</Term> rain for <Term id="erosivity">erosive rain</Term>, the <Term id="leaching">leaching season</Term> and <Term id="wetHarvest">wet harvests</Term>; <Term id="power">POWER</Term> temperature to tell <Term id="drySeason">dry years</Term> apart.</p>

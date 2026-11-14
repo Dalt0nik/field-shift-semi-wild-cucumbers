@@ -5,6 +5,7 @@
 // non-dominated part of the variants that were evaluated, not a proof that no better variant exists.
 import { characteristics, optionPart, prepare, rulesFor, type Context, type OptionPart, type Prepared } from './characteristics';
 import { baseTimeline, checkCandidate, fieldOptions, lastHistoryCrop, occupancyFor } from './plan';
+import { bestForSoil, soilScale, soilScore, type SoilScale } from './soil-score';
 import { CROPS, crop } from '../pilot/regional';
 import type { Characteristics, CropId, EvaluatedVariant, FieldInfo, FieldOption, Occupancy } from './types';
 
@@ -26,6 +27,8 @@ export interface SearchResult {
   baseline: EvaluatedVariant;
   /** the statistical farms behind the baseline */
   farmers: FarmerBand;
+  /** the 0 and the 100 of the soil health score in this set-up */
+  soilScale: SoilScale;
   evaluated: number;
   combinations: number;
 }
@@ -94,21 +97,18 @@ export function search(ctx: Context, opts: { seed?: number; population?: number;
   const front = all.filter(a => !all.some(b => b !== a && dominates(b.obj, a.obj)));
   const toVariant = (v: Ind, i: number): EvaluatedVariant => ({ id: `V${i + 1}`, options: v.idx.map((k, f) => fieldOpts[f].options[k]), origin: 'search', ch: v.ch, nonDominated: true, tags: [] });
   const variants = front.sort((a, b) => b.ch.marginMean - a.ch.marginMean).map(toVariant);
+  // the soil health score needs the local farms (its zero) and the plans found (its hundred)
+  const { baseline, farmers, farms } = typicalFarm(ctx, pre, fieldOpts, parts);
+  const scale = soilScale(farms, [baseline.ch, ...variants.map(v => v.ch)]);
+  for (const v of [baseline, ...variants]) v.ch.soilScore = soilScore(v.ch, scale);
   for (const a of AXES) { const best = a.key === 'bareErosive' ? bestForSoil(variants) : variants.reduce((x, y) => (a.sign * a.get(y.ch) > a.sign * a.get(x.ch) ? y : x)); best.tags.push(`best: ${a.label.toLowerCase()}`); }
   // "balanced": the variant whose worst normalised axis is the best
   const lo = AXES.map(a => Math.min(...variants.map(v => a.sign * a.get(v.ch)))), hi = AXES.map(a => Math.max(...variants.map(v => a.sign * a.get(v.ch))));
   const score = (v: EvaluatedVariant) => Math.min(...AXES.map((a, i) => (a.sign * a.get(v.ch) - lo[i]) / (hi[i] - lo[i] || 1)));
   variants.reduce((x, y) => (score(y) > score(x) ? y : x)).tags.push('balanced');
-  const { baseline, farmers } = typicalFarm(ctx, pre, fieldOpts, parts);
   baseline.nonDominated = !all.some(b => dominates(b.obj, AXES.map(a => a.sign * a.get(baseline.ch))));
   const combinations = fieldOpts.reduce((t, fo) => t * Math.max(1, fo.options.length), 1);
-  return { pre, fieldOpts, variants, baseline, farmers, evaluated, combinations };
-}
-
-/** Best for soil: the lowest erosion-weighted days without cover (S1e); ties are broken by the same on erosion-sensitive
- *  land (S2), then by cereal after cereal, then by the higher margin. No weights are involved. */
-export function bestForSoil<T extends { ch: Characteristics }>(variants: T[]): T {
-  return [...variants].sort((a, b) => a.ch.bareErosive.p50 - b.ch.bareErosive.p50 || a.ch.bareOnSlopes - b.ch.bareOnSlopes || a.ch.cerealAfterCereal - b.ch.cerealAfterCereal || b.ch.marginMean - a.ch.marginMean)[0];
+  return { pre, fieldOpts, variants, baseline, farmers, soilScale: scale, evaluated, combinations };
 }
 
 /** The statistical farms behind "the typical local plan": how many were kept and how they spread on each comparison axis. */
@@ -138,7 +138,7 @@ export function shareBeaten(band: FarmerBand, key: string, c: Characteristics): 
  *  table (ctx.usual). Farms are drawn field by field, those that pass the farm rules are kept, and the card shows the
  *  typical one: the kept farm nearest to the median on the four comparison axes, each axis scaled by its interquartile
  *  range. Fixed seed, so the same inputs give the same plan. */
-function typicalFarm(ctx: Context, pre: Prepared, fieldOpts: SearchResult['fieldOpts'], parts: OptionPart[][]): { baseline: EvaluatedVariant; farmers: FarmerBand } {
+function typicalFarm(ctx: Context, pre: Prepared, fieldOpts: SearchResult['fieldOpts'], parts: OptionPart[][]): { baseline: EvaluatedVariant; farmers: FarmerBand; farms: Characteristics[] } {
   const m = ctx.usual;
   const classOf = (id: string | null) => (id ? m.classOf[id] ?? 'other' : 'other');
   // p(crop | preceding crop) over the annual crops of the plan's crop set; the rest of the class probability is dropped
@@ -197,7 +197,7 @@ function typicalFarm(ctx: Context, pre: Prepared, fieldOpts: SearchResult['field
     if (d < nearest) { nearest = d; typical = f; }
   }
   const options = typical.idx.map((k, f) => fieldOpts[f].options[k]);
-  return { baseline: { id: 'usual', label: 'Typical local plan', options, origin: 'baseline', ch: typical.ch, tags: ['current practice'] }, farmers: { n: kept.length, drawn, rulesPassed, axes, keptMass } };
+  return { baseline: { id: 'usual', label: 'Typical local plan', options, origin: 'baseline', ch: typical.ch, tags: ['current practice'] }, farmers: { n: kept.length, drawn, rulesPassed, axes, keptMass }, farms: pool.map(f => f.ch) };
 }
 
 export function isDominated(a: Characteristics, others: Characteristics[]): boolean {

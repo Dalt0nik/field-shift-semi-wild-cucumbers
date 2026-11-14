@@ -8,17 +8,18 @@ import { farmerTransitions } from '@/pilot/farmers';
 import { evaluatePlan, selectionOf, workspace, type EvaluatedPlan, type Selection, type Workspace } from '@/engine/editor';
 import type { PlanSetup } from '@/engine/plan';
 import { search } from '@/engine/search';
+import { soilScore, type SoilScale } from '@/engine/soil-score';
 import type { Context } from '@/engine/characteristics';
 import type { CropId, EvaluatedVariant, FieldInfo } from '@/engine/types';
 
 export interface PlanItem { id: string; name: string; sub: string; letter: string; kind: 'baseline' | 'tagged' | 'front' | 'mine'; v: EvaluatedVariant; adjusted?: string[] }
-interface Found { key: string; variants: EvaluatedVariant[]; baseline: EvaluatedVariant; evaluated: number; combinations: number }
+interface Found { key: string; variants: EvaluatedVariant[]; baseline: EvaluatedVariant; soilScale: SoilScale; evaluated: number; combinations: number }
 interface MyPlan { id: string; name: string; sel: Selection; from: string }
 
 const TAGS: [string, string, string][] = [
   ['best: margin, usual season', 'Highest margin', 'highest margin in a usual year'],
   ['best: margin, bad seasons', 'Best in a bad year', 'highest margin in the worst year of five'],
-  ['best: soil', 'Best for soil', 'fewest days without living cover, counted by how erosive the rain is'],
+  ['best: soil', 'Best for soil', 'the highest soil health score'],
   ['balanced', 'Balanced', 'never the worst on any measure'],
 ];
 
@@ -84,10 +85,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         worker.current ??= new Worker(new URL('../engine/search.worker.ts', import.meta.url), { type: 'module' });
         worker.current.onmessage = e => done(e.data as Found);
-        worker.current.onerror = () => { worker.current = null; const r = search(ctx); done({ key, variants: r.variants, baseline: r.baseline, evaluated: r.evaluated, combinations: r.combinations }); };
+        worker.current.onerror = () => { worker.current = null; const r = search(ctx); done({ key, variants: r.variants, baseline: r.baseline, soilScale: r.soilScale, evaluated: r.evaluated, combinations: r.combinations }); };
         worker.current.postMessage({ key, ctx });
       } catch {
-        const r = search(ctx); done({ key, variants: r.variants, baseline: r.baseline, evaluated: r.evaluated, combinations: r.combinations });
+        const r = search(ctx); done({ key, variants: r.variants, baseline: r.baseline, soilScale: r.soilScale, evaluated: r.evaluated, combinations: r.combinations });
       }
     }, 150);
     return () => clearTimeout(t);
@@ -108,7 +109,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       out.push({ id: v.id, name: mine.map(m => m[1]).join(' · '), sub: mine.map(m => m[2]).join('; '), letter: String.fromCharCode(65 + n++), kind: 'tagged', v });
     }
     for (const v of fresh.variants) if (!tagged.has(v.id)) out.push({ id: v.id, name: `Variant ${v.id.slice(1)}`, sub: 'not beaten on all four characteristics at once', letter: '', kind: 'front', v });
-    myPlans.forEach(p => { const e: EvaluatedPlan = evaluatePlan(ws, p.sel, p.id, p.name); out.push({ id: p.id, name: p.name, sub: `your plan, started from ${p.from}`, letter: '★', kind: 'mine', v: e, adjusted: e.adjusted }); });
+    myPlans.forEach(p => { const e: EvaluatedPlan = evaluatePlan(ws, p.sel, p.id, p.name); e.ch.soilScore = soilScore(e.ch, fresh.soilScale); out.push({ id: p.id, name: p.name, sub: `your plan, started from ${p.from}`, letter: '★', kind: 'mine', v: e, adjusted: e.adjusted }); });
     return out;
   }, [fresh, myPlans, ws]);
   const base = plans[0] ?? null;
