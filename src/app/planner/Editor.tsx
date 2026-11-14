@@ -1,6 +1,7 @@
 'use client';
-// Planner, third tab: the agronomist builds their own plan. Every crop is shown with its status and the reason
-// before it is picked; the whole farm is re-checked and re-measured after every change (challenge R6, R8).
+// Planner, third tab: the custom plan, one copy of a plan the agronomist changes field by field. Every crop is shown
+// with its status and the reason before it is picked; the whole farm is re-checked and re-measured after every change
+// (challenge R6, R8). Once saved, the custom plan stands as a card next to the suggested plans and in Compare.
 import { useMemo, useState } from 'react';
 import { cropColor } from '@/components/colors';
 import MiniMap from '@/components/MiniMap';
@@ -16,27 +17,26 @@ import { YearTabs } from './Variants';
 const ICON = { ok: '✓', warn: '!', no: '✕' } as const;
 const TONE = { ok: 'ok', warn: 'warn', no: 'bad' } as const;
 
-export default function Editor({ onCompare }: { onCompare: () => void }) {
+export default function Editor() {
   const s = useStore();
   const fields = s.fields;
-  const mine = s.plans.filter(p => p.kind === 'mine');
-  const p = s.plan?.kind === 'mine' ? s.plan : mine[mine.length - 1] ?? null;
+  const p = s.draft;
   const sel = useMemo(() => (p ? selectionOf(p.v.options) : null), [p]);
   const starters = s.plans.filter(x => x.kind === 'baseline' || x.kind === 'tagged');
   const [from, setFrom] = useState('usual');
   const f = fields.find(x => x.id === s.field)!;
   const choices = p && sel ? PLAN_YEARS.map((_, i) => yearChoices(s.ws, f.id, sel, i)) : [];
-  useScreen('planner/mine', p ? { plan: p.name, selectedField: f.id, choicesForSelectedField: choices.map(c => ({ year: c.year, locked: c.locked ? c.lockReason : false, chosen: CROPS[c.chosen].name, options: c.items.map(i => ({ crop: CROPS[i.crop].name, status: i.status === 'ok' ? 'fits' : i.status === 'warn' ? 'allowed with a warning' : 'not possible', reasons: i.notes })) })), liveCheck: { soilHealthScore: p.v.ch.soilScore, margin: p.v.ch.marginMean, badSeasons: p.v.ch.marginWorstFifth, daysWithoutCoverWeightedByErosiveRain: p.v.ch.bareErosive.p50, daysWithoutLivingCover: p.v.ch.bareDays.p50, bareInLeachingSeason: p.v.ch.bareLeaching, humusBalance: p.v.ch.humus, rulesFailed: p.v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => r.title + ' ' + r.year) } } : { state: 'no own plan yet; the screen offers to start from the typical local plan or a suggested variant' });
+  useScreen('planner/custom', p ? { plan: p.name, saved: s.draftSaved ? 'yes' : s.customSaved ? 'an older version is saved; the changes are not' : 'not saved yet: shown next to the suggested plans only after Save', selectedField: f.id, choicesForSelectedField: choices.map(c => ({ year: c.year, locked: c.locked ? c.lockReason : false, chosen: CROPS[c.chosen].name, options: c.items.map(i => ({ crop: CROPS[i.crop].name, status: i.status === 'ok' ? 'fits' : i.status === 'warn' ? 'allowed with a warning' : 'not possible', reasons: i.notes })) })), liveCheck: { soilHealthScore: p.v.ch.soilScore, margin: p.v.ch.marginMean, badSeasons: p.v.ch.marginWorstFifth, daysWithoutCoverWeightedByErosiveRain: p.v.ch.bareErosive.p50, daysWithoutLivingCover: p.v.ch.bareDays.p50, bareInLeachingSeason: p.v.ch.bareLeaching, humusBalance: p.v.ch.humus, rulesFailed: p.v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => r.title + ' ' + r.year) } } : { state: 'no custom plan yet; the screen offers to start it from the typical local plan or a suggested plan' });
 
   if (s.busy) return <Panel><p className="muted">Searching for plan variants…</p></Panel>;
   if (!p || !sel) return (
-    <Panel title="Build your own plan">
-      <p className="lead">Start from a plan, then change crops field by field. Each crop is checked before you pick it, and your plan is measured exactly like the suggested ones.</p>
-      <div className="row" style={{ marginTop: 12 }}><span className="muted">Start from</span><Select label="Plan to start from" value={starters.some(x => x.id === from) ? from : 'usual'} onChange={setFrom} options={starters.map(x => ({ value: x.id, label: x.name }))} /><button className="btn pri" onClick={() => s.addMyPlan(from)}>Start my plan</button></div>
+    <Panel title="Build a custom plan">
+      <p className="lead">Start from a plan, then change crops field by field. Each crop is checked before you pick it, and the custom plan is measured exactly like the suggested ones. Save it to see it next to them.</p>
+      <div className="row" style={{ marginTop: 12 }}><span className="muted">Start from</span><Select label="Plan to start from" value={starters.some(x => x.id === from) ? from : 'usual'} onChange={setFrom} options={starters.map(x => ({ value: x.id, label: x.name }))} /><button className="btn pri" onClick={() => s.startDraft(from)}>Start the custom plan</button></div>
     </Panel>
   );
 
-  const set = (i: number, crop: string, catchBefore?: boolean) => s.updateMyPlan(p.id, pickCrop(s.ws, sel, f.id, i, crop, catchBefore));
+  const set = (i: number, crop: string, catchBefore?: boolean) => s.updateDraft(pickCrop(s.ws, sel, f.id, i, crop, catchBefore));
   const ch = p.v.ch, base = s.base!.v.ch;
   const failed = [...new Set(ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => (r.title.split(' — ')[1] ?? r.title) + ' ' + r.year))];
   const d = (a: number, b: number, unit: string) => (a === b ? 'same as the typical local plan' : (a > b ? '+' : '−') + Math.abs(a - b) + ' ' + unit + ' against the typical local plan');
@@ -44,12 +44,12 @@ export default function Editor({ onCompare }: { onCompare: () => void }) {
   return (
     <>
       <div className="row">
-        {mine.length > 1 ? <Select label="My plan" value={p.id} onChange={s.setPlanId} options={mine.map(x => ({ value: x.id, label: x.name }))} /> : <b>{p.name}</b>}
+        <b>{p.name}</b>
         <span className="muted small">{p.sub}</span>
         <span className="sp" />
         <YearTabs />
-        <button className="btn sm" onClick={() => s.addMyPlan(p.id)}>Duplicate</button>
-        <button className="btn sm" onClick={() => s.removeMyPlan(p.id)}>Delete</button>
+        <button className="btn pri" disabled={s.draftSaved} onClick={s.saveCustom}>{s.draftSaved ? 'Saved' : 'Save'}</button>
+        <button className="btn" onClick={s.deleteCustom}>Delete</button>
       </div>
 
       <div className="facts">
@@ -58,10 +58,9 @@ export default function Editor({ onCompare }: { onCompare: () => void }) {
         <div><span><Term id="worstFifth">Worst year of five</Term></span><b>{ch.marginWorstFifth} €/ha</b><small>{d(ch.marginWorstFifth, base.marginWorstFifth, '€/ha')}</small></div>
         <div><span><Term id="soilScore">Soil health score</Term></span><b>{ch.soilScore?.total ?? '—'}{ch.soilScore && <Band points={ch.soilScore.total} />}</b><small>{d(ch.soilScore?.total ?? 0, base.soilScore?.total ?? 0, 'points')}</small></div>
         <div><span><Term id="humus">Humus balance</Term></span><b>{ch.humus > 0 ? '+' : ''}{ch.humus} kg C/ha</b><small>{d(ch.humus, base.humus, 'kg')}</small></div>
-        <div style={{ alignContent: 'center', gap: 6 }}>{s.chosen?.id === p.id ? <b className="ok">Your chosen plan</b> : <button className="btn pri" onClick={() => s.choose(p.id)}>Choose this plan</button>}<button className="link small" onClick={onCompare}>compare with other plans</button></div>
       </div>
 
-      <div className="cols" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))' }}>
+      <div className="cols" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', alignItems: 'stretch' }}>
         <Panel title="1 · Pick a field">
           <div><MiniMap fill={Object.fromEntries(p.v.options.map(o => [o.fieldId, cropColor(o.crops[s.yearIdx])]))} selected={s.field} onSelect={s.setField} labels /></div>
           <div style={{ marginTop: 10 }}><More label="All fields of this plan"><div className="fieldlist">

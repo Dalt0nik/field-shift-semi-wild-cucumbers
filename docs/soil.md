@@ -6,7 +6,7 @@ How the engine measures what a crop plan does for the soil, how one plan becomes
 
 - **Measured, not assumed.** The farm rules count what is declared. NASA HLS measures what covers the soil, NASA GPM IMERG measures when rain is erosive. Every plan is measured before sowing.
 - **A European frame.** The EU Soil Monitoring Law (Directive (EU) 2025/2360) assesses soil health by aspect of soil degradation. A crop plan changes two that we measure: erosion (its Annex II asks erosion estimates to consider rainfall erosivity, vegetation cover, crop type and cover crops) and loss of organic carbon. FAO's Conservation Agriculture principles add soil cover and species diversification. Disturbance by tillage cannot be seen from space or from a crop plan, and the app says so.
-- **One soil health score, with its parts visible** (section 6). Since 15 Nov 2026 the cards show one number, 0–100, bigger is better, in place of four separate soil numbers. It is the equal-weight average of three aspects. The six measures of section 2 stay in the table of the selected plan and in Compare.
+- **One soil health score, with its parts visible** (section 6). Since 15 Nov 2026 the cards show one number, 0–100, bigger is better, in place of four separate soil numbers. It is the equal-weight average of three aspects. The six measures of section 2 stay in Compare.
 - **None of them is an erosion rate, a leached amount or measured carbon.** They compare plans on the part that the crop plan decides.
 
 ## 2. The measures
@@ -77,7 +77,7 @@ From the advisory worksheet of LfL Bayern (Stand 11/2014), which prints the coef
 | Perennial grass | +600 | 800 × 75 % (yield unknown; footnote 1 of the worksheet) |
 | Catch crop | +176 | (100 + 190 dt/ha × 0.8) × 70 % (stand unknown; footnote 3) |
 
-Classes for conventional farming: below −200 very low, to −76 low, −75 to +100 balanced, to +300 high, above very high. The straw switch (`strawLeft`) is in the soil table of the Planner.
+Classes for conventional farming: below −200 very low, to −76 low, −75 to +100 balanced, to +300 high, above very high. The straw assumption (`strawLeft`) stays at its default (straw left on the field); since 15 Nov 2026 the Planner has no switch for it.
 
 ## 6. Soil health score and Best for soil — `src/engine/soil-score.ts`
 
@@ -92,7 +92,7 @@ Decided by the owner on 14–15 Nov 2026; the research behind it is `research/ch
 | Bands | Below 40 low, 40 to 60 medium, from 60 high (`soilBand`) | The cut points of the Cornell report (its five colours folded into three). On this scale "high" means close to the best plan found, "low" means like the weakest local farms |
 | Best for soil | The highest score; plans within 3 points of the top (`SOIL_TIE_POINTS`) count as equal and the highest margin among them wins (`bestForSoil`) | A point or two is less than the measures can tell apart: one plan's own bare-soil days spread by about 35 between years |
 
-- The score is attached to the characteristics by the search (`ch.soilScore`) and, for the agronomist's own plans, by the store with the scale of the search (`SearchResult.soilScale`).
+- The score is attached to the characteristics by the search (`ch.soilScore`) and, for the custom plan, by the store with the scale of the search (`SearchResult.soilScale`).
 - **Robustness.** `tests/soil.test.ts` checks that with any aspect counted double or half the Best-for-soil plan stays within 5 points of the top.
 - **Limits.** The weights are a stated judgement. The scale is relative to this farm, this decision day and this crop set: it compares plans and is not a measurement of the soil. Humus is an accounting, cover is measured. Tillage is not in it. The search does not push for humus directly: its soil axis is still S1e (`AXES`), so the best score is the best among the plans the search keeps.
 - **Before the score** Best for soil was the plan with the fewest S1e days (`fewestBareSoil`); the check of the rain weighting (`pipeline/92_soil_sensitivity.ts`, `src/data/soil-check.json`) still follows that plan.

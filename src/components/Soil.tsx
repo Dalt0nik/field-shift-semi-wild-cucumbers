@@ -1,22 +1,21 @@
 'use client';
-// Soil in the interface: the soil health score on every plan card, the table of the score and the measures behind it
-// for the selected plan, the charts of bare soil against erosive rain (Analytics), and the panel that explains in
+// Soil in the interface: the soil health score on every plan card, the charts of bare soil against erosive rain (Analytics), and the panel that explains in
 // plain words how the score is counted, with its sources.
 import { coverDays } from '@/engine/characteristics';
 import { SOIL_TIE_POINTS, soilBand, type SoilBand } from '@/engine/soil-score';
 import type { Characteristics } from '@/engine/types';
 import soilCheckJson from '@/data/soil-check.json';
-import { PLAN_YEARS, coverModel } from '@/pilot/demo';
-import { SOIL_SOURCES, humusClass, soilClimate, soilParams } from '@/pilot/soil';
+import { coverModel } from '@/pilot/demo';
+import { SOIL_SOURCES, soilClimate, soilParams } from '@/pilot/soil';
 import { farmerTransitions } from '@/pilot/farmers';
-import { useStore, type PlanItem } from './store';
+import { useStore } from './store';
 import { Term, pct, useQueryState } from './ui';
 
 export const soilCheck = soilCheckJson as unknown as { decisionDate: string; base: string; plans: number; fewestBareSoil: { s1e: number; margin: number }; usual: { s1e: number; margin: number }; lowerBound: number; frontier: { s1e: number; margin: number }[];
   variants: { key: string; junToAug: number; decToFeb: number; basePlanRank: number; of: number; rho: number; bestDiffersOnFields: number }[] };
 
 const signed = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(v)}`;
-const E = soilClimate.erosivity, P0 = soilParams();
+const P0 = soilParams();
 
 /** The "?" control: opens the panel that explains the soil numbers. The open state is in the URL (?help=soil). */
 export function SoilHelpButton({ text, quiet }: { text?: string; quiet?: boolean }) {
@@ -31,11 +30,6 @@ const BAND_LABEL: Record<SoilBand, string> = { low: 'Low', medium: 'Medium', hig
 /** The band of a score as a small coloured tag: low (like the weakest farms nearby), medium, high (close to the best plan found). */
 export const Band = ({ points }: { points: number }) => { const b = soilBand(points); return <i className={`band is-${b}`}>{BAND_LABEL[b]}</i>; };
 
-/** Price of a plan's soil health against another plan: points of the score and euros. */
-export function priceOf(p: Characteristics, other: Characteristics): string {
-  return `${signed((p.soilScore?.total ?? 0) - (other.soilScore?.total ?? 0))} points, ${signed(p.marginMean - other.marginMean)} €/ha a year`;
-}
-
 /** Soil block of a plan card: the soil health score with its band, and the points of its three parts. */
 export function SoilBlock({ c, best }: { c: Characteristics; best: number }) {
   const s = c.soilScore;
@@ -48,41 +42,6 @@ export function SoilBlock({ c, best }: { c: Characteristics; best: number }) {
       <span className="stat"><span><Term id="cropVariety">Crop variety</Term></span><b>{s.variety}</b></span>
       <span className="stat"><span><Term id="organicMatter">Organic matter</Term></span><b>{s.organic}</b></span>
     </span>
-  );
-}
-
-/** The soil health score of the selected plan with its three parts, and the measures behind them, next to the typical local plan. */
-export function SoilTable({ plan, base, top, steepHa, strawLeft, setStrawLeft }: { plan: PlanItem; base: PlanItem; top: PlanItem | null; steepHa: number; strawLeft: boolean; setStrawLeft: (b: boolean) => void }) {
-  const c = plan.v.ch, b = base.v.ch, isBase = plan.id === base.id;
-  const onSteep = (v: number) => (steepHa ? Math.round(v / steepHa) : 0);
-  const pts = (get: (s: NonNullable<Characteristics['soilScore']>) => number) => (x: Characteristics) => (x.soilScore ? String(get(x.soilScore)) : '—');
-  // label: the name with its explained term, where the vocabulary has one; head: a row of the score itself
-  const rows: { name: string; label?: React.ReactNode; unit: string; get: (x: Characteristics) => string; data: React.ReactNode; head?: boolean }[] = [
-    { name: 'Soil health score', label: <Term id="soilScore">Soil health score</Term>, unit: 'points of 100', get: pts(s => s.total), data: 'the average of the three parts below', head: true },
-    { name: 'Soil cover', label: <Term id="soilCover">Soil cover</Term>, unit: 'points', get: pts(s => s.cover), data: 'from the days of bare soil under heavy rain', head: true },
-    { name: 'Crop variety', label: <Term id="cropVariety">Crop variety</Term>, unit: 'points', get: pts(s => s.variety), data: 'from cereal after cereal and the crop groups', head: true },
-    { name: 'Organic matter', label: <Term id="organicMatter">Organic matter</Term>, unit: 'points', get: pts(s => s.organic), data: 'from the humus balance', head: true },
-    { name: 'Days of bare soil under heavy rain', label: <Term id="soilDays">Days of bare soil under heavy rain</Term>, unit: 'a year', get: x => String(x.bareErosive.p50), data: <>NASA <Term id="hls">HLS</Term> × NASA <Term id="imerg">GPM IMERG</Term></> },
-    { name: 'Crop diversity', unit: `crop groups ${PLAN_YEARS.join(' / ')} · legumes · cereal after cereal`, get: x => `${x.familiesPerYear.join(' / ')} · ${pct(x.legumeShare)} · ${pct(x.cerealAfterCereal)}`, data: 'crop plan' },
-    { name: 'Humus balance', label: <Term id="humus">Humus balance</Term>, unit: 'kg humus-C per ha a year', get: x => `${signed(x.humus)} · ${humusClass(x.humus)}`, data: <label className="chk small" style={{ fontSize: 'inherit' }}><input type="checkbox" checked={strawLeft} onChange={e => setStrawLeft(e.target.checked)} />straw left on the field</label> },
-    { name: 'Days without green cover', label: <Term id="bareDays">Days without green cover</Term>, unit: 'a year', get: x => String(x.bareDays.p50), data: 'NASA HLS' },
-    { name: 'Bare soil on erosion-sensitive land', unit: 'weighted days a year', get: x => String(onSteep(x.bareOnSlopes)), data: 'NASA HLS × IMERG, official layer' },
-    { name: 'Bare soil in the leaching season', label: <>Bare soil in the <Term id="leaching">leaching season</Term></>, unit: 'days, Sep–Feb', get: x => String(x.bareLeaching), data: 'NASA HLS × IMERG, POWER' },
-    { name: 'Harvest on wet soil', label: <Term id="wetSoilHarvest">Harvest on wet soil</Term>, unit: 'ha a year', get: x => (x.wetHarvestHa ? x.wetHarvestHa.toFixed(1) : '0'), data: <>NASA GPM IMERG, NASA <Term id="power">POWER</Term></> },
-  ];
-  return (
-    <div className="soilbox">
-      <div className="row" style={{ justifyContent: 'space-between' }}><h3>Soil health of this plan{c.soilScore && <Band points={c.soilScore.total} />}</h3><SoilHelpButton text="How the score is counted, and its sources" /></div>
-      <div className="scroll-x">
-        <table>
-          <thead><tr><th>Measure</th><th className="n">{isBase ? 'Typical local plan' : 'This plan'}</th>{!isBase && <th className="n">Typical local plan</th>}<th>Built from</th></tr></thead>
-          <tbody>{rows.map((r, i) => (
-            <tr key={r.name} className={r.head ? 'score-row' : undefined}><td>{i === 0 ? <b>{r.label ?? r.name}</b> : r.label ?? r.name} <small>{r.unit}</small></td><td className="n">{r.head ? <b>{r.get(c)}</b> : r.get(c)}</td>{!isBase && <td className="n muted">{r.get(b)}</td>}<td className="small muted">{r.data}</td></tr>))}</tbody>
-        </table>
-      </div>
-      {!isBase && <p className="small" style={{ marginTop: 8 }}><b>The price.</b> Against the typical local plan: {priceOf(c, b)}.{top && top.id !== plan.id && <> Against the highest-margin plan: {priceOf(c, top.v.ch)}.</>}</p>}
-      <p className="note" style={{ marginTop: 6 }}>The score compares the plans of this farm: 0 is like the weakest farms nearby, 100 is the best plan found. A few points of difference mean nothing. The last four rows are not in the score. Stubble counts as bare; tillage is not visible from space.</p>
-    </div>
   );
 }
 

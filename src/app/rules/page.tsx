@@ -40,7 +40,6 @@ export default function ChecksPage() {
       </div>
       <aside className="dock">
         <h1>Plan checks</h1>
-        {s.chosen && s.chosen.id === s.planId && <p className="small ok"><b>Your chosen plan.</b></p>}
         <div className="row">
           <Select label="Plan to check" value={s.planId} onChange={s.setPlanId} options={s.plans.map(x => ({ value: x.id, label: x.name }))} />
           <Tabs label="Crops on the map" tabs={PLAN_YEARS.map((y, i) => ({ id: String(i), label: String(y) }))} value={String(s.yearIdx)} onChange={v => s.setYearIdx(+v)} />

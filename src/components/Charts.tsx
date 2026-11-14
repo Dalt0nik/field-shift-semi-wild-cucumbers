@@ -4,25 +4,6 @@ import { SEASON_COLOR } from './colors';
 
 const INK = '#17231c';
 
-export function SeasonBars({ series, compare, height = 170 }: { series: { season: string; margin: number; type: string }[]; compare?: { season: string; margin: number }[]; height?: number }) {
-  const W = 560, pad = 30, all = [...series.map(s => s.margin), ...(compare?.map(s => s.margin) ?? []), 0];
-  const lo = Math.min(...all), hi = Math.max(...all), y = (v: number) => pad / 2 + (height - pad * 1.4) * (1 - (v - lo) / (hi - lo || 1));
-  const bw = (W - pad) / series.length;
-  return (
-    <svg viewBox={`0 0 ${W} ${height}`} className="chart" role="img" aria-label="Margin by replayed season">
-      <line x1={pad} x2={W} y1={y(0)} y2={y(0)} stroke={INK} />
-      {[lo, hi].map((v, i) => <text key={i} x={pad - 4} y={y(v) + 4} textAnchor="end" className="tick">{Math.round(v)}</text>)}
-      {series.map((s, i) => (
-        <g key={s.season}>
-          <rect x={pad + i * bw + 2} width={bw - 4} y={Math.min(y(s.margin), y(0))} height={Math.abs(y(s.margin) - y(0))} fill={SEASON_COLOR[s.type] ?? SEASON_COLOR.normal}><title>{`${s.season}: ${s.margin} €/ha (${s.type === 'dry' ? 'dry season' : s.type === 'wetHarvest' ? 'wet harvest' : 'ordinary season'})`}</title></rect>
-          {compare && <line x1={pad + i * bw + 1} x2={pad + (i + 1) * bw - 1} y1={y(compare[i].margin)} y2={y(compare[i].margin)} stroke={INK} strokeWidth="2" />}
-          {i % 3 === 0 && <text x={pad + i * bw + bw / 2} y={height - 3} textAnchor="middle" className="tick">{s.season}</text>}
-        </g>
-      ))}
-    </svg>
-  );
-}
-
 export function WaterBalance({ years }: { years: { year: number; waterBalanceMayJul: number; type: string }[] }) {
   const W = 560, H = 150, pad = 32, ys = years.filter(y => y.type !== 'current');
   const lo = Math.min(...ys.map(y => y.waterBalanceMayJul)), hi = Math.max(...ys.map(y => y.waterBalanceMayJul), 0);
@@ -37,36 +18,6 @@ export function WaterBalance({ years }: { years: { year: number; waterBalanceMay
           {(d.type === 'dry' || (i % 5 === 0 && ys[i + 1]?.type !== 'dry' && ys[i - 1]?.type !== 'dry')) && <text x={pad + i * bw + bw / 2} y={H - 4} textAnchor="middle" className={`tick${d.type === 'dry' ? ' strong' : ''}`}>{String(d.year).slice(2)}</text>}
         </g>
       ))}
-    </svg>
-  );
-}
-
-export interface Dot { id: string; x: number; y: number; kind: 'variant' | 'baseline' | 'tagged' | 'mine'; label?: string }
-export function Scatter({ dots, xLabel, yLabel, selected, onSelect }: { dots: Dot[]; xLabel: string; yLabel: string; selected: string | null; onSelect: (id: string) => void }) {
-  const W = 560, H = 250, pl = 46, pb = 34;
-  const xs = dots.map(d => d.x), ys = dots.map(d => d.y);
-  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-  const px = (v: number) => pl + 12 + (W - pl - 30) * ((v - x0) / (x1 - x0 || 1)), py = (v: number) => 20 + (H - pb - 34) * (1 - (v - y0) / (y1 - y0 || 1));
-  const order = { variant: 0, tagged: 1, baseline: 2, mine: 3 };
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="chart" role="img" aria-label={`${yLabel} against ${xLabel}`}>
-      <line x1={pl} x2={W} y1={H - pb} y2={H - pb} stroke={INK} /><line x1={pl} x2={pl} y1={6} y2={H - pb} stroke={INK} />
-      <text x={W - 4} y={H - 6} textAnchor="end" className="axis">{xLabel}</text>
-      <text x={pl + 6} y={13} className="axis">{yLabel}</text>
-      {[x0, x1].map((v, i) => <text key={'x' + i} x={px(v)} y={H - pb + 16} textAnchor="middle" className="tick">{Math.round(v)}</text>)}
-      {[y0, y1].map((v, i) => <text key={'y' + i} x={pl - 5} y={py(v) + 4} textAnchor="end" className="tick">{Math.round(v)}</text>)}
-      {[...dots].sort((a, b) => order[a.kind] - order[b.kind]).map(d => {
-        const sel = selected === d.id, cx = px(d.x), cy = py(d.y);
-        return (
-          <g key={d.id} onClick={() => onSelect(d.id)} className="dot" tabIndex={0} onKeyDown={e => e.key === 'Enter' && onSelect(d.id)}>
-            {sel && <circle cx={cx} cy={cy} r={12} fill="#f0cf1a" />}
-            {d.kind === 'baseline' ? <rect x={cx - 6} y={cy - 6} width={12} height={12} fill={INK} />
-              : d.kind === 'mine' ? <path d={`M${cx},${cy - 8}L${cx + 7},${cy + 6}L${cx - 7},${cy + 6}Z`} fill="#a8497a" stroke="#fff" />
-                : <circle cx={cx} cy={cy} r={d.kind === 'tagged' ? 6 : 4} fill={d.kind === 'tagged' ? '#2f6b3c' : '#8fb39a'} stroke="#fff" />}
-            <title>{d.label ?? d.id}</title>
-          </g>
-        );
-      })}
     </svg>
   );
 }

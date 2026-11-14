@@ -24,7 +24,7 @@ export function fiveAnswers(v: EvaluatedVariant, base: EvaluatedVariant, ws: Wor
   const diff = v.options.filter((o, i) => optionKey(o) !== optionKey(base.options[i]));
   const moves = diff.slice(0, 3).map(o => `${o.fieldId}: ${o.crops.map((c, i) => `${years[i]} ${CROPS[c].name}${catchBefore(o, i) ? ' after a catch crop' : ''}`).filter((_, i) => !o.fixed[i]).join(', ')}`);
   const why = v.id === base.id ? TAG_WHY['current practice']
-    : `${v.tags.map(t => TAG_WHY[t]).filter(Boolean).join(' ') || (v.origin === 'agronomist' ? 'This is your own plan; the system only checks and measures it.' : 'One of the variants that no other variant beats on all four comparison characteristics at once.')} It differs from the typical local plan on ${diff.length} of ${v.options.length} fields${moves.length ? ` (${moves.join('; ')}${diff.length > 3 ? '; …' : ''})` : ''}.`;
+    : `${v.tags.map(t => TAG_WHY[t]).filter(Boolean).join(' ') || (v.origin === 'agronomist' ? 'This is your custom plan; the system only checks and measures it.' : 'One of the variants that no other variant beats on all four comparison characteristics at once.')} It differs from the typical local plan on ${diff.length} of ${v.options.length} fields${moves.length ? ` (${moves.join('; ')}${diff.length > 3 ? '; …' : ''})` : ''}.`;
   const estCrops = [...new Set(v.options.flatMap(o => o.crops))].filter(c => CROPS[c].sowing.status !== 'primary' || CROPS[c].harvest.status !== 'primary').map(c => CROPS[c].name);
   const d = (a: number, b: number) => Math.round(a - b);
   const benefits = v.id === base.id ? `Familiar crops and machinery. Margin ${v.ch.marginMean} €/ha in a usual season, soil health score ${v.ch.soilScore?.total ?? '—'} of 100.`

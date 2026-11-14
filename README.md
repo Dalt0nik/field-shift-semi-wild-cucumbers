@@ -61,7 +61,7 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 
 | Path | Contents |
 |---|---|
-| `src/engine/` | The planning logic, independent of the interface: `plan.ts` (field timelines, free slots, candidate crops), `search.ts` (search for farm plans, comparison), `characteristics.ts` (what each plan is measured on), `editor.ts` (the agronomist's own plan), `explain.ts` (plain-language reading of a plan) |
+| `src/engine/` | The planning logic, independent of the interface: `plan.ts` (field timelines, free slots, candidate crops), `search.ts` (search for farm plans, comparison), `characteristics.ts` (what each plan is measured on), `editor.ts` (the custom plan), `explain.ts` (plain-language reading of a plan) |
 | `src/pilot/` | Everything bound to the Lithuanian pilot: `regional.ts` (crop reference), `rules.ts` (EU farm-payment conditions with the thresholds that apply in Lithuania, payment rates), `demo.ts` (the farm, the decision day, the plan set-up, the replayed seasons), `economics.ts` (money constants), `soil.ts` (soil climate, humus coefficients, sources of the soil numbers), `satellite.ts` (what NASA HLS saw on the fields, cut at the decision day) |
 | `src/data/` | Inputs of the pilot farm, all built by `pipeline/` |
 | `src/app/` | One folder per screen, `api/assistant/route.ts`, `globals.css` (the design system) |
@@ -78,7 +78,7 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 | Farm | Map | Declared fields around the farm, the farm's fields, the official rule areas |
 | Farm | Fields | The previous season on each field: its crop (pre-filled from the paying agency’s crop monitoring, editable), whether it is harvested on the decision day and when the field is free for the next crop, and, once sowing has started, what is already sown; a satellite hint from before that day; field timelines with sowing and harvest windows and free slots |
 | Farm | Crops | Crops the farm can grow, catch crops, limits |
-| Plan | Planner | Suggested plans with the soil health score and the panel that explains it (`?help=soil`), comparison, the agronomist's own plan, "Choose this plan" and the sowing list |
+| Plan | Planner | Suggested plans with the soil health score and the panel that explains it (`?help=soil`), the comparison table, the custom plan (one copy of a plan, changed field by field, shown next to the suggested ones), "Choose this plan" and the sowing list |
 | Plan | Analytics | The selected plan's risks and the data behind every number: when fields are bare (HLS), when rain is erosive and when water drains through the soil (IMERG, POWER); which months are risky; risk zones; the method behind each number. It comes after the Planner because most of its views look at the selected plan |
 | Plan | Checks | The farm rules applied to a plan |
 
