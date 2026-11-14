@@ -42,7 +42,6 @@ export const PLAN_YEARS = [DECISION_YEAR + 1, DECISION_YEAR + 2];
 export const niceDate = (iso: string) => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 /** Is a piece of data that ends on `until` later than the decision day (so: not usable by the plan)? */
 export const afterDecision = (until: string) => until > DECISION_DATE;
-export const AFTER_LABEL = 'after the decision day — not used by the plan';
 
 // ---------- fields and their history ----------
 // F11: no 2026 crop in the monitoring layer; HLS shows it green all year (NDVI 0.70 in early spring 2026), entered as grass.
@@ -131,9 +130,6 @@ export const PLAN_DATA: { id: string; label: string; until: string }[] = [
   { id: 'history', label: `Crops of ${DECISION_YEAR}: declared in spring, confirmed by the agronomist`, until: `${DECISION_YEAR}-06-30` },
   { id: 'farmers', label: `Usual practice: what farms within ${farmerTransitions.radiusKm} km sowed after each crop, declarations ${farmerTransitions.years.join(' → ')}`, until: farmerTransitions.dataUntil },
 ];
-/** Satellite layers of the screens that are not inputs of the plan: last day of each, to label the later ones. */
-export const LAYER_UNTIL: Record<string, string> = { ndvi_peak_2025: '2025-07-15', ndvi_peak_2026: '2026-07-15', ndvi_autumn_2026: '2026-11-10', spring_bare: '2026-04-15' };
-export const layerAfterDecision = (id: string) => !!LAYER_UNTIL[id] && afterDecision(LAYER_UNTIL[id]);
 
 export interface SetupOptions { costFactor?: number; strawLeft?: boolean; confirmed?: Record<string, CropId>; erosivity?: string }
 export function makeSetup(over: Partial<PlanSetup> = {}): PlanSetup {

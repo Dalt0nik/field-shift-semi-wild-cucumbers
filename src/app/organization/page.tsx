@@ -27,7 +27,8 @@ const WINTER_LIKE = (c: string | null | undefined) => !!c && (CROPS[c]?.season =
 // where the previous crop is on the decision day (from its harvest window in the crop guides, not observed), one
 // marker per state, the same in the summary, the table and the card
 type State = 'done' | 'part' | 'wait' | 'grass' | 'sown' | 'unknown';
-const STATES: State[] = ['done', 'part', 'wait', 'grass', 'sown', 'unknown'];
+// full circle = crop still standing, half = being harvested, empty = harvested
+const STATES: State[] = ['wait', 'part', 'done', 'grass', 'sown', 'unknown'];
 const STATE_LABEL: Record<State, string> = { done: 'Harvested', part: 'Being harvested', wait: 'Not yet harvested', grass: 'Grass, stays', sown: `Sown for ${NEXT}`, unknown: 'Crop unknown' };
 const Dot = ({ s }: { s: State }) => <i className={`dot is-${s}`} aria-hidden />;
 
@@ -95,7 +96,7 @@ export default function FieldsPage() {
               </tr>))}</tbody>
           </table>
         </div>
-        <p className="note">Pre-filled from the {Y} crop declarations. Correct a crop if it is wrong.{SOWING_STARTED ? ` What is sown for ${NEXT} is a demo preset.` : ''}</p>
+        {SOWING_STARTED && <p className="note">What is sown for {NEXT} is a demo preset.</p>}
       </aside>
       <div className="mapbox">
         <FarmMap fill={fill} selected={s.field} onSelect={s.setField} />
@@ -114,7 +115,7 @@ export default function FieldsPage() {
             <Check>the satellite hint can be wrong; what you know of the field comes first.</Check>
           </More>
         </div>
-        <div className="maplegend">{sownNext.length ? <><span><Sw c="#c79a1e" />sown for {NEXT} (colour = crop)</span><span><Sw c="#ffffff" />free</span></> : <span><Sw c="#c79a1e" />colour = crop of {Y}</span>}</div>
+        {sownNext.length > 0 && <div className="maplegend"><span><Sw c="#c79a1e" />sown for {NEXT} (colour = crop)</span><span><Sw c="#ffffff" />free</span></div>}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { workspace } from '@/engine/editor';
 import { checkCandidate, baseTimeline } from '@/engine/plan';
 import { search } from '@/engine/search';
-import { DECISION_DATE, DECISION_YEAR, PLAN_DATA, PLAN_YEARS, REPLAY, SUPPORTED_DAYS, afterDecision, currentAt, fieldIndexAt, fieldIndexSeasonEnd, fields, fieldsWith, layerAfterDecision, makeContext, makeSetup, sowableBy, standing } from '@/pilot/demo';
+import { DECISION_DATE, DECISION_YEAR, PLAN_DATA, PLAN_YEARS, REPLAY, SUPPORTED_DAYS, afterDecision, currentAt, fieldIndexAt, fieldIndexSeasonEnd, fields, fieldsWith, makeContext, makeSetup, sowableBy, standing } from '@/pilot/demo';
 import { CROPS } from '@/pilot/regional';
 import fieldIndexFile from '@/data/field-index.json';
 
@@ -99,7 +99,4 @@ describe('stage 2 on the decision day', () => {
     expect(fields.find(x => x.id === 'F2')!.history[DECISION_YEAR].crop).toBe('winter_rapeseed'); // the base is untouched
     expect(fieldsWith({}).length).toBe(fields.length);
   });
-  it('layers observed after the decision day are flagged, earlier ones are not', () => {
-    expect(layerAfterDecision('ndvi_peak_2025')).toBe(false);
-    expect(layerAfterDecision('ndvi_autumn_2026')).toBe(DECISION_DATE < '2026-11-10');  });
 });

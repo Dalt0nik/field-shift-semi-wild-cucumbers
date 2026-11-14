@@ -24,7 +24,7 @@ const mapReady = page => page.waitForSelector('.map-label', { timeout: 20000 }).
 const STATES = [
   { name: 'map', url: '/map', map: true },
   { name: 'map-field-card', url: '/map', map: true, act: p => click(p, '.map-label', 'F3') },
-  { name: 'map-layers-and-help', url: '/map', map: true, act: async p => { await click(p, 'label.chk', 'Rule layers'); await click(p, 'details.more summary', 'How do I add'); } },
+  { name: 'map-layers', url: '/map', map: true, act: async p => { await p.evaluate(() => document.querySelectorAll('button.eye')[1]?.click()); } },
   { name: 'fields-now', url: '/organization', map: true },
   { name: 'fields-now-dropdown-open', url: '/organization', map: true, act: async p => { await click(p, 'tbody tr:nth-child(2) .dd'); } },
   { name: 'fields-timelines', url: '/organization?tab=timelines' },
@@ -40,8 +40,6 @@ const STATES = [
   { name: 'planner-mine-editing', url: '/planner?tab=mine', plans: true, act: async p => { await click(p, '.btn', 'Start my plan'); await sleep(400); await p.evaluate(() => { const t = [...document.querySelectorAll('svg.mini path title')].find(x => x.textContent === 'F2'); t?.parentElement?.dispatchEvent(new MouseEvent('click', { bubbles: true })); }); } },
   { name: 'checks', url: '/rules', map: true, plans: true },
   { name: 'checks-numbers-open', url: '/rules', map: true, plans: true, act: p => p.evaluate(() => document.querySelectorAll('details.more').forEach(d => (d.open = true))) },
-  { name: 'satellite-layer', url: '/scenes', map: true },
-  { name: 'satellite-compare-pixel', url: '/scenes?tab=compare', map: true, act: async p => { const box = await (await p.$$('.mapbox'))[1].boundingBox(); await p.mouse.click(box.x + box.width * 0.45, box.y + box.height * 0.6); } },
   { name: 'analytics-bare-soil', url: '/analytics' },
   { name: 'analytics-weather-risk', url: '/analytics?tab=weather', plans: true },
   { name: 'analytics-zones-erosion', url: '/analytics?tab=zones', map: true, plans: true },

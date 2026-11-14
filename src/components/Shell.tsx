@@ -17,7 +17,6 @@ const NAV: Item[] = [
   { href: '/map', label: 'Map', hint: 'The fields of the farm', icon: I('M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14') },
   { href: '/organization', label: 'Fields', hint: 'What grows now, field timelines', icon: I('M4 20V8l8-4 8 4v12M4 20h16M9 20v-6h6v6') },
   { group: 'NASA data' },
-  { href: '/scenes', label: 'Satellite', hint: 'Satellite layers as numbers per field', icon: I('M12 3 3 8l9 5 9-5-9-5ZM3 13l9 5 9-5M3 17.5l9 5 9-5') },
   { href: '/analytics', label: 'Analytics', hint: 'Bare soil and erosive rain, weather risk, risk zones, method', icon: I('M4 20V4m0 16h16M8 16l4-5 3 3 5-7') },
   { group: 'Plan' },
   { href: '/settings', label: 'Crops', hint: 'Crops the farm can grow, limits', icon: I('M4 6h10m4 0h2M4 12h4m4 0h8M4 18h12m4 0h0M14 4v4M8 10v4M16 16v4') },
@@ -27,8 +26,7 @@ const NAV: Item[] = [
 // the next step of the path, always at the right end of the top bar; the last screen has none
 const NEXT: Record<string, { href: string; label: string }> = {
   '/map': { href: '/organization', label: 'Next: the previous season on the fields' },
-  '/organization': { href: '/scenes', label: 'Next: what the satellites see' },
-  '/scenes': { href: '/analytics', label: 'Next: bare soil and weather risk' },
+  '/organization': { href: '/analytics', label: 'Next: bare soil and weather risk' },
   '/analytics': { href: '/settings', label: 'Next: crops and limits' },
   '/settings': { href: '/planner', label: 'Next: see the plans' },
   '/planner': { href: '/rules', label: 'Next: check the plan against the rules' },

@@ -10,13 +10,13 @@ const Y = DECISION_YEAR, DAY = niceDate(DECISION_DATE), H = PLAN_YEARS.join(' an
 export const SCREENS: Record<string, ScreenNote> = {
   map: {
     title: 'Map',
-    shows: `A map of all declared fields around the farm (paying agency declarations of 2025, coloured by crop class), the fields of the organization with a dark outline, and an optional layer with the official rule areas (erosion-sensitive land, peat). Clicking a field opens a card with its crops of ${Y - 2}–${Y} and area. The NASA satellite layers are on the Satellite screen.`,
+    shows: `A map of all declared fields around the farm (paying agency declarations of 2025, coloured by crop class), the fields of the organization with a dark outline, and an optional layer with the official risk zones (erosion-sensitive land, peat). The side panel has one section per layer, "Neighbours’ crops, harvest 2025" and "Risk zones", each with an eye icon that shows or hides it (the first one only the neighbours; the farm keeps its colours), its legend and its data source, and a note that adding fields is switched off in the demo. Clicking a field opens a card with its crops of ${Y - 2}–${Y} and area. What the NASA data show about the fields is on the Analytics screen.`,
     why: 'A plan must cover the whole farm, because some rules are checked across all fields together. Open declarations carry no owner, so the user assembles their own holding from declared fields or draws a boundary. Open data lag about a year, which is why the map shows last year’s declarations. In the demo the farm is preloaded and adding fields is switched off, because satellite products are precomputed only for these 12 fields. The demo replays the decision of one day, so later satellite data may be shown but never used.',
     ask: ['How would I add my own farm here?', 'Why does the map show last year’s crops?', 'What are the red and purple areas?'],
   },
   'organization/fields': {
     title: 'Fields · Previous season',
-    shows: `The previous season on each field of the farm, seen on the decision day, ${DAY}: a short count of fields that are harvested, being harvested, not yet harvested or in grass; a table with the previous crop of each field (the crop of ${Y}, a dropdown pre-filled from the paying agency’s declarations) and when the field is free for the next crop (the end of the crop’s usual harvest window, not an observation), or, once winter sowing has started, what is already sown for ${PLAN_YEARS[0]}. A card shows the selected field: its last three crops, how it yields against its neighbours, and what the satellite saw on it in early spring; "More about this field" has slope, erosion-sensitive land and peat.`,
+    shows: `The previous season on each field of the farm, seen on the decision day, ${DAY}: a short count of fields that are harvested, being harvested, not yet harvested or in grass; a table with the previous crop of each field (the crop of ${Y}, a dropdown pre-filled from the paying agency’s crop monitoring) and when the field is free for the next crop (the end of the crop’s usual harvest window, not an observation), or, once winter sowing has started, what is already sown for ${PLAN_YEARS[0]}. A card shows the selected field: its last three crops, how it yields against its neighbours, and what the satellite saw on it in early spring; "More about this field" has slope, erosion-sensitive land and peat.`,
     why: 'What is on the fields on the decision day decides which fields are free and when; no open source knows it, so the agronomist confirms it. The satellite only supports the entry: early-spring greenness (NASA HLS) tells a winter crop or grass from a spring-sown crop, and in our test on about 1 350 declared fields it was right for 65–85 % of fields, which is not good enough to decide. Fields that are already sown for the next harvest are fixed in every plan; everything else is open.',
     ask: ['Why do I have to confirm the crops myself?', 'How reliable is the satellite hint?', 'What happens if I change a crop here?'],
   },
@@ -31,18 +31,6 @@ export const SCREENS: Record<string, ScreenNote> = {
     shows: 'The crops the farm can grow with their sowing and harvest months (tick to include), a switch for catch crops, the limits (fields already in the ground, crops banned on a field by the user, restrictions coming from rules).',
     why: 'Constraints are hard: a plan that breaks one is never shown and they are never traded against money. The crop set reflects machinery, storage and contracts, which the tool does not model. The rules are the EU farm-payment conditions as they apply in Lithuania. Costs are illustrative because no open per-crop cost source exists for Lithuania, so a slider shows whether the comparison survives a cost error.',
     ask: ['What changes if I untick a crop?', 'Why are limits never traded off against money?', 'Where do the sowing months come from?'],
-  },
-  'scenes/scene': {
-    title: 'Satellite · One layer',
-    shows: 'One satellite or terrain layer drawn as 30 m pixels over the farm, with a table of numbers per field (median, low and high value, number of pixels). Layers: NDVI at peak season of two years, NDVI of a later autumn, how often a pixel is bare in early spring, slope, height relative to the surroundings. A layer observed after the decision day is labelled so and is not used by the plan.',
-    why: 'NASA data enter the plan through products, not directly: a layer becomes a number per field. All layers are resampled to one 30 m grid (the HLS grid), so they can be compared at the same pixel. A large spread inside a field is a reason to walk there; 30 m pixels do not show the cause.',
-    ask: ['What does NDVI tell me about a field?', 'Why 30 m pixels?', 'What does a high spread inside a field mean?'],
-  },
-  'scenes/compare': {
-    title: 'Satellite · Compare two',
-    shows: 'Two layers side by side with linked views. Clicking a pixel opens an inspector with the value of every layer at that point, plus the coarse weather values (rain, water balance, frost) of the cell that covers it.',
-    why: 'Weather layers are coarse (one cell of 10–50 km), so they have the same value for every field of the farm; the inspector says so instead of pretending to field-level detail. Fine layers (30 m) show differences inside and between fields.',
-    ask: ['Why is the rain value the same for all my fields?', 'What can I learn from comparing two years?', 'Which layers are fine and which are coarse?'],
   },
   'analytics/bare': {
     title: 'Analytics · Bare soil and rain',

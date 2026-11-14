@@ -38,6 +38,6 @@ export const GLOSSARY: Record<string, { term: string; text: string; source?: str
   catchCrop: { term: 'Catch crop', text: 'A crop sown after the harvest only to cover the soil until the next spring crop. It cuts the days without cover, most of all in the leaching season, adds to the humus balance and earns an eco-scheme payment.' },
   slot: { term: 'Free slot', text: 'A time when the field is free: after one harvest and before the next sowing. The plan fills these gaps with crops.' },
   margin: { term: 'Margin', text: 'Yield × price + payments − variable costs, per hectare and year. The yield is the district yield times the field index (NASA HLS). Costs are illustrative, so compare variants with each other rather than reading the euros as a forecast.' },
-  cellValue: { term: 'Cell value', text: 'Weather layers are coarse: one value for a cell of 10–50 km. The inspector shows the value of the cell that covers the point, the same for every field of the farm.' },
+  cellValue: { term: 'Weather cell', text: 'Weather data are coarse: one value for an area of 10 to 50 km, the same for every field of the farm.' },
 };
 export type TermId = keyof typeof GLOSSARY;

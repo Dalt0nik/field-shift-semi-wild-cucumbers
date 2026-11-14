@@ -19,7 +19,7 @@ The application follows the agronomist's path in seven stages. Stages 1–5 answ
 | 3 | Slot search | Builds the timeline of each field and finds the free gaps up to the plan horizon | Fields, `src/engine/plan.ts` |
 | 4 | Candidates | Admits a crop to a slot if its sowing window fits, its harvest ends before the next crop, and no field rule forbids it | Crops, `src/engine/plan.ts` |
 | 5 | Plan variants | Searches for combinations across all fields that pass the farm rules | `src/engine/search.ts` |
-| 6 | Variant characteristics | Measures every variant the same way: money over past seasons with each field's index from HLS and the wet-harvest loss from IMERG ([docs/money.md](docs/money.md)); soil protection in six measures from HLS cover and IMERG rain ([docs/soil.md](docs/soil.md)); dry seasons from IMERG and POWER; rotation | Fields, Satellite, Analytics, `src/engine/characteristics.ts` |
+| 6 | Variant characteristics | Measures every variant the same way: money over past seasons with each field's index from HLS and the wet-harvest loss from IMERG ([docs/money.md](docs/money.md)); soil protection in six measures from HLS cover and IMERG rain ([docs/soil.md](docs/soil.md)); dry seasons from IMERG and POWER; rotation | Fields, Analytics, `src/engine/characteristics.ts` |
 | 7 | Variants for the agronomist | Shows usual practice (a typical farm of the area, drawn from the field declarations: [docs/usual-practice.md](docs/usual-practice.md)) and the best variant for each measure (highest margin, best in a bad year, best for soil, balanced) and lets the agronomist compare, edit and choose | Planner, Checks |
 
 Principles behind it:
@@ -51,7 +51,7 @@ Copy `.env.example` to `.env`. `GEE_KEY` and the CDSE S3 keys (`CDSE_S3_ACCESS_K
 
 The demo replays the decision the farm faced on one day: **1 August 2026**, `DECISION_DATE` in `src/pilot/demo.ts`. The rapeseed is harvested, the cereal harvest is starting, winter rapeseed must be sown within three weeks: the last day on which the whole plan for 2027 is still open, a catch crop for this autumn included.
 
-- **The plan uses only data from before that day.** `PLAN_DATA` in `src/pilot/demo.ts` lists every dataset behind the plan with its last day, and a test fails if one runs past the decision day. Satellite layers observed later are shown with the label "after the decision day — not used by the plan".
+- **The plan uses only data from before that day.** `PLAN_DATA` in `src/pilot/demo.ts` lists every dataset behind the plan with its last day, and a test fails if one runs past the decision day. Data observed later may be shown only with the label "after the decision day — not used by the plan".
 - **Everything else follows from the constant**: the plan years, what stands on the fields and what is already sown, which seasons the field index may use (`fieldIndexAt`), which satellite observations the screens show as known (`src/pilot/satellite.ts`), the texts.
 - **Supported days**: 1 July – 31 December 2026 (`SUPPORTED_DAYS`); outside it the app stops with an explanation, because the field histories and the cover model are prepared for this range.
 - **Checking another day**: `npm run check:day -- 2026-11-14` starts the app on that day on port 3111, next to the dev server; `BASE=http://localhost:3111 OUT=screenshots-check node scripts/shots.mjs 1280` photographs every state. `tests/demo-date.test.ts` runs the engine on nine days of the range.
@@ -76,8 +76,7 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 | Group | Screen | What it does |
 |---|---|---|
 | Farm | Map | Declared fields around the farm, the farm's fields, the official rule areas |
-| Farm | Fields | The previous season on each field: its crop (pre-filled from the declarations, editable), whether it is harvested on the decision day and when the field is free for the next crop, and, once sowing has started, what is already sown; a satellite hint from before that day; field timelines with sowing and harvest windows and free slots |
-| NASA data | Satellite | One layer as 30 m pixels and numbers per field; two layers side by side with a pixel inspector |
+| Farm | Fields | The previous season on each field: its crop (pre-filled from the paying agency’s crop monitoring, editable), whether it is harvested on the decision day and when the field is free for the next crop, and, once sowing has started, what is already sown; a satellite hint from before that day; field timelines with sowing and harvest windows and free slots |
 | NASA data | Analytics | When fields are bare (HLS), when rain is erosive and when water drains through the soil (IMERG, POWER); which months are risky; risk zones; the method behind each number |
 | Plan | Crops | Crops the farm can grow, catch crops, limits |
 | Plan | Planner | Suggested plans with the soil-protection block and its "?" panel (`?help=soil`), comparison, the agronomist's own plan, "Choose this plan" and the sowing list |

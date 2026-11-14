@@ -6,12 +6,20 @@ import { useMemo, useState } from 'react';
 import { cropColor } from '@/components/colors';
 import type { Neighbour } from '@/components/FarmMap';
 import { useScreen, useStore } from '@/components/store';
-import { More, Sw } from '@/components/ui';
+import { Sw } from '@/components/ui';
 import neighbours from '@/data/neighbours.json';
 import { DECISION_YEAR, farm } from '@/pilot/demo';
 import { cropLabel } from '@/pilot/regional';
 
 const FarmMap = dynamic(() => import('@/components/FarmMap'), { ssr: false });
+/** Show or hide a map layer: an open eye when shown, a crossed eye when hidden. */
+const Eye = ({ on, set, what }: { on: boolean; set: (v: boolean) => void; what: string }) => (
+  <button type="button" className="eye" aria-pressed={on} aria-label={`${on ? 'Hide' : 'Show'} ${what} on the map`} title={on ? 'Hide on the map' : 'Show on the map'} onClick={() => set(!on)}>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{!on && <path d="M4 4l16 16" />}
+    </svg>
+  </button>
+);
 
 export default function MapPage() {
   const s = useStore();
@@ -31,30 +39,26 @@ export default function MapPage() {
   useScreen('map', { cropYearShown: year, layersOn: { declaredFields: declared, ruleLayers }, cardOpenFor: card ? (nb ? `neighbouring declared field ${nb.nmaId}` : `farm field ${f.id}`) : null });
 
   return (
-    <div className="split" style={{ ['--side' as string]: '310px' }}>
+    <div className="split" style={{ ['--side' as string]: '350px' }}>
       <aside className="dock">
         <h1>Your farm</h1>
-        <p className="lead">{fields.length} fields, {farm.totalHa.toFixed(0)} ha, outlined in black and coloured by the crop of 2025. Click a field to see what grew on it.</p>
-        <div style={{ display: 'grid', gap: 7 }}>
-          <label className="chk"><input type="checkbox" checked={declared} onChange={e => setDeclared(e.target.checked)} />Neighbouring declared fields, 2025</label>
-          <label className="chk"><input type="checkbox" checked={ruleLayers} onChange={e => setRuleLayers(e.target.checked)} />Rule layers</label>
-        </div>
-        <More label="Crop colours">
+        <p className="lead">{fields.length} fields, {farm.totalHa.toFixed(0)} ha, outlined in black and coloured by the crop of the {year} harvest. Click a field to see what grew on it.</p>
+        {/* each map layer is a section: its switch and its legend, the legend always shown so nothing jumps */}
+        <section className="dock-sec">
+          <div className="sec-h"><h2>Neighbours’ crops, harvest {year}</h2><Eye on={declared} set={setDeclared} what="the crops of the neighbouring fields" /></div>
           <div className="legend" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 10px' }}>
-            {[...farmLegend, ...(declared ? otherLegend : [])].map(id => <span key={id}><Sw c={cropColor(id)} />{cropLabel(id).replace(' (class)', '')}</span>)}
-            {ruleLayers && <><span><Sw c="#b5452c" />Erosion-sensitive</span><span><Sw c="#3b2a4a" />Peat soil</span></>}
+            {[...farmLegend, ...otherLegend].map(id => <span key={id}><Sw c={cropColor(id)} />{cropLabel(id).replace(' (class)', '')}</span>)}
           </div>
-        </More>
-        <More label="How do I add my own farm?">
-          <ol className="plain" style={{ paddingLeft: '1.3em' }}>
-            <li>Find your fields: all declared fields of Lithuania are here (paying agency, 1.16 million in 2025).</li>
-            <li>Click a field and add it to your farm. Open data carry no owner, so you assemble your own holding; a boundary can also be drawn or corrected by hand.</li>
-            <li>Confirm what is on the fields on the <Link className="link" href="/organization">Fields</Link> screen: open declarations lag a year.</li>
-          </ol>
-          <p className="demo">In this demo the farm is preloaded: {fields.length} real neighbouring fields, {farm.totalHa.toFixed(0)} ha. Adding and drawing are switched off because satellite products are computed only for these fields.</p>
-        </More>
+          <small className="src-line">Source: crop declarations {year}, National Paying Agency (NMA)</small>
+        </section>
+        <section className="dock-sec">
+          <div className="sec-h"><h2>Risk zones</h2><Eye on={ruleLayers} set={setRuleLayers} what="the risk zones" /></div>
+          <div className="legend" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 10px' }}><span><Sw c="rgba(181,69,44,0.8)" />Erosion-sensitive land</span><span><Sw c="rgba(59,42,74,0.55)" />Peat soil</span></div>
+          <small className="src-line">Source: maps of the National Paying Agency (NMA)</small>
+        </section>
       </aside>
       <div className="mapbox">
+        <span className="map-note">In this demo, adding fields to the farm is switched off.</span>
         <FarmMap fill={fill} selected={nb ? null : s.field} onSelect={id => { s.setField(id); setCard(true); setAsked(false); }} neighbours={declared ? 'class' : 'outline'}
           selectedNeighbour={nb?.nmaId ?? null} onSelectNeighbour={p => { setNb(p); setAsked(false); if (p) setCard(true); }} showErosion={ruleLayers} showPeat={ruleLayers} />
         {card && (nb ? (
