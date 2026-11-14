@@ -59,7 +59,9 @@ export default function FieldsPage() {
   const agrees = spring.overwintered === null || !cropNow(f.id) ? null : spring.overwintered === WINTER_LIKE(cropNow(f.id));
   useScreen(`organization/${tab}`, { decisionDay: DECISION_DATE, selectedField: f.id, previousCrop: Object.fromEntries(fields.map(x => [x.id, `${cropLabel(cropNow(x.id))}: ${STATE_LABEL[stateOf(x.id)].toLowerCase()}, free for the next crop ${freeOf(x.id)}`])), sownForNextHarvest: Object.fromEntries(fields.map(x => [x.id, s.current[x.id] ? CROPS[s.current[x.id]!].name : 'nothing yet'])),
     satelliteHintForSelected: { earlySpringGreenness: spring.maxNdvi, suggestsWinterCropOrGrass: spring.overwintered, agreesWithEntry: agrees, accuracy: SPRING_HINT.accuracy, autumnHint: autumn.winterCropSuggested === null ? 'not yet observed on the decision day' : autumn },
-    fieldIndexForSelected: fi ? { seasons: fi.k, percentileAmongNeighbours: fi.percentile, winterWheat: +idx('winter_wheat').toFixed(3), rapeseed: +idx('winter_rapeseed').toFixed(3), legumes: +idx('faba_bean').toFixed(3) } : null });
+    fieldIndexForSelected: fi ? { seasons: fi.k, percentileAmongNeighbours: fi.percentile, winterWheat: +idx('winter_wheat').toFixed(3), rapeseed: +idx('winter_rapeseed').toFixed(3), legumes: +idx('faba_bean').toFixed(3) } : null,
+    // every field in short, so questions about a field that is not selected can be answered
+    everyField: Object.fromEntries(fields.map(x => [x.id, { crops: Object.fromEntries([Y - 2, Y - 1, Y].map(y => [y, cropLabel(x.history[y]?.crop ?? x.history[y]?.cropClass)])), wheatYieldAgainstNeighbours: fieldIndex.fields[x.id]?.k ? signedPct(fieldFactor(s.ctx, x.id, 'winter_wheat')) : 'not known, counted as average' }])) });
   const tabs = <Tabs label="Fields views" tabs={[{ id: 'fields', label: 'Previous season' }, { id: 'timelines', label: 'Field timelines' }]} value={tab} onChange={setTab} />;
 
   if (tab === 'timelines') return (
