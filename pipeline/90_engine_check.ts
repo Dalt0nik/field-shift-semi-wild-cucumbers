@@ -3,7 +3,7 @@
 // Usage: npx tsx pipeline/90_engine_check.ts [decision day ...]      default: the decision day of the demo
 //   e.g. npx tsx pipeline/90_engine_check.ts 2026-07-15 2026-08-01 2026-09-01 2026-11-14
 import { rulesFor } from '../src/engine/characteristics.ts';
-import { AXES, consequences, search } from '../src/engine/search.ts';
+import { AXES, consequences, search, shareBeaten } from '../src/engine/search.ts';
 import { catchBefore } from '../src/engine/plan.ts';
 import { DECISION_DATE, fields, makeContext, makeSetup } from '../src/pilot/demo.ts';
 import { cropLabel } from '../src/pilot/regional.ts';
@@ -24,6 +24,11 @@ for (const date of dates) {
   const span = (get: (c: any) => number) => { const v = r.variants.map(x => get(x.ch)); return `${Math.min(...v)}–${Math.max(...v)}`; };
   console.log(`span of the non-dominated plans: margin ${span(c => c.marginMean)} (usual ${r.baseline.ch.marginMean}) | S1e ${span(c => c.bareErosive.p50)} (usual ${r.baseline.ch.bareErosive.p50}) | S1 ${span(c => c.bareDays.p50)} (usual ${r.baseline.ch.bareDays.p50}) | S5 ${span(c => c.bareLeaching)} (usual ${r.baseline.ch.bareLeaching}) | S6 ${span(c => c.humus)} (usual ${r.baseline.ch.humus}) | c>c ${span(c => Math.round(c.cerealAfterCereal * 100))} % (usual ${Math.round(r.baseline.ch.cerealAfterCereal * 100)} %)`);
   console.log('BASE  ', show(r.baseline), 'nonDominated', r.baseline.nonDominated);
+  // usual practice is the typical of the statistical farms (docs/usual-practice.md): their spread, and how the cards place
+  const fb = r.farmers;
+  console.log(`statistical farms: ${fb.n} kept of ${fb.drawn} drawn${fb.rulesPassed ? '' : ' (too few pass the farm rules: failing farms kept too)'} | 10th / 50th / 90th percentile: ${AXES.map(a => `${a.key} ${fb.axes[a.key].p10.toFixed(0)} / ${fb.axes[a.key].p50.toFixed(0)} / ${fb.axes[a.key].p90.toFixed(0)}`).join(' | ')}`);
+  console.log(`kept farmer probability per field: ${Object.entries(fb.keptMass).map(([f, m]) => `${f} ${m.toFixed(2)}${m < 0.2 ? ' (!)' : ''}`).join(' ')}`);
+  for (const v of r.variants.filter(v => v.tags.length)) console.log(`  ${v.tags.join(', ').padEnd(30)} beats statistical farms: ${AXES.map(a => `${a.key} ${(shareBeaten(fb, a.key, v.ch) * 100).toFixed(0)} %`).join(', ')}`);
   for (const v of r.variants.filter(v => v.tags.length)) console.log(show(v));
 
   // exact bounds: soil and margin add up over fields, so the best option of each field taken alone bounds the farm.

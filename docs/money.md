@@ -6,7 +6,8 @@ How the engine computes the money of a crop plan: the margin of every field in e
 
 A plan is replayed through past seasons (`REPLAY` in `src/pilot/demo.ts`: 2006–2024; the last season and the years of the normal levels follow the decision day, so that only published yields and prices are used).
 
-- **Levels are today's.** Each replayed season applies its relative deviations of yield and price to today's normal levels.
+- **Levels are today's.** Each replayed season applies its relative deviations of yield and price to today's normal levels. The deviations of every crop average 1 over the replayed seasons, so the replay keeps that level: the yield trend is in the normal level already and is not counted a second time.
+- **The margin is the farm net income.** Besides the crops' variable costs, every season carries the costs of running the farm (overheads, depreciation, rent, wages, interest) of an average Lithuanian cereal farm and the redistributive payment of a holding of this size (section 7a). They are the same for every plan, so they set the level and never the order of plans.
 - **One season for all crops.** Every crop of the plan goes through the same season, so the crops of a plan keep their joint good and bad years.
 - **Result.** The engine produces one farm margin per season. All money characteristics are read from that series.
 
@@ -20,13 +21,14 @@ R(f,c,s) = Y(f,c,s) × Pnorm(c) × dP(c,s)                          revenue, €
 M(f,t,s) = R(f,c,s) − WH(f,c,s) + payments(f,t) − costs(c,t)      margin, €/ha
 
 M(f,s)   = mean of M(f,t,s) over the plan years
-F(s)     = Σf M(f,s) × area(f) / farm area + rotation eco-scheme bonus
+F(s)     = Σf M(f,s) × area(f) / farm area + rotation eco-scheme bonus + farm payments − farm costs
 ```
 
 | Term | Meaning | Code |
 |---|---|---|
 | Ynorm, Pnorm | Normal yield and price: mean over `REPLAY.normalYieldYears` and `REPLAY.normalPriceYears` | `prepare` → `normal` |
-| dY, dP | Deviation of season s: value of s divided by the mean of the five seasons before it; 1 if any of the six values is missing | `prepare` → `yieldDev`, `revenue` |
+| dY, dP | Deviation of season s: value of s divided by the mean of the seasons before it (up to five, at least `MIN_PREV_SEASONS` = 3); where a crop has no deviation, the mean deviation of its family in that season. Each series is then divided by its mean over the replayed seasons (dY and dP separately, so their covariance stays) | `prepare` → `yieldDev`, `revenue` |
+| farm costs, farm payments | Per ha a year, the same for every plan: Lithuanian FADN 2024 costs beyond the variable costs (491 €/ha) and the redistributive payment (46 €/ha for 102 ha) | `ctx.farmLevel`, `FARM_COSTS`, `redistributivePerHa` |
 | FI | Field index: the field's usual yield against neighbouring fields of the same crop group (NASA HLS) | `fieldFactor` |
 | PC | Preceding-crop factor, cereals only: after a cereal 0.93, after oilseed 1.02, after a legume 1.06, else 1 | `precropFactor` |
 | WH | Wet-harvest loss in seasons with a rainy harvest (NASA GPM IMERG) | `wetHarvestLoss` |
@@ -38,7 +40,7 @@ For every crop of the crop set and every replayed season, `prepare` builds:
 
 | Output | Content |
 |---|---|
-| `normal[c]` | `yieldTHa`, `priceEurT`, `costEurHa` (× `costFactor`), `seasonsUsed` |
+| `normal[c]` | `yieldTHa`, `priceEurT`, `costEurHa` (× `costFactor`), `seasonsUsed` (seasons with the crop's own yield and price deviation), `seasonsFilled` (seasons that borrowed the family's deviation) |
 | `yieldDev[c][s]` | dY |
 | `revenue[c][s]` | Ynorm × dY × Pnorm × dP: revenue at district level with the season's yield and price |
 | `revenueYield[c][s]` | Ynorm × dY × Pnorm: the same at the normal price, used to compare season types without price effects |
@@ -157,20 +159,44 @@ search({ ...makeContext(), moneySteps: { fieldIndex: false, wetHarvest: false } 
 
 When `fieldIndex` or `wetHarvest` is absent from the context, the step is off. `costFactor` scales all variable costs (`pipeline/91_cost_sensitivity.ts`).
 
+## 7a. Farm costs and farm payments — `ctx.farmLevel`
+
+The crops' variable costs (seed, fertiliser, plant protection, fuel, drying) leave out what it costs to run the farm. Without it the margin is a gross margin of 750–990 €/ha, which no Lithuanian cereal farm earns. `ctx.farmLevel` adds, per ha and year, the same in every season and for every plan:
+
+| Item | €/ha | Lithuanian FADN 2024, cereal and oilseed farms (TF15, 572 farms, 62.67 ha) |
+|---|---|---|
+| Machinery and buildings upkeep | 63 | table 24: 3 947 € per farm |
+| Contract work | 24 | 1 478 |
+| Other overheads (insurance, other) | 60 | 3 779 |
+| Depreciation | 204 | 12 775 |
+| Rent paid (51 % of the land rented, 116 € per rented ha) | 59 | 3 670 |
+| Wages paid | 49 | 3 098 |
+| Interest paid | 26 | 1 616 |
+| Land tax | 6 | table 12: 374 |
+| **Farm costs** | **491** | `FARM_COSTS_EUR_HA` |
+| Redistributive payment (3D-596: 75.18 / 81.42 / 95.23 / 108.45 €/ha for ha 1–10 / 11–20 / 21–30 / 31–50) | +46 | `redistributivePerHa(101.96 ha)` |
+
+Source: ŽŪDC, *Ūkių veiklos rezultatai 2024* (Lithuanian FADN), type of farming "Javų, rapsų". Energy is not taken again: it is in the variable costs. Family labour is not paid: the margin is the FADN farm net income, what is left for the family's work, its own land and capital. Farms of 100–250 thousand € economic size (182 ha, all types) carry 496 €/ha of the same items.
+
+Check against the same accounts: TF15 farms earned a farm net income of 152 €/ha in 2024, a year of low prices. Usual practice replayed in season 2024 gives −7 €/ha; the model leaves out the eco-schemes it does not plan (55 €/ha in TF15), other subsidies (41) and other and livestock output (45 €/ha), together about 140 €/ha.
+
+`moneySteps.farmLevel = false` switches the step off (gross margin), as the money-step tests do.
+
 ## 9. Pilot reference values
 
 Two set-ups of the demo farm. The money steps were first checked on the decision day **14 November 2026**, when 75 of 102 ha carried a winter crop; `tests/money.test.ts` keeps that set-up (`makeSetup({ decisionDate: '2026-11-14' })`). The demo now runs on **1 August 2026**, with every field open (`npx tsx pipeline/90_engine_check.ts 2026-08-01 2026-11-14` prints both).
 
 | | Usual season | Bad seasons | Wet harvest |
 |---|---|---|---|
-| 14 Nov · Usual practice, both steps off | 910 | 400 | 792 |
-| 14 Nov · Usual practice, wet harvest only | 887 | 383 | 676 |
-| 14 Nov · Usual practice, both steps | 929 | 409 | 711 |
-| 1 Aug · Usual practice, both steps | 984 | 426 | 755 |
-| 1 Aug · Highest margin, both steps | 988 | 444 | 763 |
-| 1 Aug · Balanced plan, both steps | 955 | 451 | 744 |
+| 14 Nov · Old usual practice, both steps off, gross | 821 | 342 | 743 |
+| 14 Nov · Old usual practice, wet harvest only, gross | 799 | 326 | 632 |
+| 14 Nov · Old usual practice, both steps, gross | 838 | 350 | 666 |
+| 14 Nov · Old usual practice, both steps, farm net income | 393 | −95 | 221 |
+| 1 Aug · Usual practice (typical statistical farm) | 319 | −129 | 156 |
+| 1 Aug · Highest margin | 440 | −81 | 259 |
+| 1 Aug · Balanced plan | 398 | −89 | 224 |
 
-All values in €/ha. The balanced plan depends on the search axes; since the bare-soil axis became the erosion-weighted days, the balanced plan of 14 November is 958 / 444 / 744 (it was 963 / 449 / 750).
+All values in €/ha. "Old usual practice" is the plan of the hand-written wheat and rapeseed habit that usual practice was until 14 November 2026. `tests/money.test.ts` keeps it as a fixed plan, so the money steps are checked on the same plan as before. Usual practice is now the typical farm drawn from the declarations around the pilot ([usual-practice.md](usual-practice.md)); 1 August rows are farm net income with both money steps. Before the replay was scaled and before the farm costs (14 November 2026) the same rows read 857 / 379 / 654, 988 / 444 / 763 and 955 / 451 / 744: gross margins, and about 90 €/ha too high.
 
 Single values:
 - FI(F12, winter wheat) = 0.813.
@@ -178,7 +204,8 @@ Single values:
 - FI(F11, any crop) = 1.
 - Wet-harvest seasons: 2006, 2007, 2010, 2011.
 - WH of winter wheat at 5.73 t/ha and 1 456 €/ha = 162 €/ha.
-- Field F2, faba bean then winter wheat, season 2006: 445.7 €/ha.
+- Field F2, faba bean then winter wheat, season 2006: 63.5 €/ha (faba bean in the 2006 drought: 0.25 of its usual yield; it was 445.7 when a missing deviation counted as an ordinary season).
+- `tests/money-replay.test.ts`: every crop's yield deviations average 1; the rolling forecast of district revenue for the harvests 2014–2025, with the app's information lag, is unbiased within 3 % (it was +12 % before the deviations were scaled).
 
 ## 10. Updating the inputs
 

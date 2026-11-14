@@ -14,60 +14,64 @@
   "perennial_grasses"
  ],
  "base": "storms",
- "plans": 57,
+ "plans": 38,
  "bestForSoil": {
   "s1e": 139,
-  "margin": 859
+  "margin": 298
  },
  "usual": {
-  "s1e": 151,
-  "margin": 984
+  "s1e": 156,
+  "margin": 319
  },
  "lowerBound": 138.5,
  "frontier": [
   {
    "s1e": 139,
-   "margin": 859
+   "margin": 298
   },
   {
    "s1e": 140,
-   "margin": 892
+   "margin": 359
   },
   {
    "s1e": 141,
-   "margin": 928
+   "margin": 380
   },
   {
    "s1e": 142,
-   "margin": 955
+   "margin": 398
   },
   {
    "s1e": 143,
-   "margin": 964
+   "margin": 422
   },
   {
    "s1e": 144,
-   "margin": 978
+   "margin": 425
   },
   {
    "s1e": 145,
-   "margin": 980
+   "margin": 427
   },
   {
    "s1e": 146,
-   "margin": 981
+   "margin": 430
   },
   {
    "s1e": 147,
-   "margin": 982
+   "margin": 434
   },
   {
    "s1e": 148,
-   "margin": 985
+   "margin": 437
   },
   {
    "s1e": 149,
-   "margin": 988
+   "margin": 439
+  },
+  {
+   "s1e": 150,
+   "margin": 440
   }
  ],
  "variants": [
@@ -76,66 +80,66 @@
    "junToAug": 0.4836,
    "decToFeb": 0.1376,
    "basePlanRank": 1,
-   "of": 57,
-   "rho": 0.985,
-   "bestDiffersOnFields": 8,
-   "basePlanS1e": 141.9,
-   "usualS1e": 153.6
+   "of": 38,
+   "rho": 0.997,
+   "bestDiffersOnFields": 3,
+   "basePlanS1e": 141.8,
+   "usualS1e": 158.9
   },
   {
    "key": "dailyB15",
    "junToAug": 0.4691,
    "decToFeb": 0.1435,
    "basePlanRank": 1,
-   "of": 57,
-   "rho": 0.975,
-   "bestDiffersOnFields": 4,
-   "basePlanS1e": 142.5,
-   "usualS1e": 154.4
+   "of": 38,
+   "rho": 0.995,
+   "bestDiffersOnFields": 3,
+   "basePlanS1e": 142.3,
+   "usualS1e": 159.9
   },
   {
    "key": "dailyB20",
    "junToAug": 0.4939,
    "decToFeb": 0.1335,
    "basePlanRank": 1,
-   "of": 57,
-   "rho": 0.991,
-   "bestDiffersOnFields": 4,
-   "basePlanS1e": 141.5,
-   "usualS1e": 153
+   "of": 38,
+   "rho": 0.998,
+   "bestDiffersOnFields": 3,
+   "basePlanS1e": 141.4,
+   "usualS1e": 158.3
   },
   {
    "key": "dailyWarm2",
    "junToAug": 0.5848,
    "decToFeb": 0.0832,
-   "basePlanRank": 3,
-   "of": 57,
-   "rho": 0.885,
-   "bestDiffersOnFields": 9,
-   "basePlanS1e": 137.6,
-   "usualS1e": 145.7
+   "basePlanRank": 6,
+   "of": 38,
+   "rho": 0.993,
+   "bestDiffersOnFields": 8,
+   "basePlanS1e": 138.6,
+   "usualS1e": 150.9
   },
   {
    "key": "stormsWithSnow",
    "junToAug": 0.5144,
    "decToFeb": 0.1688,
    "basePlanRank": 1,
-   "of": 57,
-   "rho": 0.988,
-   "bestDiffersOnFields": 7,
-   "basePlanS1e": 140.4,
-   "usualS1e": 152
+   "of": 38,
+   "rho": 0.997,
+   "bestDiffersOnFields": 3,
+   "basePlanS1e": 140.1,
+   "usualS1e": 157.2
   },
   {
    "key": "stormsSmoothed",
    "junToAug": 0.5236,
    "decToFeb": 0.1331,
    "basePlanRank": 1,
-   "of": 57,
-   "rho": 0.997,
+   "of": 38,
+   "rho": 0.999,
    "bestDiffersOnFields": 4,
-   "basePlanS1e": 139.2,
-   "usualS1e": 151.5
+   "basePlanS1e": 139,
+   "usualS1e": 156.2
   }
  ]
 }

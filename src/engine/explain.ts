@@ -12,7 +12,7 @@ const TAG_WHY: Record<string, string> = {
   'best: soil': 'It leaves the soil without living cover for the fewest days, counted more heavily in the months when rain is most erosive.',
   'best: cereal after cereal': 'It has the smallest area where a cereal follows a cereal.',
   balanced: 'It is not the best on any one measure, but it is never the worst: its weakest measure is better than the weakest measure of any other plan.',
-  'current practice': 'It continues the wheat and rapeseed habit of the region on every field that is still open. It is shown for comparison, as the challenge asks.',
+  'current practice': 'A typical farm of the area: on every field that is still open, crops drawn by how often farms nearby sow them after the same crop in the field declarations, without catch crops. It is shown for comparison, as the challenge asks.',
 };
 const signed = (v: number, unit: string) => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(v)} ${unit}`;
 const mean = (a: number[]) => a.reduce((t, v) => t + v, 0) / (a.length || 1);
