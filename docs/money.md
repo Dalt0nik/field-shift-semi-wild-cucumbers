@@ -4,7 +4,7 @@ How the engine computes the money of a crop plan: the margin of every field in e
 
 ## 1. Idea
 
-A plan is replayed through past seasons (`REPLAY` in `src/pilot/demo.ts`: 2006–2024).
+A plan is replayed through past seasons (`REPLAY` in `src/pilot/demo.ts`: 2006–2024; the last season and the years of the normal levels follow the decision day, so that only published yields and prices are used).
 
 - **Levels are today's.** Each replayed season applies its relative deviations of yield and price to today's normal levels.
 - **One season for all crops.** Every crop of the plan goes through the same season, so the crops of a plan keep their joint good and bad years.
@@ -68,6 +68,7 @@ The parts:
   A crop without a group has FI = 1.
 - `beta`, `cap` and `fields[f].dShrunk` come from `src/data/field-index.json`. A field missing from the file has FI = 1.
 - `dShrunk` is the field's mean difference of season peak NDVI from its neighbours with the same crop group, multiplied by its reliability.
+- Only seasons whose peak window (1 April – 31 July) had closed by the decision day are used: `fieldIndexAt(date)` in `src/pilot/demo.ts` recomputes `k`, `reliability` and `dShrunk` from the seasons that are left. On 1 August 2026 all four seasons count.
 
 `field-index.json` (copy of `pipeline/inputs/field-index.json`, see `pipeline/README.md`):
 
@@ -120,7 +121,9 @@ For one field option (a crop per plan year, with catch-crop flags):
 | `margin[s]` | € for the whole field, mean of the plan years, at the season's prices |
 | `marginYield[s]` | The same at normal prices (WH from the normal-price revenue) |
 | `payments` | € per year: basic support, coupled protein support for annual legumes, catch-crop eco-scheme |
-| `bare`, `bareWinter`, `bareSlopes`, `cerealAfterCereal`, `legume` | The non-money parts of the option |
+| `bare`, `bareErosive`, `bareWinter`, `bareSlopes`, `bareLeaching`, `wetHarvest`, `humus`, `cerealAfterCereal`, `legume` | The non-money parts of the option ([soil.md](soil.md)) |
+
+A catch crop can precede the crop of any plan year, the first one included while its sowing is still ahead of the decision day (`catchBefore`, `FieldOption.catchFirst`); it costs `CATCH_CROP_COST` and earns the catch-crop eco-scheme.
 
 Field parts add up over fields, so the search evaluates a plan by summing precomputed parts.
 
@@ -141,7 +144,7 @@ ecoBonus = PAYMENTS_2025.ecoRotation × share of plan years in which the farm me
 | `marginSeries` | F(s) with the season type, for charts |
 | `paymentsEurHa` | Payments per ha and year, eco-scheme included |
 
-The search (`src/engine/search.ts`) compares plans on `AXES`: `marginMean`, `marginWorstFifth`, bare-soil days and cereal after cereal.
+The search (`src/engine/search.ts`) compares plans on `AXES`: `marginMean`, `marginWorstFifth`, days without cover weighted by erosive rain (`bareErosive`, [soil.md](soil.md)) and cereal after cereal.
 
 ## 8. Switching steps off
 
@@ -156,16 +159,18 @@ When `fieldIndex` or `wetHarvest` is absent from the context, the step is off. `
 
 ## 9. Pilot reference values
 
-`tests/money.test.ts` and `pipeline/90_engine_check.ts` on the demo farm:
+Two set-ups of the demo farm. The money steps were first checked on the decision day **14 November 2026**, when 75 of 102 ha carried a winter crop; `tests/money.test.ts` keeps that set-up (`makeSetup({ decisionDate: '2026-11-14' })`). The demo now runs on **1 August 2026**, with every field open (`npx tsx pipeline/90_engine_check.ts 2026-08-01 2026-11-14` prints both).
 
 | | Usual season | Bad seasons | Wet harvest |
 |---|---|---|---|
-| Usual practice, both steps off | 910 | 400 | 792 |
-| Usual practice, wet harvest only | 887 | 383 | 676 |
-| Usual practice, both steps | 929 | 409 | 711 |
-| Balanced plan, both steps | 963 | 449 | 750 |
+| 14 Nov · Usual practice, both steps off | 910 | 400 | 792 |
+| 14 Nov · Usual practice, wet harvest only | 887 | 383 | 676 |
+| 14 Nov · Usual practice, both steps | 929 | 409 | 711 |
+| 1 Aug · Usual practice, both steps | 984 | 426 | 755 |
+| 1 Aug · Highest margin, both steps | 988 | 444 | 763 |
+| 1 Aug · Balanced plan, both steps | 955 | 451 | 744 |
 
-All values in €/ha.
+All values in €/ha. The balanced plan depends on the search axes; since the bare-soil axis became the erosion-weighted days, the balanced plan of 14 November is 958 / 444 / 744 (it was 963 / 449 / 750).
 
 Single values:
 - FI(F12, winter wheat) = 0.813.
@@ -183,4 +188,4 @@ Single values:
 | Field index | Replace `pipeline/inputs/field-index.json` and copy it to `src/data/` |
 | Rates and parameters | `PAYMENTS_2025` in `src/pilot/rules.ts`; `WET_HARVEST` and `FIELD_GROUP` in `src/pilot/economics.ts`; `REPLAY` in `src/pilot/demo.ts` |
 
-After a change, run `npm test` and `npx tsx pipeline/90_engine_check.ts`.
+After a change, run `npm test` and `npx tsx pipeline/90_engine_check.ts` (it also compares the search with exact bounds: the highest margin and the lowest erosion-weighted days of the best option of every field).

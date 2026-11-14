@@ -5,7 +5,8 @@ import { fieldIndex, fields, makeContext, makeSetup } from '@/pilot/demo';
 import { WET_HARVEST } from '@/pilot/economics';
 import { search } from '@/engine/search';
 
-const ctx = makeContext(makeSetup());
+// Reference set-up of docs/money.md, section 9: the decision day 14 November 2026, with the autumn sowing in the ground.
+const ctx = makeContext(makeSetup({ decisionDate: '2026-11-14' }));
 
 describe('field index', () => {
   it('gives the pilot values', () => {

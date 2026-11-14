@@ -2,7 +2,8 @@
 //  - NASA HLS (L30 + S30) half-month NDVI per field, 2016-2026 -> soil-cover history, bare-soil calendar, autumn-2026 state
 //  - NASADEM terrain per field: elevation, median slope, relative height (cold-air pooling and wet spots)
 //  - map overlays (PNG): HLS true colour of autumn 2026, NASADEM slope, how often a pixel is bare in early spring
-// Output: src/data/products.json, public/overlays/*.png
+// Output: src/data/products.json, src/data/farm-hls.json (the half-month series themselves: the app cuts them at the
+//         decision day of the demo, src/pilot/satellite.ts), public/overlays/*.png
 // Usage: npx tsx pipeline/30_farm_products.ts
 import fs from 'node:fs';
 import path from 'node:path';
@@ -39,6 +40,7 @@ if (!Object.keys(series).length) {
   fs.mkdirSync(CACHE, { recursive: true });
   fs.writeFileSync(cacheFile, JSON.stringify(series));
 }
+fs.writeFileSync(path.join(OUT, 'farm-hls.json'), JSON.stringify(series));
 
 // ---- terrain per field (NASADEM)
 const dem = ee.Image('NASA/NASADEM_HGT/001').select('elevation');

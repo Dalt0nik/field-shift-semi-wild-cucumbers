@@ -1,6 +1,6 @@
 'use client';
 // "A field is a timeline of slots": one row per field, occupied gaps as blocks, free slots as dashed boxes.
-import { baseTimeline, occupancyFor, slots, type PlanSetup } from '@/engine/plan';
+import { baseTimeline, catchBefore, occupancyFor, slots, type PlanSetup } from '@/engine/plan';
 import { cropLabel, CROPS } from '@/pilot/regional';
 import type { FieldInfo, FieldOption, Occupancy, Slot } from '@/engine/types';
 import { cropColor } from './colors';
@@ -19,7 +19,7 @@ export function planRows(fields: FieldInfo[], setup: PlanSetup, options: FieldOp
     if (o) o.crops.forEach((id, i) => {
       if (i === 0 && setup.current[f.id]) return;
       const oc = occupancyFor(id, setup.planYears[i], 'plan'); if (oc) occ.push(oc);
-      if (i > 0 && o.catchAfter[i - 1]) catches.push({ from: `${setup.planYears[i - 1]}-08-25`, to: `${setup.planYears[i]}-03-01` });
+      if (catchBefore(o, i)) catches.push({ from: `${setup.planYears[i] - 1}-08-25`, to: `${setup.planYears[i]}-03-01` });
     });
     return { id: f.id, areaHa: f.areaHa, occ, catches, slots: o ? undefined : slots(f, occ, setup) };
   });
@@ -38,7 +38,7 @@ export default function Timeline({ rows, from, to, decision, selected, onSelect 
         <div className="tl-name" />
         <div className="tl-track">
           {years.map(y => <span key={y} className="tl-year" style={{ left: x(`${y}-01-01`) }}>{y}</span>)}
-          <span className="tl-now" style={{ left: x(decision) }}><i>today</i></span>
+          <span className="tl-now" style={{ left: x(decision) }}><i>decision day</i></span>
         </div>
       </div>
       {rows.map(r => (

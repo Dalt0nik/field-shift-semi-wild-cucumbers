@@ -1,0 +1,141 @@
+{
+ "decisionDate": "2026-08-01",
+ "cropSet": [
+  "winter_wheat",
+  "winter_rapeseed",
+  "winter_barley",
+  "triticale",
+  "spring_wheat",
+  "spring_barley",
+  "oats",
+  "peas",
+  "faba_bean",
+  "sugar_beet",
+  "perennial_grasses"
+ ],
+ "base": "storms",
+ "plans": 57,
+ "bestForSoil": {
+  "s1e": 139,
+  "margin": 859
+ },
+ "usual": {
+  "s1e": 151,
+  "margin": 984
+ },
+ "lowerBound": 138.5,
+ "frontier": [
+  {
+   "s1e": 139,
+   "margin": 859
+  },
+  {
+   "s1e": 140,
+   "margin": 892
+  },
+  {
+   "s1e": 141,
+   "margin": 928
+  },
+  {
+   "s1e": 142,
+   "margin": 955
+  },
+  {
+   "s1e": 143,
+   "margin": 964
+  },
+  {
+   "s1e": 144,
+   "margin": 978
+  },
+  {
+   "s1e": 145,
+   "margin": 980
+  },
+  {
+   "s1e": 146,
+   "margin": 981
+  },
+  {
+   "s1e": 147,
+   "margin": 982
+  },
+  {
+   "s1e": 148,
+   "margin": 985
+  },
+  {
+   "s1e": 149,
+   "margin": 988
+  }
+ ],
+ "variants": [
+  {
+   "key": "daily",
+   "junToAug": 0.4836,
+   "decToFeb": 0.1376,
+   "basePlanRank": 1,
+   "of": 57,
+   "rho": 0.985,
+   "bestDiffersOnFields": 8,
+   "basePlanS1e": 141.9,
+   "usualS1e": 153.6
+  },
+  {
+   "key": "dailyB15",
+   "junToAug": 0.4691,
+   "decToFeb": 0.1435,
+   "basePlanRank": 1,
+   "of": 57,
+   "rho": 0.975,
+   "bestDiffersOnFields": 4,
+   "basePlanS1e": 142.5,
+   "usualS1e": 154.4
+  },
+  {
+   "key": "dailyB20",
+   "junToAug": 0.4939,
+   "decToFeb": 0.1335,
+   "basePlanRank": 1,
+   "of": 57,
+   "rho": 0.991,
+   "bestDiffersOnFields": 4,
+   "basePlanS1e": 141.5,
+   "usualS1e": 153
+  },
+  {
+   "key": "dailyWarm2",
+   "junToAug": 0.5848,
+   "decToFeb": 0.0832,
+   "basePlanRank": 3,
+   "of": 57,
+   "rho": 0.885,
+   "bestDiffersOnFields": 9,
+   "basePlanS1e": 137.6,
+   "usualS1e": 145.7
+  },
+  {
+   "key": "stormsWithSnow",
+   "junToAug": 0.5144,
+   "decToFeb": 0.1688,
+   "basePlanRank": 1,
+   "of": 57,
+   "rho": 0.988,
+   "bestDiffersOnFields": 7,
+   "basePlanS1e": 140.4,
+   "usualS1e": 152
+  },
+  {
+   "key": "stormsSmoothed",
+   "junToAug": 0.5236,
+   "decToFeb": 0.1331,
+   "basePlanRank": 1,
+   "of": 57,
+   "rho": 0.997,
+   "bestDiffersOnFields": 4,
+   "basePlanS1e": 139.2,
+   "usualS1e": 151.5
+  }
+ ]
+}

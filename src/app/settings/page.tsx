@@ -48,7 +48,7 @@ export default function CropsPage() {
           <Panel title="Limits" sub="a plan that breaks one is never shown">
             <table>
               <tbody>
-                <tr><td className="nw"><b>Already sown</b></td><td>{sown.length ? `${sown.map(f => f.id).join(', ')} keep their crop for ${PLAN_YEARS[0]}` : 'no field is sown yet'}</td><td /></tr>
+                <tr><td className="nw"><b>Already in the ground</b></td><td>{sown.length ? `${sown.map(f => f.id).join(', ')} ${sown.length > 1 ? 'keep their crop' : 'keeps its crop'} for ${PLAN_YEARS[0]}` : `nothing is sown for ${PLAN_YEARS[0]} yet`}</td><td /></tr>
                 {steep.length > 0 && <tr><td className="nw"><b>From the rules</b></td><td>Sugar beet and other root crops are not offered on {steep.length} of {fields.length} fields: part of each is erosion-sensitive land</td><td /></tr>}
                 {bans.map(([f, c]) => <tr key={f + c}><td className="nw"><b>Your ban</b></td><td>No {CROPS[c].name.toLowerCase()} on {f}</td><td className="n"><button className="link" onClick={() => s.setBan(f, c, false)}>remove</button></td></tr>)}
               </tbody>

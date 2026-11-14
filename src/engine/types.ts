@@ -59,6 +59,9 @@ export interface FieldOption {
   crops: CropId[];
   /** catch crop sown after the harvest of plan year i (before the crop of year i+1) */
   catchAfter: boolean[];
+  /** catch crop sown before the crop of the first plan year, after the harvest of the crop that stands on the
+   *  decision day (possible only while that autumn's catch-crop sowing is still ahead) */
+  catchFirst?: boolean;
   /** which years were fixed by what already grows on the field */
   fixed: boolean[];
   warnings: string[];
@@ -84,11 +87,24 @@ export interface Characteristics {
   marginNormal: number | null;
   worstSeasons: { season: string; margin: number; type: string }[];
   marginSeries: { season: string; margin: number; type: string }[];
-  /** bare-soil-equivalent days per hectare and year (NASA HLS cover model) */
+  /** S1e, the soil headline: days without living cover per hectare and year, each half-month weighted by its share
+   *  of the yearly rainfall erosivity (NASA HLS cover x NASA GPM IMERG erosivity) */
+  bareErosive: Range;
+  /** S1: days without living cover per hectare and year, every half-month weighted equally (NASA HLS cover model) */
   bareDays: Range;
   bareDaysWinter: number;
-  /** ha x bare days on land inside the official erosion-sensitive layer, per year */
+  /** S2: ha x erosion-weighted days without cover on land inside the official erosion-sensitive layer, per year */
   bareOnSlopes: number;
+  /** S5: days without living cover in the leaching season (1 Sep - 28 Feb), weighted by the water surplus */
+  bareLeaching: number;
+  /** S3: crop families (cereal, oilseed, legume, row, grass) on the farm in each plan year */
+  familiesPerYear: number[];
+  /** S4: hectares per plan year harvested in a window that is typically wet */
+  wetHarvestHa: number;
+  /** S6: humus balance, kg humus-C per hectare and year (VDLUFA coefficients; an accounting indicator) */
+  humus: number;
+  /** the straw assumption behind S6 */
+  humusStrawLeft: boolean;
   /** share of area-years with a cereal after a cereal */
   cerealAfterCereal: number;
   legumeShare: number;

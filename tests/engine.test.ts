@@ -5,7 +5,10 @@ import { baseTimeline, checkCandidate, fieldOptions, slots } from '@/engine/plan
 import { ecoRotation, gaec6, gaec7, type YearState } from '@/pilot/rules';
 import { AXES, search } from '@/engine/search';
 
-const setup = makeSetup();
+// The stage 2-4 cases below are written for a decision day in November, when winter crops are in the ground:
+// the same day the money reference values of docs/money.md are computed for.
+const NOV = '2026-11-14';
+const setup = makeSetup({ decisionDate: NOV });
 const byId = (id: string) => fields.find(f => f.id === id)!;
 const state = (over: Partial<YearState>): YearState => ({ year: 2028, area: new Map(), arableHa: 100, changedHa: 0, catchHa: 0, fourthYearHa: 0, repeatedHa: 0, winterGreenHa: 0, winterStubbleHa: 0, winterExemptHa: 0, ...over });
 
@@ -76,7 +79,7 @@ describe('stage 6: characteristics', () => {
     expect(precropFactor('peas', 'winter_wheat')).toBe(1);
   });
   it('replays 19 seasons and flags the dry ones from IMERG', () => {
-    const pre = prepare(makeContext());
+    const pre = prepare(makeContext(setup));
     expect(pre.seasons.length).toBe(19);
     expect(pre.types.filter(t => t === 'dry').length).toBeGreaterThanOrEqual(3);
     expect(pre.normal.winter_wheat.yieldTHa).toBeGreaterThan(3);
@@ -84,14 +87,14 @@ describe('stage 6: characteristics', () => {
 });
 
 describe('stage 5 and 7: search', () => {
-  const r = search(makeContext(), { population: 60, generations: 30 });
+  const r = search(makeContext(setup), { population: 60, generations: 30 });
   it('returns only variants that pass the farm rules', () => { expect(r.variants.length).toBeGreaterThan(3); expect(r.variants.every(v => v.ch.feasible)).toBe(true); });
   it('no returned variant is beaten on every comparison characteristic', () => {
     const obj = (v: (typeof r.variants)[number]) => AXES.map(a => a.sign * a.get(v.ch));
     for (const a of r.variants) for (const b of r.variants) if (a !== b) expect(obj(b).every((x, i) => x >= obj(a)[i]) && obj(b).some((x, i) => x > obj(a)[i])).toBe(false);
   });
   it('is reproducible with the same seed', () => {
-    const again = search(makeContext(), { population: 60, generations: 30 });
+    const again = search(makeContext(setup), { population: 60, generations: 30 });
     expect(again.variants.map(v => v.ch.marginMean)).toEqual(r.variants.map(v => v.ch.marginMean));
   });
   it('keeps what is already sown', () => { for (const v of r.variants) expect(v.options.find(o => o.fieldId === 'F1')!.crops[0]).toBe('winter_wheat'); });

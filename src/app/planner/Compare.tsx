@@ -3,6 +3,8 @@
 // value of each row is marked and the columns can be ordered by any one characteristic.
 import { useMemo, useState } from 'react';
 import { Scatter } from '@/components/Charts';
+import { SoilHelpButton } from '@/components/Soil';
+import { humusClass } from '@/pilot/soil';
 import { useScreen, useStore } from '@/components/store';
 import { More, Panel, Select, Sw, Term, pct } from '@/components/ui';
 import { planDiff } from '@/engine/explain';
@@ -14,9 +16,14 @@ const ROWS: RowDef[] = [
   { key: 'mean', label: <><Term id="margin">Margin</Term> in a usual year</>, text: 'Margin in a usual year', unit: '€/ha', get: c => c.marginMean, better: 1 },
   { key: 'worst', label: <>Margin in the <Term id="worstFifth">worst year of five</Term></>, text: 'Margin in the worst year of five', unit: '€/ha', get: c => c.marginWorstFifth, better: 1 },
   { key: 'dry', label: <>Margin in a <Term id="drySeason">dry year</Term></>, text: 'Margin in a dry year', unit: '€/ha · NASA IMERG, POWER', get: c => c.marginDry, better: 1 },
-  { key: 'bare', label: <Term id="bareDays">Days without crop cover</Term>, text: 'Days without crop cover', unit: 'a year · NASA HLS', get: c => c.bareDays.p50, better: -1 },
+  { key: 'soil', label: <><Term id="soilDays">Days without cover</Term>, weighted by erosive rain</>, text: 'Days without cover, weighted by erosive rain', unit: 'a year · NASA HLS × IMERG', get: c => c.bareErosive.p50, better: -1 },
+  { key: 'bare', label: <Term id="bareDays">Days without living cover</Term>, text: 'Days without living cover', unit: 'a year · NASA HLS', get: c => c.bareDays.p50, better: -1 },
+  { key: 'leach', label: <>Bare soil in the <Term id="leaching">leaching season</Term></>, text: 'Bare soil in the leaching season', unit: 'days · NASA HLS × IMERG', get: c => c.bareLeaching, better: -1 },
+  { key: 'fam', label: 'Crop families', text: 'Crop families a year', unit: 'a year', get: c => c.familiesPerYear.reduce((t, v) => t + v, 0) / c.familiesPerYear.length, better: 1, show: c => c.familiesPerYear.join(' / ') },
   { key: 'cac', label: 'Cereal after cereal', text: 'Cereal after cereal', unit: 'of area', get: c => c.cerealAfterCereal, better: -1, show: c => pct(c.cerealAfterCereal) },
   { key: 'leg', label: 'Legumes', text: 'Legumes', unit: 'of area', get: c => c.legumeShare, better: 1, show: c => pct(c.legumeShare) },
+  { key: 'wet', label: <Term id="wetSoilHarvest">Harvest on wet soil</Term>, text: 'Harvest on wet soil', unit: 'ha a year · NASA IMERG, POWER', get: c => c.wetHarvestHa, better: -1 },
+  { key: 'humus', label: <Term id="humus">Humus balance</Term>, text: 'Humus balance', unit: 'kg humus-C/ha', get: c => c.humus, better: 1, show: c => `${c.humus > 0 ? '+' : ''}${c.humus} ${humusClass(c.humus)}` },
   { key: 'pay', label: 'Payments', text: 'Payments', unit: '€/ha', get: c => c.paymentsEurHa, better: 1 },
 ];
 
@@ -44,7 +51,7 @@ export default function Compare() {
 
   return (
     <>
-      <p className="lead">The same measures for every plan. There is no overall score on purpose: the best value in each row is underlined, and a click on a row orders the plans by it.</p>
+      <p className="lead">The same measures for every plan, money first, then soil protection <SoilHelpButton />. There is no overall score on purpose: the best value in each row is underlined, and a click on a row orders the plans by it.</p>
       <Panel>
         <div className="scroll-x">
           <table>
@@ -83,10 +90,10 @@ export default function Compare() {
               <tbody>{diff.map(d => <tr key={d.fieldId} className={`click${s.field === d.fieldId ? ' sel' : ''}`} onClick={() => s.setField(d.fieldId)}><td><b>{d.fieldId}</b></td><td>{d.b}<div className="muted small">instead of {d.a}</div></td><td>{d.reason}</td></tr>)}</tbody>
             </table></div>)}
         </Panel>
-        <Panel title="Money against bare soil" sub="every plan is a dot">
-          <Scatter dots={s.plans.map(x => ({ id: x.id, x: x.v.ch.bareDays.p50, y: x.v.ch.marginMean, kind: x.kind === 'front' ? 'variant' : x.kind, label: `${x.name}: ${x.v.ch.marginMean} €/ha, ${x.v.ch.bareDays.p50} days without cover` }))} xLabel="days without crop cover a year" yLabel="margin, €/ha" selected={s.planId} onSelect={s.setPlanId} />
+        <Panel title="The price of soil protection" sub="every plan is a dot">
+          <Scatter dots={s.plans.map(x => ({ id: x.id, x: x.v.ch.bareErosive.p50, y: x.v.ch.marginMean, kind: x.kind === 'front' ? 'variant' : x.kind, label: `${x.name}: ${x.v.ch.marginMean} €/ha, ${x.v.ch.bareErosive.p50} days without cover (weighted by erosive rain)` }))} xLabel="days without cover a year, weighted by erosive rain" yLabel="margin, €/ha" selected={s.planId} onSelect={s.setPlanId} />
           <div className="legend"><span><Sw c="#2f6b3c" />best for one measure</span><span><Sw c="#8fb39a" />other plans</span><span><Sw c="#17231c" />usual practice</span><span><Sw c="#a8497a" />your plans</span></div>
-          <p className="note" style={{ marginTop: 6 }}>One plan’s own spread between years is about {s.plan ? s.plan.v.ch.bareDays.p75 - s.plan.v.ch.bareDays.p25 : 40} days, so small differences here do not matter.</p>
+          <p className="note" style={{ marginTop: 6 }}>Left is better for the soil, up earns more. The dots on the upper left edge show what each day of cover costs: the first days are cheap, the last ones are not. One plan’s own spread between years is about {s.plan ? s.plan.v.ch.bareErosive.p75 - s.plan.v.ch.bareErosive.p25 : 35} days, so a difference of a day or two does not matter.</p>
         </Panel>
       </div>
     </>

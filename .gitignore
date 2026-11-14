@@ -7,6 +7,7 @@
 # node / next
 node_modules/
 .next/
+.next-*/
 next-env.d.ts
 *.tsbuildinfo
 dist/
@@ -19,3 +20,4 @@ pipeline/local/
 
 # screenshots of every state (npm run shots); regenerate rather than commit
 screenshots/
+screenshots-*/

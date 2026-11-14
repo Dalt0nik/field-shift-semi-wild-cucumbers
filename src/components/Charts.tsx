@@ -24,7 +24,7 @@ export function SeasonBars({ series, compare, height = 170 }: { series: { season
 }
 
 export function WaterBalance({ years }: { years: { year: number; waterBalanceMayJul: number; type: string }[] }) {
-  const W = 560, H = 150, pad = 32, ys = years.filter(y => y.year <= 2025);
+  const W = 560, H = 150, pad = 32, ys = years.filter(y => y.type !== 'current');
   const lo = Math.min(...ys.map(y => y.waterBalanceMayJul)), hi = Math.max(...ys.map(y => y.waterBalanceMayJul), 0);
   const y = (v: number) => 10 + (H - 34) * (1 - (v - lo) / (hi - lo)), bw = (W - pad) / ys.length;
   return (

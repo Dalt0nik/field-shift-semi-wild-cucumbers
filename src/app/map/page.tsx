@@ -8,14 +8,15 @@ import type { Neighbour } from '@/components/FarmMap';
 import { useScreen, useStore } from '@/components/store';
 import { More, Sw } from '@/components/ui';
 import neighbours from '@/data/neighbours.json';
-import { farm, fields } from '@/pilot/demo';
+import { AFTER_LABEL, DECISION_YEAR, farm, layerAfterDecision } from '@/pilot/demo';
 import { cropLabel } from '@/pilot/regional';
 
 const FarmMap = dynamic(() => import('@/components/FarmMap'), { ssr: false });
 
 export default function MapPage() {
   const s = useStore();
-  const year = '2025'; // one year for the whole map: the last full set of open declarations
+  const fields = s.fields;
+  const year = '2025'; // one year for the whole map: the year of the open declarations in src/data/neighbours.json
   const [declared, setDeclared] = useState(true);
   const [satellite, setSatellite] = useState(false);
   const [ruleLayers, setRuleLayers] = useState(false);
@@ -37,7 +38,7 @@ export default function MapPage() {
         <p className="lead">{fields.length} fields, {farm.totalHa.toFixed(0)} ha, outlined in black and coloured by the crop of 2025. Click a field to see what grew on it.</p>
         <div style={{ display: 'grid', gap: 7 }}>
           <label className="chk"><input type="checkbox" checked={declared} onChange={e => setDeclared(e.target.checked)} />Neighbouring declared fields, 2025</label>
-          <label className="chk"><input type="checkbox" checked={satellite} onChange={e => setSatellite(e.target.checked)} />Satellite image, autumn 2026</label>
+          <label className="chk"><input type="checkbox" checked={satellite} onChange={e => setSatellite(e.target.checked)} /><span>Satellite image, autumn 2026{layerAfterDecision('hls_truecolor_autumn2026') && <small className="after"> · {AFTER_LABEL}</small>}</span></label>
           <label className="chk"><input type="checkbox" checked={ruleLayers} onChange={e => setRuleLayers(e.target.checked)} />Rule layers</label>
         </div>
         <More label="Crop colours">
@@ -50,11 +51,11 @@ export default function MapPage() {
           <ol className="plain" style={{ paddingLeft: '1.3em' }}>
             <li>Find your fields: all declared fields of Lithuania are here (paying agency, 1.16 million in 2025).</li>
             <li>Click a field and add it to your farm. Open data carry no owner, so you assemble your own holding; a boundary can also be drawn or corrected by hand.</li>
-            <li>Confirm what grows now on the <Link className="link" href="/organization">Fields</Link> screen: declarations lag a year.</li>
+            <li>Confirm what is on the fields on the <Link className="link" href="/organization">Fields</Link> screen: open declarations lag a year.</li>
           </ol>
           <p className="demo">In this demo the farm is preloaded: {fields.length} real neighbouring fields, {farm.totalHa.toFixed(0)} ha. Adding and drawing are switched off because satellite products are computed only for these fields.</p>
         </More>
-        <div><Link className="btn pri" href="/organization">Next: confirm what is sown →</Link></div>
+        <div><Link className="btn pri" href="/organization">Next: confirm what is on the fields →</Link></div>
       </aside>
       <div className="mapbox">
         <FarmMap fill={fill} selected={nb ? null : s.field} onSelect={id => { s.setField(id); setCard(true); setAsked(false); }} satellite={satellite} neighbours={declared ? 'class' : 'outline'}
@@ -73,9 +74,9 @@ export default function MapPage() {
           <div className="mapcard">
             <h3>{f.id} <small>{f.areaHa.toFixed(1)} ha · in the farm</small></h3>
             <dl className="kv">
-              {[2026, 2025, 2024].map(y => <span key={y} style={{ display: 'contents' }}><dt>{y}</dt><dd><Sw c={cropColor(f.history[y]?.crop ?? f.history[y]?.cropClass)} />{cropLabel(f.history[y]?.crop ?? f.history[y]?.cropClass).replace(' (class)', '')}</dd></span>)}
+              {[DECISION_YEAR, DECISION_YEAR - 1, DECISION_YEAR - 2].map(y => <span key={y} style={{ display: 'contents' }}><dt>{y}</dt><dd><Sw c={cropColor(f.history[y]?.crop ?? f.history[y]?.cropClass)} />{cropLabel(f.history[y]?.crop ?? f.history[y]?.cropClass).replace(' (class)', '')}</dd></span>)}
             </dl>
-            <div className="row"><Link className="btn pri" href="/organization">What grows now</Link><button className="btn" onClick={() => setCard(false)}>Close</button></div>
+            <div className="row"><Link className="btn pri" href="/organization">Confirm this field</Link><button className="btn" onClick={() => setCard(false)}>Close</button></div>
           </div>
         ))}
       </div>

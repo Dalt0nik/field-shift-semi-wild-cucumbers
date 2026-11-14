@@ -202,3 +202,24 @@ th.n .term:hover::after, .tip-left .term:hover::after { left: auto; right: 0; }
   .dock, .split.right .dock { border: 0; border-bottom: 1.5px solid var(--ink); padding-bottom: 16px; overflow: visible; }
   .cols.wide-narrow, .cols.narrow-wide { grid-template-columns: 1fr; }
 }
+
+/* soil protection: the block on the plan cards, the table of the selected plan, the "?" panel */
+.card[role=button] { cursor: pointer; }
+.soil { display: grid; gap: 4px; border-top: 1.5px solid var(--ink); padding-top: 7px; margin-top: 2px; }
+.soil-h { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-family: var(--font-display), sans-serif; font-weight: 700; font-size: 0.9rem; }
+.soil-kpi { font-size: 1.35rem; } .soil-kpi small { color: var(--ink); }
+.soil .stat b { white-space: nowrap; }
+.soil .price { display: block; color: var(--ink); font-size: 0.78rem; border-top: 1px solid var(--line); padding-top: 4px; }
+.help { flex: none; width: 20px; height: 20px; padding: 0; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--sheet); font: 700 0.78rem/1 var(--font-body), sans-serif; display: inline-grid; place-items: center; }
+.help:hover { background: var(--rape); }
+.soilbox { border: 1.5px solid var(--ink); padding: 12px 14px; background: #f8faf6; }
+.soilbox h3 { font-size: 1.05rem; }
+.drawer.wide { width: min(600px, 100vw); }
+.drawer .measure { border-top: 1.5px solid var(--ink); margin-top: 16px; padding-top: 12px; display: grid; gap: 6px; }
+.drawer .measure h3 { font-size: 1.05rem; } .drawer .measure > p { font-size: 0.92rem; }
+.drawer dl.how { margin: 2px 0 0; grid-template-columns: 96px minmax(0, 1fr); gap: 6px 12px; } .drawer dl.how dt { margin: 0; font-weight: 600; } .drawer dl.how dd { margin: 0; font-size: 0.87rem; }
+.drawer dl.how dd:not(dt + dd) { grid-column: 2; }
+.srcs { display: inline; } .srcs a, .srcs > span { color: var(--field); text-decoration: underline; text-underline-offset: 2px; white-space: normal; }
+.st { font-style: normal; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid currentColor; border-radius: 3px; padding: 0 3px; margin: 0 4px 0 4px; vertical-align: 1px; display: inline-block; text-decoration: none; }
+.st.primary { color: var(--field); } .st.abstract { color: var(--soil); } .st.calculation { color: var(--muted); }
+.after { font-size: 0.78rem; color: var(--soil); font-weight: 600; }

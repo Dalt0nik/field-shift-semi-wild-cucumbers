@@ -12,7 +12,7 @@ import type { Characteristics, CropId, EvaluatedVariant, FieldInfo, FieldOption,
 export const AXES: { key: string; label: string; unit: string; sign: 1 | -1; get: (c: Characteristics) => number; hint: string }[] = [
   { key: 'marginMean', label: 'Margin, usual season', unit: 'EUR/ha', sign: 1, get: c => c.marginMean, hint: 'Mean over the replayed past seasons: field yield x price - wet-harvest loss + payments - variable costs.' },
   { key: 'marginWorstFifth', label: 'Margin, bad seasons', unit: 'EUR/ha', sign: 1, get: c => c.marginWorstFifth, hint: 'Mean of the worst fifth of replayed seasons.' },
-  { key: 'bareDays', label: 'Bare soil', unit: 'days/yr', sign: -1, get: c => c.bareDays.p50, hint: 'Bare-soil-equivalent days per hectare and year, from NASA HLS cover curves of declared Lithuanian fields.' },
+  { key: 'bareErosive', label: 'Soil', unit: 'days/yr', sign: -1, get: c => c.bareErosive.p50, hint: 'Erosion-weighted days without living cover per hectare and year: NASA HLS cover curves of declared Lithuanian fields, each half-month weighted by its share of the yearly rainfall erosivity (NASA GPM IMERG).' },
   { key: 'cerealAfterCereal', label: 'Cereal after cereal', unit: '% area', sign: -1, get: c => c.cerealAfterCereal * 100, hint: 'Share of area where a cereal follows a cereal: disease, pest and weed pressure.' },
 ];
 
@@ -54,7 +54,7 @@ export function search(ctx: Context, opts: { seed?: number; population?: number;
   const add = (idx: number[]) => { const v = evalIdx(idx); if (v && !pop.some(p => p === v)) pop.push(v); return v; };
   // greedy seeds: per field the best option for each axis taken alone, then repaired towards feasibility by mutation
   const meanArr = (a: number[]) => a.reduce((t, v) => t + v, 0) / a.length;
-  const fieldScore: ((p: OptionPart) => number)[] = [p => meanArr(p.margin), p => Math.min(...p.margin), p => -p.bare[1], p => -p.cerealAfterCereal];
+  const fieldScore: ((p: OptionPart) => number)[] = [p => meanArr(p.margin), p => Math.min(...p.margin), p => -p.bareErosive[1], p => -p.cerealAfterCereal];
   for (const fs of fieldScore) {
     let idx = parts.map(ps => ps.reduce((best, p, k) => (fs(p) > fs(ps[best]) ? k : best), 0));
     for (let t = 0; t < 400 && !evalIdx(idx); t++) idx = mutate(idx);
@@ -92,7 +92,7 @@ export function search(ctx: Context, opts: { seed?: number; population?: number;
   const front = all.filter(a => !all.some(b => b !== a && dominates(b.obj, a.obj)));
   const toVariant = (v: Ind, i: number): EvaluatedVariant => ({ id: `V${i + 1}`, options: v.idx.map((k, f) => fieldOpts[f].options[k]), origin: 'search', ch: v.ch, nonDominated: true, tags: [] });
   const variants = front.sort((a, b) => b.ch.marginMean - a.ch.marginMean).map(toVariant);
-  for (const a of AXES) { const best = variants.reduce((x, y) => (a.sign * a.get(y.ch) > a.sign * a.get(x.ch) ? y : x)); best.tags.push(`best: ${a.label.toLowerCase()}`); }
+  for (const a of AXES) { const best = a.key === 'bareErosive' ? bestForSoil(variants) : variants.reduce((x, y) => (a.sign * a.get(y.ch) > a.sign * a.get(x.ch) ? y : x)); best.tags.push(`best: ${a.label.toLowerCase()}`); }
   // "balanced": the variant whose worst normalised axis is the best
   const lo = AXES.map(a => Math.min(...variants.map(v => a.sign * a.get(v.ch)))), hi = AXES.map(a => Math.max(...variants.map(v => a.sign * a.get(v.ch))));
   const score = (v: EvaluatedVariant) => Math.min(...AXES.map((a, i) => (a.sign * a.get(v.ch) - lo[i]) / (hi[i] - lo[i] || 1)));
@@ -103,16 +103,24 @@ export function search(ctx: Context, opts: { seed?: number; population?: number;
   return { pre, fieldOpts, variants, baseline, evaluated, combinations };
 }
 
+/** Best for soil: the lowest erosion-weighted days without cover (S1e); ties are broken by the same on erosion-sensitive
+ *  land (S2), then by cereal after cereal, then by the higher margin. No weights are involved. */
+export function bestForSoil<T extends { ch: Characteristics }>(variants: T[]): T {
+  return [...variants].sort((a, b) => a.ch.bareErosive.p50 - b.ch.bareErosive.p50 || a.ch.bareOnSlopes - b.ch.bareOnSlopes || a.ch.cerealAfterCereal - b.ch.cerealAfterCereal || b.ch.marginMean - a.ch.marginMean)[0];
+}
+
 /** Current practice as a variant (challenge: compare with the existing rotation). The habit of the region comes from
- *  the pilot (ctx.usual): which crops are preferred after a cereal, after anything else, and on a field that is open
- *  for the first plan year; no catch crops. It is shown even if it breaks a farm rule. */
+ *  the pilot (ctx.usual): which crops are preferred after a cereal, after anything else, and in spring on a field
+ *  that is open for the first plan year; no catch crops. It is shown even if it breaks a farm rule. */
 function usualPractice(ctx: Context, pre: Prepared, fieldOpts: SearchResult['fieldOpts'], parts: OptionPart[][]): EvaluatedVariant {
   const idx = fieldOpts.map(fo => {
     let prev = lastHistoryCrop(fo.field, ctx.setup.planYears[0]);
-    let cands = fo.options.map((o, k) => k).filter(k => !fo.options[k].catchAfter.some(Boolean));
+    let cands = fo.options.map((o, k) => k).filter(k => !fo.options[k].catchAfter.some(Boolean) && !fo.options[k].catchFirst);
     fo.options[0].crops.forEach((_, i) => {
-      const pref: CropId[] = i === 0 && !fo.options[0].fixed[0] ? ctx.usual.openFirstYear
-        : prev && familyOf(prev) === 'cereal' ? ctx.usual.afterCereal : ctx.usual.otherwise;
+      // the habit by preceding crop; on a field that is open for the first plan year its winter crops come first
+      // and, when their sowing is no longer possible, the spring habit
+      const habit: CropId[] = prev && familyOf(prev) === 'cereal' ? ctx.usual.afterCereal : ctx.usual.otherwise;
+      const pref: CropId[] = i === 0 && !fo.options[0].fixed[0] ? [...habit.filter(c => CROPS[c]?.season === 'winter'), ...ctx.usual.openFirstYear, ...habit] : habit;
       const avail = new Set(cands.map(k => fo.options[k].crops[i]));
       const pick = pref.find(p => avail.has(p)) ?? [...avail][0];
       cands = cands.filter(k => fo.options[k].crops[i] === pick); prev = pick;

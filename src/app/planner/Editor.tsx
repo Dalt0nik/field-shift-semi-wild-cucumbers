@@ -6,8 +6,9 @@ import { cropColor } from '@/components/colors';
 import MiniMap from '@/components/MiniMap';
 import { useScreen, useStore } from '@/components/store';
 import { More, Panel, Pill, Select, Sw, Term } from '@/components/ui';
-import { PLAN_YEARS, fields } from '@/pilot/demo';
+import { DECISION_YEAR, PLAN_YEARS } from '@/pilot/demo';
 import { pickCrop, selectionOf, yearChoices } from '@/engine/editor';
+import { catchBefore } from '@/engine/plan';
 import { CROPS, cropLabel } from '@/pilot/regional';
 import { YearTabs } from './Variants';
 
@@ -16,6 +17,7 @@ const TONE = { ok: 'ok', warn: 'warn', no: 'bad' } as const;
 
 export default function Editor({ onCompare }: { onCompare: () => void }) {
   const s = useStore();
+  const fields = s.fields;
   const mine = s.plans.filter(p => p.kind === 'mine');
   const p = s.plan?.kind === 'mine' ? s.plan : mine[mine.length - 1] ?? null;
   const sel = useMemo(() => (p ? selectionOf(p.v.options) : null), [p]);
@@ -23,7 +25,7 @@ export default function Editor({ onCompare }: { onCompare: () => void }) {
   const [from, setFrom] = useState('usual');
   const f = fields.find(x => x.id === s.field)!;
   const choices = p && sel ? PLAN_YEARS.map((_, i) => yearChoices(s.ws, f.id, sel, i)) : [];
-  useScreen('planner/mine', p ? { plan: p.name, selectedField: f.id, choicesForSelectedField: choices.map(c => ({ year: c.year, locked: c.locked ? c.lockReason : false, chosen: CROPS[c.chosen].name, options: c.items.map(i => ({ crop: CROPS[i.crop].name, status: i.status === 'ok' ? 'fits' : i.status === 'warn' ? 'allowed with a warning' : 'not possible', reasons: i.notes })) })), liveCheck: { margin: p.v.ch.marginMean, badSeasons: p.v.ch.marginWorstFifth, bareDays: p.v.ch.bareDays.p50, rulesFailed: p.v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => r.title + ' ' + r.year) } } : { state: 'no own plan yet; the screen offers to start from usual practice or a suggested variant' });
+  useScreen('planner/mine', p ? { plan: p.name, selectedField: f.id, choicesForSelectedField: choices.map(c => ({ year: c.year, locked: c.locked ? c.lockReason : false, chosen: CROPS[c.chosen].name, options: c.items.map(i => ({ crop: CROPS[i.crop].name, status: i.status === 'ok' ? 'fits' : i.status === 'warn' ? 'allowed with a warning' : 'not possible', reasons: i.notes })) })), liveCheck: { margin: p.v.ch.marginMean, badSeasons: p.v.ch.marginWorstFifth, daysWithoutCoverWeightedByErosiveRain: p.v.ch.bareErosive.p50, daysWithoutLivingCover: p.v.ch.bareDays.p50, bareInLeachingSeason: p.v.ch.bareLeaching, humusBalance: p.v.ch.humus, rulesFailed: p.v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive').map(r => r.title + ' ' + r.year) } } : { state: 'no own plan yet; the screen offers to start from usual practice or a suggested variant' });
 
   if (s.busy) return <Panel><p className="muted">Searching for plan variants…</p></Panel>;
   if (!p || !sel) return (
@@ -53,7 +55,8 @@ export default function Editor({ onCompare }: { onCompare: () => void }) {
         <div><span>Farm rules</span><b className={failed.length ? 'bad' : 'ok'}>{failed.length ? 'fails' : 'pass'}</b><small>{failed.length ? failed.join(', ') : 'all checks of both years'}</small></div>
         <div><span><Term id="margin">Margin</Term> in a usual year</span><b>{ch.marginMean} €/ha</b><small>{d(ch.marginMean, base.marginMean, '€/ha')}</small></div>
         <div><span><Term id="worstFifth">Worst year of five</Term></span><b>{ch.marginWorstFifth} €/ha</b><small>{d(ch.marginWorstFifth, base.marginWorstFifth, '€/ha')}</small></div>
-        <div><span><Term id="bareDays">Days without cover</Term></span><b>{ch.bareDays.p50} days</b><small>{d(ch.bareDays.p50, base.bareDays.p50, 'days')}</small></div>
+        <div><span><Term id="soilDays">Days without cover</Term>, by erosive rain</span><b>{ch.bareErosive.p50} days</b><small>{d(ch.bareErosive.p50, base.bareErosive.p50, 'days')}</small></div>
+        <div><span><Term id="humus">Humus balance</Term></span><b>{ch.humus > 0 ? '+' : ''}{ch.humus} kg C/ha</b><small>{d(ch.humus, base.humus, 'kg')}</small></div>
         <div style={{ alignContent: 'center', gap: 6 }}>{s.chosen?.id === p.id ? <b className="ok">Your chosen plan</b> : <button className="btn pri" onClick={() => s.choose(p.id)}>Choose this plan</button>}<button className="link small" onClick={onCompare}>compare with other plans</button></div>
       </div>
 
@@ -64,13 +67,13 @@ export default function Editor({ onCompare }: { onCompare: () => void }) {
             {p.v.options.map(o => (
               <button key={o.fieldId} className={o.fieldId === s.field ? 'sel' : ''} onClick={() => s.setField(o.fieldId)}>
                 <b>{o.fieldId}</b>
-                <span className="seq">{o.crops.map((c, i) => <span key={i} className={o.fixed[i] ? 'muted' : ''}><Sw c={cropColor(c)} />{CROPS[c].name}{i > 0 && o.catchAfter[i - 1] ? ' + catch crop' : ''}</span>)}</span>
+                <span className="seq">{o.crops.map((c, i) => <span key={i} className={o.fixed[i] ? 'muted' : ''}><Sw c={cropColor(c)} />{catchBefore(o, i) ? 'Catch crop, then ' : ''}{catchBefore(o, i) ? CROPS[c].name.toLowerCase() : CROPS[c].name}</span>)}</span>
               </button>))}
           </div></More></div>
           {p.adjusted && p.adjusted.length > 0 && <p className="note">The set-up changed: {p.adjusted.join(', ')} fell back to the nearest admissible crops.</p>}
         </Panel>
 
-        <Panel title={'2 · Choose the crop of ' + f.id} sub={f.areaHa.toFixed(1) + ' ha · ' + [2025, 2026].map(y => cropLabel(f.history[y]?.crop ?? f.history[y]?.cropClass).replace(' (class)', '')).join(' → ')}>
+        <Panel title={'2 · Choose the crop of ' + f.id} sub={f.areaHa.toFixed(1) + ' ha · ' + [DECISION_YEAR - 1, DECISION_YEAR].map(y => cropLabel(f.history[y]?.crop ?? f.history[y]?.cropClass).replace(' (class)', '')).join(' → ')}>
           {choices.map((c, i) => {
             if (i !== s.yearIdx) return null;
             const possible = c.items.filter(it => it.status !== 'no'), not = c.items.filter(it => it.status === 'no');
@@ -85,7 +88,7 @@ export default function Editor({ onCompare }: { onCompare: () => void }) {
                         <span><Sw c={cropColor(it.crop)} />{CROPS[it.crop].name}</span>
                         <small>{it.notes[0] ?? ''}</small>
                       </button>))}
-                    {i > 0 && c.items.find(it => it.crop === c.chosen)?.catchPossible && (
+                    {c.items.find(it => it.crop === c.chosen)?.catchPossible && (
                       <label className="chk" style={{ padding: '8px 8px 0' }}><input type="checkbox" checked={c.catchBefore} onChange={e => set(i, c.chosen, e.target.checked)} /><Term id="catchCrop">Catch crop</Term>&nbsp;over the winter before it</label>)}
                     {not.length > 0 && (
                       <div style={{ padding: '8px 8px 0' }}>

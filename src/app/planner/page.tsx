@@ -17,7 +17,7 @@ export default function PlannerPage() {
   return (
     <div className="page">
       <div className="page-head">
-        <h1>What to sow for {PLAN_YEARS.join(' and ')}</h1>
+        <h1>What to sow for the harvests of {PLAN_YEARS.join(' and ')}</h1>
         <Tabs label="Planner views" tabs={[{ id: 'variants', label: 'Suggested plans' }, { id: 'compare', label: 'Compare' }, { id: 'mine', label: 'My own plan' }]} value={tab} onChange={setTab} />
       </div>
       {s.chosen && tab !== 'variants' && (

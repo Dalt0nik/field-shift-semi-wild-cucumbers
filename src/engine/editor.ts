@@ -3,7 +3,7 @@
 // admissible sequences can be selected (the same stage-4 checks as the search), and a selection is evaluated with
 // exactly the same stage-6 characteristics as the variants the search finds.
 import { characteristics, optionPart, prepare, type Context, type OptionPart, type Prepared } from './characteristics';
-import { baseTimeline, catchCropFits, checkCandidate, fieldOptions } from './plan';
+import { baseTimeline, catchBefore, catchCropFits, catchFirstFits, checkCandidate, fieldOptions, optionKey } from './plan';
 import { CROPS } from '../pilot/regional';
 import type { CropId, EvaluatedVariant, FieldInfo, FieldOption, Occupancy } from './types';
 
@@ -24,15 +24,16 @@ export function workspace(ctx: Context): Workspace {
 
 /** Field-level parts of stage 6 for the options of a plan (null when an option is no longer admissible in this set-up). */
 export function partsOf(ws: Workspace, options: FieldOption[]): (OptionPart | null)[] {
-  return ws.fields.map((fc, i) => { const o = options[i]; const k = o ? fc.options.findIndex(x => x.crops.join() === o.crops.join() && x.catchAfter.join() === o.catchAfter.join()) : -1; return k < 0 ? null : fc.parts[k]; });
+  return ws.fields.map((fc, i) => { const o = options[i]; const k = o ? fc.options.findIndex(x => optionKey(x) === optionKey(o)) : -1; return k < 0 ? null : fc.parts[k]; });
 }
 
-export type Selection =Record<string, { crops: CropId[]; catchAfter: boolean[] }>;
-export const selectionOf = (options: FieldOption[]): Selection => Object.fromEntries(options.map(o => [o.fieldId, { crops: [...o.crops], catchAfter: [...o.catchAfter] }]));
+export interface FieldSelection { crops: CropId[]; catchAfter: boolean[]; catchFirst?: boolean }
+export type Selection = Record<string, FieldSelection>;
+export const selectionOf = (options: FieldOption[]): Selection => Object.fromEntries(options.map(o => [o.fieldId, { crops: [...o.crops], catchAfter: [...o.catchAfter], catchFirst: !!o.catchFirst }]));
 
 const same = <T,>(a: T[], b: T[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 /** Index of the admissible option closest to a selection (exact when the selection is still admissible). */
-function nearest(fc: FieldChoices, want: { crops: CropId[]; catchAfter: boolean[] } | undefined): { k: number; exact: boolean } {
+function nearest(fc: FieldChoices, want: FieldSelection | undefined): { k: number; exact: boolean } {
   if (!fc.options.length) return { k: -1, exact: false };
   if (!want) return { k: 0, exact: false };
   let best = 0, bestScore = -1;
@@ -41,10 +42,11 @@ function nearest(fc: FieldChoices, want: { crops: CropId[]; catchAfter: boolean[
     for (let i = 0; i < o.crops.length; i++) { if (o.crops[i] !== want.crops[i]) break; s += 10; } // longest common prefix first
     o.crops.forEach((c, i) => { if (c === want.crops[i]) s += 2; });
     o.catchAfter.forEach((c, i) => { if (c === !!want.catchAfter[i]) s += 1; });
+    if (!!o.catchFirst === !!want.catchFirst) s += 1;
     if (s > bestScore) { bestScore = s; best = k; }
   });
   const o = fc.options[best];
-  return { k: best, exact: same(o.crops, want.crops) && same(o.catchAfter, want.catchAfter.slice(0, o.catchAfter.length).map(Boolean)) };
+  return { k: best, exact: same(o.crops, want.crops) && same(o.catchAfter, want.catchAfter.slice(0, o.catchAfter.length).map(Boolean)) && !!o.catchFirst === !!want.catchFirst };
 }
 
 export interface EvaluatedPlan extends EvaluatedVariant { adjusted: string[] }
@@ -66,10 +68,10 @@ export function yearChoices(ws: Workspace, fieldId: string, sel: Selection, i: n
   const fc = ws.fields.find(x => x.field.id === fieldId)!;
   const cur = fc.options[nearest(fc, sel[fieldId]).k];
   const year = setup.planYears[i];
-  const chosen = cur.crops[i], catchBefore = i > 0 && !!cur.catchAfter[i - 1];
-  if (i === 0 && setup.current[fieldId]) return { year, locked: true, lockReason: `already sown for ${year}`, chosen, catchBefore, items: [] };
+  const chosen = cur.crops[i], catchB = catchBefore(cur, i);
+  if (i === 0 && setup.current[fieldId]) return { year, locked: true, lockReason: CROPS[setup.current[fieldId]!]?.season === 'perennial' ? 'perennial grass stays' : `already sown for ${year}`, chosen, catchBefore: catchB, items: [] };
   const prevCrop = i > 0 ? cur.crops[i - 1] : null;
-  if (prevCrop && CROPS[prevCrop]?.season === 'perennial') return { year, locked: true, lockReason: 'perennial grass stays', chosen, catchBefore, items: [] };
+  if (prevCrop && CROPS[prevCrop]?.season === 'perennial') return { year, locked: true, lockReason: 'perennial grass stays', chosen, catchBefore: catchB, items: [] };
   // timeline so far: history, what grows now, and the crops chosen for earlier plan years
   let timeline: Occupancy[] = baseTimeline(fc.field, setup);
   for (let j = 0; j < i; j++) {
@@ -85,22 +87,24 @@ export function yearChoices(ws: Workspace, fieldId: string, sel: Selection, i: n
     const hasOption = fc.options.some(o => same(o.crops.slice(0, i), prefix) && o.crops[i] === id);
     const notes = chk.ok ? [...chk.warnings] : [...chk.reasons];
     if (chk.ok && !hasOption) notes.unshift(`no admissible crop could follow it in ${setup.planYears[i + 1] ?? year + 1}`);
-    items.push({ crop: id, status: !chk.ok || !hasOption ? 'no' : chk.warnings.length ? 'warn' : 'ok', notes, catchPossible: i > 0 && setup.catchCrops && !!prevCrop && catchCropFits(prevCrop, id) });
+    items.push({ crop: id, status: !chk.ok || !hasOption ? 'no' : chk.warnings.length ? 'warn' : 'ok', notes, catchPossible: i > 0 ? setup.catchCrops && !!prevCrop && catchCropFits(prevCrop, id) : catchFirstFits(fc.field, setup, id) });
   }
   const order = { ok: 0, warn: 1, no: 2 };
   items.sort((a, b) => order[a.status] - order[b.status]);
-  return { year, locked: false, chosen, catchBefore, items };
+  return { year, locked: false, chosen, catchBefore: catchB, items };
 }
 
 /** Change the crop of one plan year on one field; later years keep their crops when that stays admissible. */
 export function pickCrop(ws: Workspace, sel: Selection, fieldId: string, i: number, cropId: CropId, catchBefore?: boolean): Selection {
   const fc = ws.fields.find(x => x.field.id === fieldId)!;
   const cur = fc.options[nearest(fc, sel[fieldId]).k];
-  const want = { crops: [...cur.crops.slice(0, i), cropId, ...cur.crops.slice(i + 1)], catchAfter: [...cur.catchAfter] };
-  if (i > 0 && catchBefore !== undefined) want.catchAfter[i - 1] = catchBefore;
-  const cands = fc.options.filter(o => same(o.crops.slice(0, i + 1), want.crops.slice(0, i + 1)));
+  const want: FieldSelection = { crops: [...cur.crops.slice(0, i), cropId, ...cur.crops.slice(i + 1)], catchAfter: [...cur.catchAfter], catchFirst: !!cur.catchFirst };
+  if (catchBefore !== undefined) { if (i > 0) want.catchAfter[i - 1] = catchBefore; else want.catchFirst = catchBefore; }
+  let cands = fc.options.filter(o => same(o.crops.slice(0, i + 1), want.crops.slice(0, i + 1)));
+  // an explicit catch-crop choice for this year is kept when an option has it
+  if (catchBefore !== undefined) { const withIt = cands.filter(o => (i > 0 ? !!o.catchAfter[i - 1] : !!o.catchFirst) === catchBefore); if (withIt.length) cands = withIt; }
   if (!cands.length) return sel;
   const n = nearest({ ...fc, options: cands }, want);
   const o = cands[n.k];
-  return { ...sel, [fieldId]: { crops: [...o.crops], catchAfter: [...o.catchAfter] } };
+  return { ...sel, [fieldId]: { crops: [...o.crops], catchAfter: [...o.catchAfter], catchFirst: !!o.catchFirst } };
 }

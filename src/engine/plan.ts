@@ -125,10 +125,24 @@ export function checkCandidate(f: FieldInfo, timeline: Occupancy[], cropId: Crop
   return { ok: reasons.length === 0, reasons, warnings, occupancy: o };
 }
 
+/** A catch crop needs the preceding crop off the field by this day (month-day); team parameter. */
+export const CATCH_AFTER_HARVEST_BY = '09-05';
 /** A catch crop fits after a crop harvested by early September and before a spring-sown crop. */
 export function catchCropFits(prevCrop: CropId, nextCrop: CropId): boolean {
   const p = CROPS[prevCrop], n = CROPS[nextCrop];
-  return !!p && !!n && p.season !== 'perennial' && n.season === 'spring' && !!p.harvest.to && p.harvest.to <= '09-05';
+  return !!p && !!n && p.season !== 'perennial' && n.season === 'spring' && !!p.harvest.to && p.harvest.to <= CATCH_AFTER_HARVEST_BY;
+}
+/** Is a catch crop sown before the crop of plan year i (after the preceding harvest)? */
+export const catchBefore = (o: { catchAfter: boolean[]; catchFirst?: boolean }, i: number): boolean => (i === 0 ? !!o.catchFirst : !!o.catchAfter[i - 1]);
+/** Identity of a field choice: the crops and where the catch crops are. */
+export const optionKey = (o: { crops: CropId[]; catchAfter: boolean[]; catchFirst?: boolean }): string => `${o.crops.join()}|${o.catchFirst ? 1 : 0}${o.catchAfter.map(c => (c ? 1 : 0)).join('')}`;
+/** Can a catch crop still be sown before the first plan-year crop? Only after a crop harvested in the autumn before
+ *  that year, and only while that autumn's catch-crop sowing is not behind the decision day. */
+export function catchFirstFits(f: FieldInfo, setup: PlanSetup, nextCrop: CropId): boolean {
+  const year = setup.planYears[0];
+  const h = f.history[year - 1];
+  if (!setup.catchCrops || setup.current[f.id] || !h?.crop) return false;
+  return setup.decisionDate <= `${year - 1}-${CATCH_AFTER_HARVEST_BY}` && catchCropFits(h.crop, nextCrop);
 }
 
 /** All admissible choices for one field over the plan years (the per-field part of stage 5). */
@@ -137,14 +151,14 @@ export function fieldOptions(f: FieldInfo, setup: PlanSetup): { options: FieldOp
   const rejected: { year: number; crop: CropId; after: CropId | null; reasons: string[] }[] = [];
   const options: FieldOption[] = [];
   const cur = setup.current[f.id];
-  const rec = (i: number, timeline: Occupancy[], crops: CropId[], catches: boolean[], fixed: boolean[], warnings: string[]) => {
-    if (i === setup.planYears.length) { options.push({ fieldId: f.id, crops, catchAfter: catches, fixed, warnings }); return; }
+  const rec = (i: number, timeline: Occupancy[], crops: CropId[], catches: boolean[], fixed: boolean[], warnings: string[], first = false) => {
+    if (i === setup.planYears.length) { options.push(first ? { fieldId: f.id, crops, catchAfter: catches, catchFirst: true, fixed, warnings } : { fieldId: f.id, crops, catchAfter: catches, fixed, warnings }); return; }
     const year = setup.planYears[i];
     const prevCrop = crops[i - 1] ?? null;
     if (i === 0 && cur) { rec(1, timeline, [cur], [], [true], warnings); return; }
     if (prevCrop && CROPS[prevCrop]?.season === 'perennial') { // grass stays
       const o = occupancyFor(prevCrop, year, 'plan')!;
-      rec(i + 1, [...timeline, o], [...crops, prevCrop], [...catches, false], [...fixed, true], warnings); return;
+      rec(i + 1, [...timeline, o], [...crops, prevCrop], [...catches, false], [...fixed, true], warnings, first); return;
     }
     for (const id of setup.cropSet) {
       if (CROPS[id]?.season === 'perennial') continue;
@@ -152,8 +166,8 @@ export function fieldOptions(f: FieldInfo, setup: PlanSetup): { options: FieldOp
       if (!chk.ok) { if (!rejected.some(r => r.year === year && r.crop === id && r.after === prevCrop)) rejected.push({ year, crop: id, after: prevCrop, reasons: chk.reasons }); continue; }
       const w = [...warnings, ...chk.warnings.map(x => `${year} ${CROPS[id].name}: ${x}`)];
       const tl = [...timeline, chk.occupancy!];
-      const catchOpts = i > 0 && setup.catchCrops && prevCrop && catchCropFits(prevCrop, id) ? [false, true] : [false];
-      for (const cc of catchOpts) rec(i + 1, tl, [...crops, id], i > 0 ? [...catches, cc] : catches, [...fixed, false], w);
+      const catchOpts = (i > 0 ? setup.catchCrops && !!prevCrop && catchCropFits(prevCrop, id) : catchFirstFits(f, setup, id)) ? [false, true] : [false];
+      for (const cc of catchOpts) rec(i + 1, tl, [...crops, id], i > 0 ? [...catches, cc] : catches, [...fixed, false], w, i > 0 ? first : cc);
     }
   };
   rec(0, base, [], [], [], []);

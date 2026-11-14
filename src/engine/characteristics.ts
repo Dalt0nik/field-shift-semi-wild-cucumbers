@@ -7,11 +7,14 @@
 //              subtracted. Described in docs/money.md.
 //  Seasons   — each replayed season is typed by NASA data: dry = lowest fifth of the May-July water balance
 //              (IMERG rain minus ET0 from POWER temperature), wet harvest = highest fifth of IMERG rain 20 Jul - 31 Aug.
-//  Bare soil — bare-soil-equivalent days from NASA HLS cover curves of 1 700 declared fields, by crop sequence (C4, C6).
+//  Soil      — six measures of soil protection, no composite score and no weights between them (see "Soil protection"
+//              below): S1e erosion-weighted days without living cover (NASA HLS cover x NASA GPM IMERG erosivity),
+//              S1 days without living cover, S2 the same on erosion-sensitive land, S3 crop diversity, S4 harvest in
+//              a typically wet window, S5 bare soil in the leaching season, S6 humus balance.
 //  Rules     — EU conditionality (GAEC 6, GAEC 7) as implemented in Lithuania, eco-scheme and payments.
 import { CLASS_INFO, CROPS, crop } from '../pilot/regional';
 import { PAYMENTS_2025, ecoRotation, gaec6, gaec7, type YearState } from '../pilot/rules';
-import { familyOf, lastHistoryCrop, type PlanSetup } from './plan';
+import { catchBefore, familyOf, lastHistoryCrop, type PlanSetup } from './plan';
 import type { Characteristics, CropId, FieldInfo, FieldOption, Range, RuleResult } from './types';
 
 export interface EconCrop { yieldTHa: Record<string, number>; priceEurT: Record<string, number>; costEurHa: number | null }
@@ -37,7 +40,32 @@ export interface WetHarvestParams {
   feedShare: number;
   feedDiscount: number;
 }
-export interface CoverModel { model: Record<string, { n: number; autumn: number[]; winter: number[]; spring: number[]; total: number[] }> }
+/** Cover model: per crop sequence the quartiles over fields of the bare days (total, winter, erosion-weighted,
+ *  leaching season) and the mean bare fraction (1 - green cover) in each of the 24 half-months from 1-15 July. */
+export interface CoverModel { model: Record<string, { n: number; autumn: number[]; winter: number[]; spring: number[]; total: number[]; erosive: number[]; leaching: number[]; half: { mean: number[] } }> }
+
+/** Soil protection: the climate and the coefficients behind the soil measures (set by the pilot, not by the engine).
+ *  Half-month arrays have 24 values, index 0 = 1-15 July ... 23 = 16-30 June. */
+export interface SoilParams {
+  /** share of the yearly rainfall erosivity in each half-month (sums to 1) */
+  erosivity: number[];
+  /** share of the leaching-season water surplus in each half-month (zero outside the season; sums to 1) */
+  leaching: number[];
+  /** length of the leaching season, days */
+  leachingDays: number;
+  /** crops whose harvest window is typically wet */
+  wetHarvest: Record<CropId, boolean>;
+  humus: HumusParams;
+}
+/** Humus balance: coefficients in kg humus-C per hectare and year (crop) or per 100 kg of by-product (straw, leaves). */
+export interface HumusParams {
+  crop: Record<CropId, number>;
+  /** by-product left on the field: dt of by-product per dt of main product, and kg humus-C per dt of by-product */
+  byProduct: Record<CropId, { ratio: number; perDt: number }>;
+  catchCrop: number;
+  /** are straw and beet leaves left on the field? */
+  strawLeft: boolean;
+}
 
 export interface Context {
   fields: FieldInfo[];
@@ -58,6 +86,8 @@ export interface Context {
   wetHarvest?: WetHarvestParams;
   /** switch single money steps off, for checks and sensitivity runs (default: on when their data are given) */
   moneySteps?: { fieldIndex?: boolean; wetHarvest?: boolean };
+  /** soil-protection climate and coefficients (absent: every half-month weighs the same, S4-S6 are zero) */
+  soil?: SoilParams;
 }
 export interface Replay { firstSeason: number; lastSeason: number; normalYieldYears: number[]; normalPriceYears: number[] }
 export interface UsualPractice { openFirstYear: CropId[]; afterCereal: CropId[]; otherwise: CropId[] }
@@ -143,13 +173,42 @@ const timing = (id: string | null, kind: 'harvest' | 'sowing'): string => {
   if (c) return kind === 'harvest' ? c.harvestTiming : c.sowingTiming;
   return CLASS_INFO[id]?.harvestTiming ?? 'mid';
 };
-/** Bare-soil-equivalent days (p25, median, p75) for the year ending with `next`, after `prev`. */
-export function bareFor(cover: CoverModel, prev: string | null, next: CropId, catchCrop: boolean): { total: number[]; winter: number[]; key: string; n: number } {
+/** Cover-model entry for the year ending with `next`, after `prev`: quartiles over fields and the half-month curve.
+ *  `exact` is false when the sequence has no entry of its own and a similar one stands in. */
+export function bareFor(cover: CoverModel, prev: string | null, next: CropId, catchCrop: boolean): { total: number[]; winter: number[]; erosive: number[]; half: number[]; key: string; n: number; exact: boolean } {
   const p = timing(prev, 'harvest'), n = timing(next, 'sowing');
   const keys = [catchCrop ? `${p}>${n}>green_autumn` : `${p}>${n}`, catchCrop ? `mid>${n}>green_autumn` : `mid>${n}`, `${p}>${n}`, `mid>${n}`, 'mid>september'];
-  for (const k of keys) { const m = cover.model[k]; if (m) return { total: m.total, winter: m.winter, key: k, n: m.n }; }
+  for (const k of keys) { const m = cover.model[k]; if (m) return { total: m.total, winter: m.winter, erosive: m.erosive, half: m.half.mean, key: k, n: m.n, exact: k === keys[0] }; }
   // no silent default: a cover model without the general entry is a broken input, not a 200-day field
   throw new Error(`cover model has no entry for "${p}>${n}" and no general entry "mid>september"`);
+}
+
+// ---------- Soil protection ----------
+// Sources and their status are listed in the "?" panel of the Planner (src/pilot/soil.ts); the specification is
+// docs/soil.md. None of these is an erosion rate, a leached amount or measured carbon: they compare plans on the
+// part that the crop plan decides.
+export const HALF_MONTHS = 24;
+const UNIFORM = Array.from({ length: HALF_MONTHS }, () => 1 / HALF_MONTHS);
+
+/** Days without living cover of one field-year from its half-month bare fractions b (1 - green cover, NASA HLS).
+ *  S1  = sum of b x 365/24: every half-month weighs the same.
+ *  S1e = sum of b x w x 365, w = that half-month's share of the yearly rainfall erosivity (NASA GPM IMERG): the time
+ *        weighting of the RUSLE cover factor (soil-loss ratio x share of erosivity, in 15-day steps), with the bare
+ *        fraction in place of the soil-loss ratio. With equal shares S1e equals S1.
+ *  S5  = sum over the leaching season of b x d x season length, d = that half-month's share of the season's water
+ *        surplus (IMERG rain above ET0 from POWER temperature). */
+export function coverDays(half: number[], soil?: SoilParams): { s1: number; s1e: number; s5: number } {
+  const w = soil?.erosivity ?? UNIFORM;
+  let s1 = 0, s1e = 0, s5 = 0;
+  for (let h = 0; h < HALF_MONTHS; h++) { s1 += half[h] * 365 / HALF_MONTHS; s1e += half[h] * w[h] * 365; if (soil) s5 += half[h] * soil.leaching[h] * soil.leachingDays; }
+  return { s1, s1e, s5 };
+}
+
+/** S6, humus balance of one crop-year in kg humus-C per hectare (VDLUFA method): the crop's own coefficient, plus the
+ *  by-product left on the field (yield in dt/ha x by-product ratio x coefficient per dt), plus a catch crop. */
+export function humusOf(h: HumusParams, c: CropId, yieldTHa: number, catchCrop: boolean): number {
+  const by = h.byProduct[c];
+  return (h.crop[c] ?? 0) + (h.strawLeft && by ? yieldTHa * 10 * by.ratio * by.perDt : 0) + (catchCrop ? h.catchCrop : 0);
 }
 
 export interface OptionPart {
@@ -157,9 +216,13 @@ export interface OptionPart {
   margin: number[];
   /** the same at normal prices: only the yield deviation of the season */
   marginYield: number[];
-  bare: number[]; // ha x days: p25, p50, p75 (mean of plan years)
+  bare: number[]; // S1, ha x days: low, typical, high (mean of plan years)
+  bareErosive: number[]; // S1e, ha x days: low, typical, high
   bareWinter: number;
-  bareSlopes: number;
+  bareSlopes: number; // S2, ha x erosion-weighted days on erosion-sensitive land
+  bareLeaching: number; // S5, ha x days
+  wetHarvest: number; // S4, ha per plan year
+  humus: number; // S6, kg humus-C per year for the whole field
   cerealAfterCereal: number; // ha-years
   legume: number; // ha-years
   payments: number; // EUR per year (field level)
@@ -169,12 +232,13 @@ export interface OptionPart {
 export function optionPart(pre: Prepared, f: FieldInfo, o: FieldOption): OptionPart {
   const { ctx } = pre; const ny = ctx.setup.planYears.length;
   const margin = new Array(pre.seasons.length).fill(0), marginYield = new Array(pre.seasons.length).fill(0);
-  const bare = [0, 0, 0]; let bareWinter = 0, bareSlopes = 0, cac = 0, leg = 0, pay = 0;
+  const bare = [0, 0, 0], bareE = [0, 0, 0]; let bareWinter = 0, bareSlopes = 0, bareLeach = 0, wetH = 0, humus = 0, cac = 0, leg = 0, pay = 0;
+  const soil = ctx.soil;
   let prev = lastHistoryCrop(f, ctx.setup.planYears[0]);
   o.crops.forEach((id, i) => {
-    const c = crop(id), catchBefore = i > 0 && o.catchAfter[i - 1];
-    const payHa = PAYMENTS_2025.basic + (c.legume && c.season !== 'perennial' ? PAYMENTS_2025.coupledProtein : 0) + (catchBefore ? PAYMENTS_2025.ecoCatchCrop : 0);
-    const costHa = (pre.normal[id]?.costEurHa ?? 0) + (catchBefore ? CATCH_CROP_COST * (ctx.costFactor ?? 1) : 0);
+    const c = crop(id), catchB = catchBefore(o, i);
+    const payHa = PAYMENTS_2025.basic + (c.legume && c.season !== 'perennial' ? PAYMENTS_2025.coupledProtein : 0) + (catchB ? PAYMENTS_2025.ecoCatchCrop : 0);
+    const costHa = (pre.normal[id]?.costEurHa ?? 0) + (catchB ? CATCH_CROP_COST * (ctx.costFactor ?? 1) : 0);
     // yield of this field = normal x field index x season deviation x preceding crop
     const k = precropFactor(id, prev) * fieldFactor(ctx, f.id, id);
     const rev = pre.revenue[id], revY = pre.revenueYield[id], dev = pre.yieldDev[id], nt = pre.normal[id]?.yieldTHa ?? 0;
@@ -187,15 +251,22 @@ export function optionPart(pre: Prepared, f: FieldInfo, o: FieldOption): OptionP
       marginYield[s] += f.areaHa * (rY - lossY + payHa - costHa) / ny;
     }
     pay += f.areaHa * payHa / ny;
-    const b = bareFor(ctx.cover, prev, id, catchBefore);
-    for (let q = 0; q < 3; q++) bare[q] += f.areaHa * b.total[q] / ny;
+    // soil: the typical value comes from the mean half-month curve of the sequence; low and high keep the distance
+    // of the quartiles over fields from their median
+    const b = bareFor(ctx.cover, prev, id, catchB), d = coverDays(b.half, soil);
+    const spread = (v: number, q: number[]) => [v + q[0] - q[1], v, v + q[2] - q[1]];
+    const r1 = spread(d.s1, b.total), r1e = spread(d.s1e, soil ? b.erosive : b.total);
+    for (let q = 0; q < 3; q++) { bare[q] += f.areaHa * r1[q] / ny; bareE[q] += f.areaHa * r1e[q] / ny; }
     bareWinter += f.areaHa * b.winter[1] / ny;
-    bareSlopes += f.areaHa * f.erosionShare * b.total[1] / ny;
+    bareSlopes += f.areaHa * f.erosionShare * d.s1e / ny;
+    bareLeach += f.areaHa * d.s5 / ny;
+    if (soil?.wetHarvest[id]) wetH += f.areaHa / ny;
+    if (soil) humus += f.areaHa * humusOf(soil.humus, id, nt * k, catchB) / ny;
     if (c.family === 'cereal' && prev && familyOf(prev) === 'cereal') cac += f.areaHa;
     if (c.legume) leg += f.areaHa;
     prev = id;
   });
-  return { margin, marginYield, bare, bareWinter, bareSlopes, cerealAfterCereal: cac, legume: leg, payments: pay };
+  return { margin, marginYield, bare, bareErosive: bareE, bareWinter, bareSlopes, bareLeaching: bareLeach, wetHarvest: wetH, humus, cerealAfterCereal: cac, legume: leg, payments: pay };
 }
 
 const sameCrop = (a: string | null, b: string) => !!a && (a === b || (!CROPS[a] && !!CLASS_INFO[a]?.members.includes(b)));
@@ -214,9 +285,9 @@ export function yearStates(ctx: Context, options: FieldOption[]): YearState[] {
       if (!sameCrop(prev, id)) s.changedHa += f.areaHa; else s.repeatedHa += f.areaHa;
       // "no crop for more than three years on a plot" concerns annual crops; perennial grass is meant to stay
       if (c.season !== 'perennial' && sameCrop(before(1), id) && sameCrop(before(2), id) && sameCrop(before(3), id)) s.fourthYearHa += f.areaHa;
-      const catchBefore = i > 0 && o.catchAfter[i - 1];
-      if (catchBefore) s.catchHa += f.areaHa;
-      if (c.season === 'winter' || c.season === 'perennial' || catchBefore) s.winterGreenHa += f.areaHa;
+      const catchB = catchBefore(o, i);
+      if (catchB) s.catchHa += f.areaHa;
+      if (c.season === 'winter' || c.season === 'perennial' || catchB) s.winterGreenHa += f.areaHa;
       else if (prev && CROPS[prev]?.rootCrop) s.winterExemptHa += f.areaHa;
       else s.winterStubbleHa += f.areaHa;
     }
@@ -250,7 +321,10 @@ export function characteristics(pre: Prepared, options: FieldOption[], parts: Op
   const dry = pick('dry'), wet = pick('wetHarvest'), normal = pick('normal');
   const rows = seasons.map((s, i) => ({ season: String(s), margin: Math.round(series[i]), type: types[i] }));
   const sum = (f: (p: OptionPart) => number) => parts.reduce((t, p) => t + f(p), 0);
-  const bare: Range = { p25: Math.round(sum(p => p.bare[0]) / totalHa), p50: Math.round(sum(p => p.bare[1]) / totalHa), p75: Math.round(sum(p => p.bare[2]) / totalHa) };
+  const range = (get: (p: OptionPart) => number[]): Range => ({ p25: Math.round(sum(p => get(p)[0]) / totalHa), p50: Math.round(sum(p => get(p)[1]) / totalHa), p75: Math.round(sum(p => get(p)[2]) / totalHa) });
+  const bare = range(p => p.bare);
+  // S3: crop families on the farm in each plan year
+  const families = states.map(s => new Set([...s.area.keys()].map(id => crop(id).family)).size);
   const ny = ctx.setup.planYears.length;
   const largest = Math.max(...states.map(s => Math.max(...s.area.values()) / s.arableHa));
   return {
@@ -260,7 +334,9 @@ export function characteristics(pre: Prepared, options: FieldOption[], parts: Op
     marginWetHarvest: wet.length ? Math.round(mean(wet)) : null, marginWetHarvestN: wet.length,
     marginNormal: normal.length ? Math.round(mean(normal)) : null,
     worstSeasons: [...rows].sort((a, b) => a.margin - b.margin).slice(0, 3), marginSeries: rows,
-    bareDays: bare, bareDaysWinter: Math.round(sum(p => p.bareWinter) / totalHa), bareOnSlopes: Math.round(sum(p => p.bareSlopes)),
+    bareErosive: range(p => p.bareErosive), bareDays: bare, bareDaysWinter: Math.round(sum(p => p.bareWinter) / totalHa), bareOnSlopes: Math.round(sum(p => p.bareSlopes)),
+    bareLeaching: Math.round(sum(p => p.bareLeaching) / totalHa), familiesPerYear: families, wetHarvestHa: +sum(p => p.wetHarvest).toFixed(1),
+    humus: Math.round(sum(p => p.humus) / totalHa), humusStrawLeft: ctx.soil?.humus.strawLeft ?? true,
     cerealAfterCereal: +(sum(p => p.cerealAfterCereal) / (totalHa * ny)).toFixed(3), legumeShare: +(sum(p => p.legume) / (totalHa * ny)).toFixed(3),
     largestCropShare: +largest.toFixed(3), cropsPerYear: states.map(s => s.area.size),
     paymentsEurHa: Math.round(sum(p => p.payments) / totalHa + ecoBonus), ecoRotationEligible: eco,

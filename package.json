@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "pipeline": "tsx",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "check:day": "node scripts/check-day.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

@@ -1,13 +1,14 @@
 // Screenshots of every state of the app at several window widths, plus a fit report: elements that stick out of
 // the window or of their panel, bars that overflow, pages that scroll sideways.
 // Usage: npm run dev (in another terminal), then  node scripts/shots.mjs [width ...]     default widths 1100 1280 1600
+//        BASE=http://localhost:3111 OUT=screenshots-check node scripts/shots.mjs 1280     another server, another folder
 // Output: screenshots/<width>/NN-name.png and screenshots/fit-report.md. Uses the installed Chrome or Edge.
 import fs from 'node:fs';
 import path from 'node:path';
 import puppeteer from 'puppeteer-core';
 
 const BASE = process.env.BASE ?? 'http://localhost:3000';
-const OUT = path.resolve('screenshots');
+const OUT = path.resolve(process.env.OUT ?? 'screenshots');
 const widths = process.argv.slice(2).map(Number).filter(Boolean);
 const WIDTHS = widths.length ? widths : [1100, 1280, 1600];
 const BROWSERS = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/google-chrome', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
@@ -30,7 +31,9 @@ const STATES = [
   { name: 'crops-and-limits', url: '/settings' },
   { name: 'crops-ban-dropdown-open', url: '/settings', viewport: true, act: async p => { await p.evaluate(() => document.querySelectorAll('.dd')[1]?.click()); } },
   { name: 'planner-suggested', url: '/planner', plans: true },
-  { name: 'planner-suggested-2028-chosen', url: '/planner', plans: true, act: async p => { await click(p, '.tabs button', 'Harvest 2028'); await click(p, '.card', 'Least cereal'); await click(p, '.btn', 'Choose this plan'); } },
+  { name: 'planner-best-for-soil-chosen', url: '/planner', plans: true, act: async p => { await p.evaluate(() => document.querySelectorAll('[aria-label="Plan year shown"] button')[1]?.click()); await click(p, '.card', 'Best for soil'); await click(p, '.btn', 'Choose this plan'); } },
+  { name: 'planner-soil-how-calculated', url: '/planner?help=soil', plans: true, viewport: true },
+  { name: 'planner-soil-how-calculated-sources', url: '/planner?help=soil', plans: true, viewport: true, act: p => p.evaluate(() => { const d = document.querySelector('.drawer'); if (d) d.scrollTop = d.scrollHeight; }) },
   { name: 'planner-suggested-all-open', url: '/planner', plans: true, act: p => p.evaluate(() => document.querySelectorAll('details.more').forEach(d => (d.open = true))) },
   { name: 'planner-compare', url: '/planner?tab=compare', plans: true },
   { name: 'planner-mine-empty', url: '/planner?tab=mine', plans: true },
