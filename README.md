@@ -77,9 +77,9 @@ The demo replays the decision the farm faced on one day: **1 August 2026**, `DEC
 |---|---|---|
 | Farm | Map | Declared fields around the farm, the farm's fields, the official rule areas |
 | Farm | Fields | The previous season on each field: its crop (pre-filled from the paying agency’s crop monitoring, editable), whether it is harvested on the decision day and when the field is free for the next crop, and, once sowing has started, what is already sown; a satellite hint from before that day; field timelines with sowing and harvest windows and free slots |
-| NASA data | Analytics | When fields are bare (HLS), when rain is erosive and when water drains through the soil (IMERG, POWER); which months are risky; risk zones; the method behind each number |
-| Plan | Crops | Crops the farm can grow, catch crops, limits |
+| Farm | Crops | Crops the farm can grow, catch crops, limits |
 | Plan | Planner | Suggested plans with the soil-protection block and its "?" panel (`?help=soil`), comparison, the agronomist's own plan, "Choose this plan" and the sowing list |
+| Plan | Analytics | The selected plan's risks and the data behind every number: when fields are bare (HLS), when rain is erosive and when water drains through the soil (IMERG, POWER); which months are risky; risk zones; the method behind each number. It comes after the Planner because most of its views look at the selected plan |
 | Plan | Checks | The farm rules applied to a plan |
 
 Tabs and views are in the URL (`/planner?tab=compare`, `/analytics?tab=zones&view=dry`), so every state can be linked and photographed. The button to the next screen of the path is always at the right end of the top bar (`NEXT` in `src/components/Shell.tsx`); Checks, the last screen, has none.

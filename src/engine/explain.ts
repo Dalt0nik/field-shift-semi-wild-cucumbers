@@ -24,13 +24,13 @@ export function fiveAnswers(v: EvaluatedVariant, base: EvaluatedVariant, ws: Wor
   const diff = v.options.filter((o, i) => optionKey(o) !== optionKey(base.options[i]));
   const moves = diff.slice(0, 3).map(o => `${o.fieldId}: ${o.crops.map((c, i) => `${years[i]} ${CROPS[c].name}${catchBefore(o, i) ? ' after a catch crop' : ''}`).filter((_, i) => !o.fixed[i]).join(', ')}`);
   const why = v.id === base.id ? TAG_WHY['current practice']
-    : `${v.tags.map(t => TAG_WHY[t]).filter(Boolean).join(' ') || (v.origin === 'agronomist' ? 'This is your own plan; the system only checks and measures it.' : 'One of the variants that no other variant beats on all four comparison characteristics at once.')} It differs from usual practice on ${diff.length} of ${v.options.length} fields${moves.length ? ` (${moves.join('; ')}${diff.length > 3 ? '; …' : ''})` : ''}.`;
+    : `${v.tags.map(t => TAG_WHY[t]).filter(Boolean).join(' ') || (v.origin === 'agronomist' ? 'This is your own plan; the system only checks and measures it.' : 'One of the variants that no other variant beats on all four comparison characteristics at once.')} It differs from the typical local plan on ${diff.length} of ${v.options.length} fields${moves.length ? ` (${moves.join('; ')}${diff.length > 3 ? '; …' : ''})` : ''}.`;
   const estCrops = [...new Set(v.options.flatMap(o => o.crops))].filter(c => CROPS[c].sowing.status !== 'primary' || CROPS[c].harvest.status !== 'primary').map(c => CROPS[c].name);
   const d = (a: number, b: number) => Math.round(a - b);
   const benefits = v.id === base.id ? `Familiar crops and machinery. Margin ${v.ch.marginMean} €/ha in a usual season, ${v.ch.bareErosive.p50} erosion-weighted days without cover a year.`
-    : [`Usual-season margin ${signed(d(v.ch.marginMean, base.ch.marginMean), '€/ha')} against usual practice`, `worst-fifth margin ${signed(d(v.ch.marginWorstFifth, base.ch.marginWorstFifth), '€/ha')}`,
+    : [`Usual-season margin ${signed(d(v.ch.marginMean, base.ch.marginMean), '€/ha')} against the typical local plan`, `worst-fifth margin ${signed(d(v.ch.marginWorstFifth, base.ch.marginWorstFifth), '€/ha')}`,
       `soil without cover ${signed(d(v.ch.bareErosive.p50, base.ch.bareErosive.p50), 'erosion-weighted days a year')}`, `bare soil in the leaching season ${signed(d(v.ch.bareLeaching, base.ch.bareLeaching), 'days')}`,
-      `humus balance ${signed(d(v.ch.humus, base.ch.humus), 'kg humus-C per ha')}`, `cereal after cereal ${Math.round(v.ch.cerealAfterCereal * 100)} % of area (usual practice ${Math.round(base.ch.cerealAfterCereal * 100)} %)`,
+      `humus balance ${signed(d(v.ch.humus, base.ch.humus), 'kg humus-C per ha')}`, `cereal after cereal ${Math.round(v.ch.cerealAfterCereal * 100)} % of area (the typical local plan ${Math.round(base.ch.cerealAfterCereal * 100)} %)`,
       `payments ${v.ch.paymentsEurHa} €/ha`].join('; ') + '.';
   const dry = v.ch.marginDry !== null && v.ch.marginNormal !== null ? `In dry seasons the margin at normal prices was ${v.ch.marginDry} €/ha against ${v.ch.marginNormal} in ordinary ones (${v.ch.marginDryN} seasons).` : '';
   const failed = v.ch.rules.filter(r => !r.ok && r.kind !== 'incentive');

@@ -5,7 +5,7 @@
 import { coverDays } from '@/engine/characteristics';
 import type { Characteristics } from '@/engine/types';
 import soilCheckJson from '@/data/soil-check.json';
-import { DECISION_DATE, coverModel, niceDate } from '@/pilot/demo';
+import { DECISION_DATE, PLAN_YEARS, coverModel, niceDate } from '@/pilot/demo';
 import { CROPS } from '@/pilot/regional';
 import { HUMUS_BYPRODUCT, HUMUS_CATCH_CROP, HUMUS_CROP, SOIL_SOURCES, humusClass, soilClimate, soilParams } from '@/pilot/soil';
 import type { PlanItem } from './store';
@@ -19,10 +19,11 @@ const E = soilClimate.erosivity, BASE = E.summary[E.base], P0 = soilParams();
 const p100 = (v: number) => Math.round(v * 100);
 
 /** The "?" control: opens the panel that explains the soil numbers. The open state is in the URL (?help=soil). */
-export function SoilHelpButton({ text }: { text?: string }) {
+export function SoilHelpButton({ text, quiet }: { text?: string; quiet?: boolean }) {
   const [, setHelp] = useQueryState<string>('help', '');
+  // quiet: the text itself opens the panel, underlined like an explained term (the heading of every plan card)
   return text
-    ? <button type="button" className="link small" onClick={e => { e.stopPropagation(); setHelp('soil'); }}>{text}</button>
+    ? <button type="button" className={quiet ? 'quiet-link' : 'link small'} title={quiet ? 'How the soil numbers are calculated' : undefined} onClick={e => { e.stopPropagation(); setHelp('soil'); }}>{text}</button>
     : <button type="button" className="help" aria-label="How the soil numbers are calculated" title="How the soil numbers are calculated" onClick={e => { e.stopPropagation(); setHelp('soil'); }}>?</button>;
 }
 
@@ -32,30 +33,29 @@ export function priceOf(p: Characteristics, other: Characteristics): string {
 }
 
 /** Soil block of a plan card: the headline (S1e), the plain days (S1) and the rotation (S3). */
-export function SoilBlock({ c, best, priceLines }: { c: Characteristics; best: { e: number; d: number; c: number }; priceLines?: string[] }) {
+export function SoilBlock({ c, best }: { c: Characteristics; best: { e: number; d: number; c: number } }) {
   const mark = (on: boolean) => (on ? 'bestv' : undefined);
   return (
     <span className="soil">
-      <span className="soil-h">Soil protection <SoilHelpButton /></span>
-      <span className="kpi soil-kpi"><span className={mark(c.bareErosive.p50 === best.e)}>{c.bareErosive.p50}</span><small><Term id="soilDays">days without cover a year, weighted by erosive rain</Term><i className="src">NASA</i></small></span>
-      <span className="stat"><span><Term id="bareDays">Days without living cover</Term></span><b className={mark(c.bareDays.p50 === best.d)}>{c.bareDays.p50}</b></span>
-      <span className="stat"><span>Crop families a year</span><b>{c.familiesPerYear.join(' · ')}</b></span>
-      <span className="stat"><span>Cereal after cereal</span><b className={mark(c.cerealAfterCereal === best.c)}>{pct(c.cerealAfterCereal)}</b></span>
-      {priceLines?.map(l => <small key={l} className="price">{l}</small>)}
+      <span className="soil-h"><SoilHelpButton text="Soil protection" quiet /></span>
+      <span className="kpi soil-kpi"><span className={mark(c.bareErosive.p50 === best.e)}>{c.bareErosive.p50}</span><small><Term id="soilDays">days of bare soil under heavy rain</Term> <i className="src">NASA</i></small></span>
+      <span className="stat"><span><Term id="bareDays">Days without green cover</Term></span><b className={mark(c.bareDays.p50 === best.d)}>{c.bareDays.p50}</b></span>
+      <span className="stat"><span><Term id="cropFamilies">Crop groups</Term>, {PLAN_YEARS.join(' · ')}</span><b>{c.familiesPerYear.join(' · ')}</b></span>
+      <span className="stat"><span><Term id="cerealAfterCereal">Cereal after cereal</Term></span><b className={mark(c.cerealAfterCereal === best.c)}>{pct(c.cerealAfterCereal)}</b></span>
     </span>
   );
 }
 
-/** All six soil measures of the selected plan next to usual practice. */
+/** All six soil measures of the selected plan next to the typical local plan. */
 export function SoilTable({ plan, base, top, steepHa, strawLeft, setStrawLeft, cheaper }: { plan: PlanItem; base: PlanItem; top: PlanItem | null; steepHa: number; strawLeft: boolean; setStrawLeft: (b: boolean) => void; cheaper: { s1e: number; margin: number } | null }) {
   const c = plan.v.ch, b = base.v.ch, isBase = plan.id === base.id;
   const onSteep = (v: number) => (steepHa ? Math.round(v / steepHa) : 0);
   // label: the name with its explained term, where the vocabulary has one
   const rows: { name: string; label?: React.ReactNode; unit: string; get: (x: Characteristics) => string; data: React.ReactNode }[] = [
-    { name: 'Days without cover, weighted by erosive rain', label: <Term id="soilDays">Days without cover, weighted by erosive rain</Term>, unit: 'a year', get: x => String(x.bareErosive.p50), data: <>NASA <Term id="hls">HLS</Term> × NASA <Term id="imerg">GPM IMERG</Term></> },
-    { name: 'Days without living cover', label: <Term id="bareDays">Days without living cover</Term>, unit: 'a year', get: x => String(x.bareDays.p50), data: 'NASA HLS' },
+    { name: 'Days of bare soil under heavy rain', label: <Term id="soilDays">Days of bare soil under heavy rain</Term>, unit: 'a year', get: x => String(x.bareErosive.p50), data: <>NASA <Term id="hls">HLS</Term> × NASA <Term id="imerg">GPM IMERG</Term></> },
+    { name: 'Days without green cover', label: <Term id="bareDays">Days without green cover</Term>, unit: 'a year', get: x => String(x.bareDays.p50), data: 'NASA HLS' },
     { name: 'The same on erosion-sensitive land', unit: 'weighted days a year', get: x => String(onSteep(x.bareOnSlopes)), data: 'NASA HLS × IMERG, official layer' },
-    { name: 'Crop diversity', unit: 'families a year · legumes · cereal after cereal', get: x => `${x.familiesPerYear.join(' / ')} · ${pct(x.legumeShare)} · ${pct(x.cerealAfterCereal)}`, data: 'crop plan' },
+    { name: 'Crop diversity', unit: `crop groups ${PLAN_YEARS.join(' / ')} · legumes · cereal after cereal`, get: x => `${x.familiesPerYear.join(' / ')} · ${pct(x.legumeShare)} · ${pct(x.cerealAfterCereal)}`, data: 'crop plan' },
     { name: 'Harvest on wet soil', label: <Term id="wetSoilHarvest">Harvest on wet soil</Term>, unit: 'ha a year', get: x => (x.wetHarvestHa ? x.wetHarvestHa.toFixed(1) : '0'), data: <>NASA GPM IMERG, NASA <Term id="power">POWER</Term></> },
     { name: 'Bare soil in the leaching season', label: <>Bare soil in the <Term id="leaching">leaching season</Term></>, unit: 'days, Sep–Feb', get: x => String(x.bareLeaching), data: 'NASA HLS × IMERG, POWER' },
     { name: 'Humus balance', label: <Term id="humus">Humus balance</Term>, unit: 'kg humus-C per ha a year', get: x => `${signed(x.humus)} · ${humusClass(x.humus)}`, data: <label className="chk small" style={{ fontSize: 'inherit' }}><input type="checkbox" checked={strawLeft} onChange={e => setStrawLeft(e.target.checked)} />straw left on the field</label> },
@@ -65,12 +65,12 @@ export function SoilTable({ plan, base, top, steepHa, strawLeft, setStrawLeft, c
       <div className="row" style={{ justifyContent: 'space-between' }}><h3>Soil protection of this plan</h3><SoilHelpButton text="How these numbers are calculated, and their sources" /></div>
       <div className="scroll-x">
         <table>
-          <thead><tr><th>Measure</th><th className="n">{isBase ? 'Usual practice' : 'This plan'}</th>{!isBase && <th className="n">Usual practice</th>}<th>Built from</th></tr></thead>
+          <thead><tr><th>Measure</th><th className="n">{isBase ? 'Typical local plan' : 'This plan'}</th>{!isBase && <th className="n">Typical local plan</th>}<th>Built from</th></tr></thead>
           <tbody>{rows.map((r, i) => (
             <tr key={r.name}><td>{i === 0 ? <b>{r.label ?? r.name}</b> : r.label ?? r.name} <small>{r.unit}</small></td><td className="n">{i === 0 ? <b>{r.get(c)}</b> : r.get(c)}</td>{!isBase && <td className="n muted">{r.get(b)}</td>}<td className="small muted">{r.data}</td></tr>))}</tbody>
         </table>
       </div>
-      {!isBase && <p className="small" style={{ marginTop: 8 }}><b>The price.</b> Against usual practice: {priceOf(c, b)}.{top && top.id !== plan.id && <> Against the highest-margin plan: {priceOf(c, top.v.ch)}.</>}{cheaper && <> Most of the gain costs less: a plan with {cheaper.s1e} days earns {cheaper.margin} €/ha (see Compare).</>}</p>}
+      {!isBase && <p className="small" style={{ marginTop: 8 }}><b>The price.</b> Against the typical local plan: {priceOf(c, b)}.{top && top.id !== plan.id && <> Against the highest-margin plan: {priceOf(c, top.v.ch)}.</>}{cheaper && <> Most of the gain costs less: a plan with {cheaper.s1e} days earns {cheaper.margin} €/ha (see Compare).</>}</p>}
       <p className="note" style={{ marginTop: 6 }}>Six measures, no overall score. Typical values of two satellite seasons, not a forecast: one plan’s own spread between years is about {c.bareErosive.p75 - c.bareErosive.p25} days. Stubble counts as bare; tillage is not visible from space.</p>
     </div>
   );
@@ -134,7 +134,7 @@ export function SoilHelp() {
         <div className="row" style={{ justifyContent: 'space-between' }}><h2>Soil protection: how the numbers are calculated</h2><button className="btn sm" onClick={() => setHelp('')}>Close</button></div>
         <p style={{ marginTop: 10 }}>Soil is best protected when it is covered, has living roots, carries a varied rotation and is disturbed little: the four soil-health principles of <Src ids={['nrcs']} />. Every plan is measured on the first three, from NASA satellite data and the crop plan. The fourth, tillage, cannot be seen from space, so it is not scored. There is <b>no overall soil score and no weights</b>: six measures, each in its own unit. “Best for soil” is the plan with the lowest first measure; ties go to the lower second measure on erosion-sensitive land, then to less cereal after cereal.</p>
 
-        <Measure id="s1e" name="1 · Days without cover, weighted by erosive rain" what="How long the soil lies without living plant cover in a year, each half-month counted by its share of the year’s erosive rain. The headline of the soil block.">
+        <Measure id="s1e" name="1 · Days of bare soil under heavy rain" what="How long the soil lies without living plant cover in a year, each half-month counted by its share of the year’s erosive rain. The headline of the soil block.">
           <dt>Calculation</dt><dd>For each of the 24 half-months from July to June: bare fraction × that half-month’s share of the yearly rainfall erosivity × 365. Summed, averaged over the plan years, weighted by field area. Bare fraction = 1 − green cover; green cover is <Term id="ndvi">NDVI</Term> rescaled between bare soil ({coverModel.ndvi_soil.toFixed(2)}) and full cover ({coverModel.ndvi_full.toFixed(2)}) <Src ids={['fvc']} />.</dd>
           <dt>Data</dt><dd><b>NASA <Term id="hls">HLS</Term></b> (Landsat + Sentinel-2, 30 m): cover curves of about 1 700 declared Lithuanian fields in the seasons {coverModel.seasons.join(' and ')}, grouped into {Object.keys(m).length} crop sequences. <b>NASA <Term id="imerg">GPM IMERG</Term></b>, half-hourly rain at the farm, {soilClimate.period}: storms of {E.thresholdMm} mm or more, erosivity = storm energy × highest 30-minute intensity; precipitation that IMERG marks as frozen is left out.</dd>
           <dd><ErosivityChart /><ErosivityLegend /></dd>
@@ -144,7 +144,7 @@ export function SoilHelp() {
           <dt>Why this way</dt><dd>Erosion models weight crop cover by the timing of erosive rain, in 15-day steps <Src ids={['rusle']} />; the JRC computed a cover factor per parcel the same way from Sentinel-2 <Src ids={['jrc']} />. The EU Soil Monitoring Law makes the soil erosion rate a descriptor and asks that its estimates consider vegetation cover and crop type <Src ids={['law']} />. Monitoring asks whether a field was bare; this asks how bare it will be under each plan, before sowing.</dd>
         </Measure>
 
-        <Measure id="s1" name="2 · Days without living cover" what="The same without the rain weighting: every half-month counts the same.">
+        <Measure id="s1" name="2 · Days without green cover" what="The same without the rain weighting: every half-month counts the same.">
           <dt>Data</dt><dd>NASA HLS cover curves, as above <Src ids={['ours']} />. HLS sees green plants only, so “living cover” and “living roots” are one number here.</dd>
         </Measure>
 

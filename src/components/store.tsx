@@ -97,7 +97,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const plans = useMemo<PlanItem[]>(() => {
     if (!fresh) return [];
-    const out: PlanItem[] = [{ id: 'usual', name: 'Usual practice', sub: `what farms within ${farmerTransitions.radiusKm} km sow, no catch crops`, letter: '0', kind: 'baseline', v: fresh.baseline }];
+    const out: PlanItem[] = [{ id: 'usual', name: 'Typical local plan', sub: `what farms within ${farmerTransitions.radiusKm} km sow`, letter: '0', kind: 'baseline', v: fresh.baseline }];
     let n = 0;
     const tagged = new Set<string>();
     for (const [tag] of TAGS) {

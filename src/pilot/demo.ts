@@ -128,7 +128,7 @@ export const PLAN_DATA: { id: string; label: string; until: string }[] = [
   { id: 'yields', label: `District yields ${REPLAY.firstSeason - 5}–${Math.max(...REPLAY.normalYieldYears)}`, until: `${Math.max(...REPLAY.normalYieldYears)}-12-31` },
   { id: 'prices', label: `Prices to ${Math.max(...REPLAY.normalPriceYears)}`, until: `${Math.max(...REPLAY.normalPriceYears)}-12-31` },
   { id: 'history', label: `Crops of ${DECISION_YEAR}: declared in spring, confirmed by the agronomist`, until: `${DECISION_YEAR}-06-30` },
-  { id: 'farmers', label: `Usual practice: what farms within ${farmerTransitions.radiusKm} km sowed after each crop, declarations ${farmerTransitions.years.join(' → ')}`, until: farmerTransitions.dataUntil },
+  { id: 'farmers', label: `Typical local plan: what farms within ${farmerTransitions.radiusKm} km sowed after each crop, declarations ${farmerTransitions.years.join(' → ')}`, until: farmerTransitions.dataUntil },
 ];
 
 export interface SetupOptions { costFactor?: number; strawLeft?: boolean; confirmed?: Record<string, CropId>; erosivity?: string }

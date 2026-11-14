@@ -111,7 +111,7 @@ export function bestForSoil<T extends { ch: Characteristics }>(variants: T[]): T
   return [...variants].sort((a, b) => a.ch.bareErosive.p50 - b.ch.bareErosive.p50 || a.ch.bareOnSlopes - b.ch.bareOnSlopes || a.ch.cerealAfterCereal - b.ch.cerealAfterCereal || b.ch.marginMean - a.ch.marginMean)[0];
 }
 
-/** The statistical farms behind "usual practice": how many were kept and how they spread on each comparison axis. */
+/** The statistical farms behind "the typical local plan": how many were kept and how they spread on each comparison axis. */
 export interface FarmerBand {
   /** farms kept (they pass the farm rules) and farms drawn */
   n: number;
@@ -197,7 +197,7 @@ function typicalFarm(ctx: Context, pre: Prepared, fieldOpts: SearchResult['field
     if (d < nearest) { nearest = d; typical = f; }
   }
   const options = typical.idx.map((k, f) => fieldOpts[f].options[k]);
-  return { baseline: { id: 'usual', label: 'Usual practice', options, origin: 'baseline', ch: typical.ch, tags: ['current practice'] }, farmers: { n: kept.length, drawn, rulesPassed, axes, keptMass } };
+  return { baseline: { id: 'usual', label: 'Typical local plan', options, origin: 'baseline', ch: typical.ch, tags: ['current practice'] }, farmers: { n: kept.length, drawn, rulesPassed, axes, keptMass } };
 }
 
 export function isDominated(a: Characteristics, others: Characteristics[]): boolean {
