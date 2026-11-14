@@ -42,7 +42,7 @@ npm run shots      # screenshots of every state at 1100, 1280 and 1600 px, and a
 
 TypeScript on Node 24, Next.js 16, React 19, MapLibre GL. The engine runs in the browser; the search for plans runs in a Web Worker. The only server code is `/api/assistant`.
 
-Copy `.env.example` to `.env`. `GEE_KEY` is needed only to rebuild the data (`pipeline/`); `ANTHROPIC_API_KEY` only for the assistant chat. Every screen works without both.
+Copy `.env.example` to `.env`. `GEE_KEY` and the CDSE S3 keys (`CDSE_S3_ACCESS_KEY`, `CDSE_S3_SECRET_KEY`, for Copernicus HRL Crop Types) are needed only to rebuild the data (`pipeline/`); `ANTHROPIC_API_KEY` only for the assistant chat. Every screen works without both.
 
 ## Layout
 
